@@ -48,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         initialWork();
         execListener();
+        this.checkPermissions();
     }
 
     private void execListener() {
