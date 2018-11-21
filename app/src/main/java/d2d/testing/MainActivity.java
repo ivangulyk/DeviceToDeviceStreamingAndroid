@@ -1,20 +1,14 @@
 package d2d.testing;
 
 import android.Manifest;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.net.wifi.WifiManager;
-import android.net.wifi.p2p.WifiP2pDevice;
-import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pManager;
+import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -22,8 +16,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.ArrayList;
-import java.util.List;
+import d2d.testing.net.WifiP2pController;
 
 public class MainActivity extends AppCompatActivity {
     public static final int MY_PERMISSIONS_REQUEST_COARSE_LOCATION = 1;
@@ -32,16 +25,10 @@ public class MainActivity extends AppCompatActivity {
     ListView listView;
     TextView textView;
 
-    WifiManager wifiManager;
-    WifiP2pManager mManager;
-    WifiP2pManager.Channel mChannel;
+    WifiP2pController mWifiP2pController;
 
-    BroadcastReceiver mReciever;
     IntentFilter mIntentFilter;
 
-    List<WifiP2pDevice> peers = new ArrayList<WifiP2pDevice>();
-    String [] deviceNameArray;
-    WifiP2pDevice[] deviceArray;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -55,12 +42,12 @@ public class MainActivity extends AppCompatActivity {
         btnOnOff.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(wifiManager.isWifiEnabled()) {
-                    wifiManager.setWifiEnabled(false);
+                if(mWifiP2pController.isWifiEnabled()) {
+                    mWifiP2pController.setWifiEnabled(false);
                     btnOnOff.setText("ON");
                 }
                 else{
-                    wifiManager.setWifiEnabled(true);
+                    mWifiP2pController.setWifiEnabled(true);
                     btnOnOff.setText("OFF");
                 }
             }
@@ -68,7 +55,7 @@ public class MainActivity extends AppCompatActivity {
         btnsrch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mManager.discoverPeers(mChannel, new WifiP2pManager.ActionListener() {
+                mWifiP2pController.discoverPeers(new WifiP2pManager.ActionListener() {
                     @Override
                     public void onSuccess() {
                         textView.setText("Discovery Started");
@@ -89,12 +76,7 @@ public class MainActivity extends AppCompatActivity {
         listView = (ListView) findViewById(R.id.peerListView);
         textView = (TextView) findViewById(R.id.connectionStatus);
 
-        wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-
-        mManager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
-        mChannel = mManager.initialize(this, getMainLooper(), null);
-
-        mReciever = new WiFiDirectBroadcastReceiver(mManager,mChannel,this);
+        mWifiP2pController = new WifiP2pController(this);
         mIntentFilter = new IntentFilter();
         // Indicates a change in the Wi-Fi P2P status.
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
@@ -110,47 +92,32 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
- public WifiP2pManager.PeerListListener peerListListener = new WifiP2pManager.PeerListListener() {
-      @Override
-      public void onPeersAvailable(WifiP2pDeviceList peerList) {
+    public void updatePeers(String [] deviceNameArray)
+    {
+        if (deviceNameArray.length == 0) {
+            //Log.d(WiFiDirectActivity.TAG, "No devices found");
+            Toast.makeText(getApplicationContext(), "No Devices Found", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        else
+        {
+            ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(), android.R.layout.simple_list_item_1, deviceNameArray);
+            listView.setAdapter(adapter);
+        }
 
-          //List<WifiP2pDevice> refreshedPeers = (List<WifiP2pDevice>) peerList.getDeviceList();
-          if ( !peerList.getDeviceList().equals(peers)) {
-              peers.clear();
-              peers.addAll(peerList.getDeviceList());
-              deviceNameArray = new String[peerList.getDeviceList().size()];
-              deviceArray = new WifiP2pDevice[peerList.getDeviceList().size()];
-              int index = 0;
-
-              for (WifiP2pDevice device : peerList.getDeviceList()) {
-                  deviceNameArray[index] = device.deviceName;
-                  deviceArray[index] = device;
-                  index++;
-              }
-              ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(), android.R.layout.simple_list_item_1, deviceNameArray);
-              listView.setAdapter(adapter);
-          }
-
-
-          if (peers.size() == 0) {
-              //Log.d(WiFiDirectActivity.TAG, "No devices found");
-              Toast.makeText(getApplicationContext(), "No Devices Found", Toast.LENGTH_SHORT).show();
-              return;
-          }
-      }
-  };
+    }
 
     @Override
     public void onResume() {
         super.onResume();
-        //mReciever = new WiFiDirectBroadcastReceiver(mManager, mChannel, this);
-        registerReceiver(mReciever, mIntentFilter);
+
+        registerReceiver(this.mWifiP2pController.getWiFiP2pBroadcastReceiver(), mIntentFilter);
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        unregisterReceiver(mReciever);
+        unregisterReceiver(this.mWifiP2pController.getWiFiP2pBroadcastReceiver());
     }
 
     public void checkPermissions()
@@ -168,17 +135,20 @@ public class MainActivity extends AppCompatActivity {
                 // this thread waiting for the user's response! After the user
                 // sees the explanation, try again to request the permission.
 
+                Toast.makeText(getApplicationContext(), "WE NEED PERMISSIONS BECAUSE YES.. BLAH BLAH BLAH JA JA JA", Toast.LENGTH_SHORT).show();
+                //ask later
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        checkPermissions();
+                    }
+                }, 5 * 1000); // afterDelay will be executed after (secs*1000) milliseconds.
             } else {
 
-                // No explanation needed, we can request the permission.
-
+                // We can request the permission.
                 ActivityCompat.requestPermissions(this,
                         new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
                         MY_PERMISSIONS_REQUEST_COARSE_LOCATION);
-
-                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
-                // app-defined int constant. The callback method gets the
-                // result of the request.
             }
         }
     }
@@ -189,25 +159,19 @@ public class MainActivity extends AppCompatActivity {
         switch (requestCode) {
             case MY_PERMISSIONS_REQUEST_COARSE_LOCATION: {
                 // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
-                    // permission was granted, yay! Do the
-                    // contacts-related task you need to do.
-
-                    Toast.makeText(getApplicationContext(), "YAY PERMISSON FOUND", Toast.LENGTH_SHORT).show();
+                    // permission was granted,
+                    Toast.makeText(getApplicationContext(), "PERMISSON GRANTED", Toast.LENGTH_SHORT).show();
                 } else {
 
-                    // permission denied, boo! Disable the
-                    // functionality that depends on this permission.
-
-                    Toast.makeText(getApplicationContext(), "YAY PERMISSON not FOUND", Toast.LENGTH_SHORT).show();
+                    // permission denied, wifi direct wont work under version ??? maybe we dont need it....
+                    Toast.makeText(getApplicationContext(), "PERMISSON NOT GRANTED", Toast.LENGTH_SHORT).show();
                 }
                 return;
             }
 
-            // other 'case' lines to check for other
-            // permissions this app might request
+            // other 'case' lines to check for other permissions
         }
     }
 }

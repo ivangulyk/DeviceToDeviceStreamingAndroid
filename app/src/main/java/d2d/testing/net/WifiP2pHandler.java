@@ -1,19 +1,60 @@
 package d2d.testing.net;
 
+import android.app.Activity;
 import android.content.Context;
+import android.net.wifi.WpsInfo;
+import android.net.wifi.p2p.WifiP2pConfig;
+import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Looper;
+import android.widget.Toast;
 
 /**
  * Created by Koerfer on 16.02.2016.
  */
 public class WifiP2pHandler {
 
-    public WifiP2pManager Manager;
-    public WifiP2pManager.Channel Channel;
+    public Activity mActivity;
+    public WifiP2pManager mWifiP2pManager;
+    public WifiP2pManager.Channel mChannel;
+    public WifiP2pController mController;
 
-    public WifiP2pHandler(Context context) {
-        this.Manager = (WifiP2pManager) context.getSystemService(Context.WIFI_P2P_SERVICE);
-        this.Channel = this.Manager.initialize(context, Looper.getMainLooper(), null);
+    public WifiP2pManager getWifiP2pManager() {
+        return this.mWifiP2pManager;
     }
+
+    public void setWifiP2pManager(WifiP2pManager wifiP2pManager) {
+        this.mWifiP2pManager = wifiP2pManager;
+    }
+
+    public WifiP2pManager.Channel getChannel() {
+        return this.mChannel;
+    }
+
+    public void setChannel(WifiP2pManager.Channel channel) {
+        this.mChannel = channel;
+    }
+
+    public Activity getActivity() {
+
+        return this.mActivity;
+    }
+
+    public void setActivity(Activity activity) {
+        this.mActivity = activity;
+    }
+
+    public WifiP2pManager.PeerListListener getPeerListListener() {
+        return this.mController.peerListListener;
+
+    }
+
+    public WifiP2pHandler(Activity activity, WifiP2pManager manager, WifiP2pManager.Channel channel, WifiP2pController controller) {
+        this.mActivity = activity;
+        this.mWifiP2pManager = manager;
+        this.mChannel = channel;
+        this.mController = controller;
+    }
+
+
 }

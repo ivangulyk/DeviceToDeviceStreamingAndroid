@@ -1,4 +1,4 @@
-package d2d.testing;
+package d2d.testing.net;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -6,16 +6,14 @@ import android.content.Intent;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.widget.Toast;
 
-public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
+import d2d.testing.MainActivity;
 
-    private WifiP2pManager mManager;
-    private WifiP2pManager.Channel mChannel;
-    private MainActivity activity;
+public class WiFiP2pBroadcastReceiver extends BroadcastReceiver {
 
-    public  WiFiDirectBroadcastReceiver( WifiP2pManager mManager,WifiP2pManager.Channel mChannel, MainActivity activity){
-            this.activity = activity;
-            this.mChannel = mChannel;
-            this.mManager = mManager;
+    private WifiP2pHandler mWifiP2pHandler;
+
+    public WiFiP2pBroadcastReceiver(WifiP2pHandler wifiP2pHandler){
+        this.mWifiP2pHandler = wifiP2pHandler;
     }
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
@@ -32,8 +30,8 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
                 break;
 
             case WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION:
-                if(mManager != null) {
-                    mManager.requestPeers(mChannel,activity.peerListListener);
+                if(mWifiP2pHandler.getWifiP2pManager() != null) {
+                    mWifiP2pHandler.getWifiP2pManager().requestPeers(mWifiP2pHandler.getChannel(), mWifiP2pHandler.getPeerListListener());
                 }
                 break;
 
