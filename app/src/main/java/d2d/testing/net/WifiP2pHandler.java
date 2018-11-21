@@ -46,7 +46,10 @@ public class WifiP2pHandler {
 
     public WifiP2pManager.PeerListListener getPeerListListener() {
         return this.mController.peerListListener;
+    }
 
+    public WifiP2pManager.ConnectionInfoListener getConnectionInfoListener() {
+        return this.mController.connectionInfoListener;
     }
 
     public WifiP2pHandler(Activity activity, WifiP2pManager manager, WifiP2pManager.Channel channel, WifiP2pController controller) {

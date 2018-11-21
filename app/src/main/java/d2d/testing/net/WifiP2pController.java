@@ -8,15 +8,31 @@ import android.net.wifi.WpsInfo;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
+import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Looper;
 import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 
 import d2d.testing.MainActivity;
+
+/*
+
+If each of the devices in your group supports Wi-Fi direct, you don't need to explicitly ask for the group's password when connecting. To allow a device that doesn't support Wi-Fi Direct to join a group, however, you need to retrieve this password by calling requestGroupInfo(), as shown in the following code snippet:
+
+KOTLINJAVA
+mManager.requestGroupInfo(mChannel, new GroupInfoListener() {
+  @Override
+  public void onGroupInfoAvailable(WifiP2pGroup group) {
+      String groupPassword = group.getPassphrase();
+  }
+});
+
+ */
 
 public class WifiP2pController {
 
@@ -79,37 +95,50 @@ public class WifiP2pController {
             if ( !peerList.getDeviceList().equals(peers)) {
                 peers.clear();
                 peers.addAll(peerList.getDeviceList());
-                deviceNameArray = new String[peerList.getDeviceList().size()];
+
                 deviceArray = new WifiP2pDevice[peerList.getDeviceList().size()];
                 int index = 0;
 
                 for (WifiP2pDevice device : peerList.getDeviceList()) {
-                    deviceNameArray[index] = device.deviceName;
                     deviceArray[index] = device;
                     index++;
                 }
             }
 
-            mContext.updatePeers(deviceNameArray);
+            mContext.updatePeers(deviceArray);
         }
     };
 
-    private void connectToPeer(WifiP2pDevice peer) {
+    public WifiP2pManager.ConnectionInfoListener connectionInfoListener = new WifiP2pManager.ConnectionInfoListener() {
+
+        @Override
+        public void onConnectionInfoAvailable(final WifiP2pInfo info) {
+
+            // InetAddress from WifiP2pInfo struct.
+            final InetAddress groupOwnerAddress = info.groupOwnerAddress;
+
+            // After the group negotiation, we can determine the group owner
+            // (server).
+            if (info.groupFormed && info.isGroupOwner) {
+                // Do whatever tasks are specific to the group owner.
+                // One common case is creating a group owner thread and accepting
+                // incoming connections.
+                Toast.makeText(mContext,"You are Host", Toast.LENGTH_SHORT).show();
+            } else if (info.groupFormed) {
+                // The other device acts as the peer (client). In this case,
+                // you'll want to create a peer thread that connects
+                // to the group owner.
+                Toast.makeText(mContext,"You are Client", Toast.LENGTH_SHORT).show();
+            }
+        }
+    };
+
+    public void connectToPeer(WifiP2pDevice peer, WifiP2pManager.ActionListener actionListener) {
         WifiP2pConfig config = new WifiP2pConfig();
         config.deviceAddress = peer.deviceAddress;
         config.wps.setup = WpsInfo.PBC;
 
-        this.mWifiP2pManager.connect(this.mChannel, config, new WifiP2pManager.ActionListener() {
-
-            @Override
-            public void onSuccess() {
-                Toast.makeText(mContext, "Connecting to peer ...", Toast.LENGTH_SHORT).show();
-            }
-            @Override
-            public void onFailure(int reason) {
-                Toast.makeText(mContext, "Peer connection failed with code " + Integer.toString(reason), Toast.LENGTH_SHORT).show();
-            }
-        });
+        this.mWifiP2pManager.connect(this.mChannel, config, actionListener);
     }
 
     public BroadcastReceiver getWiFiP2pBroadcastReceiver() {
