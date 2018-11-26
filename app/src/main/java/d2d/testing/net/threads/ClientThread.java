@@ -61,46 +61,6 @@ public class ClientThread extends Thread {
         return SelectorProvider.provider().openSelector();
     }
 
-    private SocketChannel initiateConnection() throws IOException {
-        // Create a non-blocking socket channel
-        SocketChannel socketChannel = SocketChannel.open();
-        socketChannel.configureBlocking(false);
-
-        // Kick off connection establishment
-        socketChannel.connect(mInetSocketAddress);
-
-        // Queue a channel registration since the caller is not the 
-        // selecting thread. As part of the registration we'll register
-        // an interest in connection events. These are raised when a channel
-        // is ready to complete connection establishment.
-        synchronized(this.pendingChanges) {
-            this.pendingChanges.add(new ChangeRequest(socketChannel, ChangeRequest.REGISTER, SelectionKey.OP_CONNECT));
-        }
-
-        return socketChannel;
-    }
-
-    public void send(byte[] data, RspHandler handler) throws IOException {
-        // Start a new connection
-        SocketChannel socket = this.initiateConnection();
-
-        // Register the response handler
-        this.rspHandlers.put(socket, handler);
-
-        // And queue the data we want written
-        synchronized (this.pendingData) {
-            List queue = (List) this.pendingData.get(socket);
-            if (queue == null) {
-                queue = new ArrayList();
-                this.pendingData.put(socket, queue);
-            }
-            queue.add(ByteBuffer.wrap(data));
-        }
-
-        // Finally, wake up our selecting thread so it can make the required changes
-        this.selector.wakeup();
-    }
-
     public void run() {
         while (true) {
             try {
@@ -180,6 +140,27 @@ public class ClientThread extends Thread {
         this.handleResponse(socketChannel, this.readBuffer.array(), numRead);
     }
 
+    public void send(byte[] data, RspHandler handler) throws IOException {
+        // Start a new connection
+        SocketChannel socket = this.initiateConnection();
+
+        // Register the response handler
+        this.rspHandlers.put(socket, handler);
+
+        // And queue the data we want written
+        synchronized (this.pendingData) {
+            List queue = (List) this.pendingData.get(socket);
+            if (queue == null) {
+                queue = new ArrayList();
+                this.pendingData.put(socket, queue);
+            }
+            queue.add(ByteBuffer.wrap(data));
+        }
+
+        // Finally, wake up our selecting thread so it can make the required changes
+        this.selector.wakeup();
+    }
+
     private void handleResponse(SocketChannel socketChannel, byte[] data, int numRead) throws IOException {
         // Make a correctly sized copy of the data before handing it
         // to the client
@@ -221,6 +202,24 @@ public class ClientThread extends Thread {
                 key.interestOps(SelectionKey.OP_READ);
             }
         }
+    }
+
+    private SocketChannel initiateConnection() throws IOException {
+        SocketChannel socketChannel = SocketChannel.open();
+        socketChannel.configureBlocking(false);             // Create a non-blocking socket channel
+
+
+        socketChannel.connect(mInetSocketAddress);          // Connection establishment
+
+        // Queue a channel registration since the caller is not the
+        // selecting thread. As part of the registration we'll register
+        // an interest in connection events. These are raised when a channel
+        // is ready to complete connection establishment.
+        synchronized(this.pendingChanges) {
+            this.pendingChanges.add(new ChangeRequest(socketChannel, ChangeRequest.REGISTER, SelectionKey.OP_CONNECT));
+        }
+
+        return socketChannel;
     }
 
     private void finishConnection(SelectionKey key) throws IOException {

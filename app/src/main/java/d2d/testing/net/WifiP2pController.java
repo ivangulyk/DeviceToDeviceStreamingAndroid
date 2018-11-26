@@ -10,15 +10,21 @@ import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
+import android.os.Build;
 import android.os.Looper;
+import android.support.annotation.RequiresApi;
 import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 
 import d2d.testing.MainActivity;
+import d2d.testing.net.helpers.RspHandler;
+import d2d.testing.net.threads.ClientThread;
+import d2d.testing.net.threads.ServerThread;
 
 /*
 
@@ -44,7 +50,8 @@ public class WifiP2pController {
     private WifiP2pManager.Channel mChannel;
 
     private WiFiP2pBroadcastReceiver mReciever;
-
+    private ServerThread mServerThread;
+    private ClientThread mClientThread;
     private boolean mWifiStatus;
     private boolean mWifiP2pAvailable = false;
 
@@ -123,6 +130,7 @@ public class WifiP2pController {
 
     public WifiP2pManager.ConnectionInfoListener connectionInfoListener = new WifiP2pManager.ConnectionInfoListener() {
 
+        @RequiresApi(api = Build.VERSION_CODES.N)
         @Override
         public void onConnectionInfoAvailable(final WifiP2pInfo info) {
 
@@ -135,12 +143,29 @@ public class WifiP2pController {
                 // Do whatever tasks are specific to the group owner.
                 // One common case is creating a group owner thread and accepting
                 // incoming connections.
-                //info.groupOwnerAddress;
+                try {
+                    mServerThread = new ServerThread(groupOwnerAddress);
+                    mServerThread.start();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
                 Toast.makeText(mContext,"You are Host", Toast.LENGTH_SHORT).show();
             } else if (info.groupFormed) {
                 // The other device acts as the peer (client). In this case,
                 // you'll want to create a peer thread that connects
                 // to the group owner.
+
+                try {
+                    mClientThread = new ClientThread(groupOwnerAddress);
+                    mClientThread.setDaemon(true);
+                    mClientThread.start();
+                    RspHandler handler = new RspHandler();
+                    mClientThread.send("GET / HTTP/1.0\r\n\r\n".getBytes(), handler);
+                    handler.waitForResponse();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 Toast.makeText(mContext,"You are Client", Toast.LENGTH_SHORT).show();
             }
         }
