@@ -1,5 +1,7 @@
 package d2d.testing.net.helpers;
 
+import android.util.Log;
+
 public class RspHandler {
     private byte[] rsp = null;
 
@@ -17,6 +19,7 @@ public class RspHandler {
             }
         }
 
+        Log.d("CLIENT",new String(this.rsp));
         System.out.println(new String(this.rsp));
     }
 }
