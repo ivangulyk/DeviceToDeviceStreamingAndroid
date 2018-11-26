@@ -1,8 +1,10 @@
-package d2d.testing.net;
+package d2d.testing.net.threads;
 
 import java.nio.channels.SocketChannel;
 import java.util.LinkedList;
 import java.util.List;
+
+import d2d.testing.net.events.ServerDataEvent;
 
 public class WorkerThread implements Runnable {
     private List queue = new LinkedList();

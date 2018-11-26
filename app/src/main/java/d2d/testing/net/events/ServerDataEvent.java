@@ -1,8 +1,10 @@
-package d2d.testing.net;
+package d2d.testing.net.events;
 
 import java.nio.channels.SocketChannel;
 
-class ServerDataEvent {
+import d2d.testing.net.threads.ServerThread;
+
+public class ServerDataEvent {
     public ServerThread server;
     public SocketChannel socket;
     public byte[] data;

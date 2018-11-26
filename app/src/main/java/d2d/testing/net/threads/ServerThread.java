@@ -1,4 +1,4 @@
-package d2d.testing.net;
+package d2d.testing.net.threads;
 
 import android.os.Build;
 import android.support.annotation.RequiresApi;
@@ -20,6 +20,9 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import d2d.testing.net.events.ChangeRequest;
+import d2d.testing.net.threads.WorkerThread;
 
 public class ServerThread extends Thread {
 

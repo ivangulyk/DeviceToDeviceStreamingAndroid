@@ -1,4 +1,4 @@
-package d2d.testing.net;
+package d2d.testing.net.events;
 
 import java.nio.channels.SocketChannel;
 
