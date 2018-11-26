@@ -73,6 +73,10 @@ public class WifiP2pController {
         return mWifiP2pAvailable;
     }
 
+    public BroadcastReceiver getWiFiP2pBroadcastReceiver() {
+        return this.mReciever;
+    }
+
     public void setWifiEnabled(boolean enabled){
 
         if(enabled==false)
@@ -84,6 +88,14 @@ public class WifiP2pController {
 
     public void discoverPeers(WifiP2pManager.ActionListener actionListener) {
         mWifiP2pManager.discoverPeers(this.mChannel,actionListener);
+    }
+
+    public void connectToPeer(WifiP2pDevice peer, WifiP2pManager.ActionListener actionListener) {
+        WifiP2pConfig config = new WifiP2pConfig();
+        config.deviceAddress = peer.deviceAddress;
+        config.wps.setup = WpsInfo.PBC;
+
+        this.mWifiP2pManager.connect(this.mChannel, config, actionListener);
     }
 
     public WifiP2pManager.PeerListListener peerListListener = new WifiP2pManager.PeerListListener() {
@@ -123,6 +135,7 @@ public class WifiP2pController {
                 // Do whatever tasks are specific to the group owner.
                 // One common case is creating a group owner thread and accepting
                 // incoming connections.
+                //info.groupOwnerAddress;
                 Toast.makeText(mContext,"You are Host", Toast.LENGTH_SHORT).show();
             } else if (info.groupFormed) {
                 // The other device acts as the peer (client). In this case,
@@ -132,16 +145,4 @@ public class WifiP2pController {
             }
         }
     };
-
-    public void connectToPeer(WifiP2pDevice peer, WifiP2pManager.ActionListener actionListener) {
-        WifiP2pConfig config = new WifiP2pConfig();
-        config.deviceAddress = peer.deviceAddress;
-        config.wps.setup = WpsInfo.PBC;
-
-        this.mWifiP2pManager.connect(this.mChannel, config, actionListener);
-    }
-
-    public BroadcastReceiver getWiFiP2pBroadcastReceiver() {
-        return this.mReciever;
-    }
 }
