@@ -34,7 +34,6 @@ public class ServerThread extends Thread {
 
                 //creamos un cliente con la conexion
                 new ClientThread(client);
-
             }
         } catch (IOException e) {
             e.printStackTrace();

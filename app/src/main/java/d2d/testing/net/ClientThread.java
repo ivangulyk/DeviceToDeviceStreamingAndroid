@@ -6,6 +6,8 @@ import java.net.Socket;
 
 public class ClientThread extends Thread {
 
+    private static final int PORT = 958;
+
     private boolean enabled = false;
 
     private Socket mSocket;
@@ -15,8 +17,9 @@ public class ClientThread extends Thread {
         this.mSocket = socket;
     }
 
-    public ClientThread(InetAddress address) {
+    public ClientThread(InetAddress address) throws IOException {
         this.mInetAddress = address;
+        this.mSocket = new Socket(mInetAddress, PORT);
     }
 
     @Override
