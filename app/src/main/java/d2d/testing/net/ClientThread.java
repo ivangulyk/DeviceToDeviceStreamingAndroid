@@ -2,7 +2,11 @@ package d2d.testing.net;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 
 public class ClientThread extends Thread {
 
@@ -12,14 +16,18 @@ public class ClientThread extends Thread {
 
     private Socket mSocket;
     private InetAddress mInetAddress;
+    private InetSocketAddress mInetSocketAddress;
+    private SocketChannel crunchifyClient;
 
     public ClientThread(Socket socket) {
-        this.mSocket = socket;
+        mSocket = socket;
     }
 
     public ClientThread(InetAddress address) throws IOException {
-        this.mInetAddress = address;
-        this.mSocket = new Socket(mInetAddress, PORT);
+        mInetAddress = address;
+        mInetSocketAddress = new InetSocketAddress(mInetSocketAddress.getAddress(),PORT);
+        //mSocket = new Socket(mInetAddress, PORT);
+        crunchifyClient = SocketChannel.open(mInetSocketAddress);
     }
 
     @Override
