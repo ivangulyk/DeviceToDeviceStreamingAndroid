@@ -52,7 +52,7 @@ public class ServerThread extends Thread {
     @RequiresApi(api = Build.VERSION_CODES.N)
     public ServerThread(InetAddress address) throws IOException {
         mInetAddress = address;
-        mInetSocketAddress = new InetSocketAddress(address.getHostAddress(),PORT);
+        mInetSocketAddress = new InetSocketAddress(PORT);//address.getHostAddress(),PORT);
         this.mWorker = new WorkerThread();
         new Thread(mWorker).start();
         mSelector = this.initSelector();

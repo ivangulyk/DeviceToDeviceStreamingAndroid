@@ -64,12 +64,13 @@ public class WifiP2pController {
         this.mContext = context;
         this.mWifiManager = (WifiManager) this.mContext.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         this.mWifiP2pManager = (WifiP2pManager) this.mContext.getSystemService(Context.WIFI_P2P_SERVICE);
+        this.mChannel = this.mWifiP2pManager.initialize(this.mContext, Looper.getMainLooper(), null);
 
         this.mWifiP2pHandler = new WifiP2pHandler (this.mContext, this.mWifiP2pManager, this.mChannel, this);
         this.mReciever = new WiFiP2pBroadcastReceiver(this.mWifiP2pHandler);
 
         this.mWifiStatus = false;
-        this.mChannel = this.mWifiP2pManager.initialize(this.mContext, Looper.getMainLooper(), null);
+
     }
 
     public boolean isWifiEnabled() {

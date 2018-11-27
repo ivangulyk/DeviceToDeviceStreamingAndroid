@@ -26,7 +26,7 @@ public class ClientThread extends Thread {
 
     private boolean enabled = false;
 
-    private Socket mSocket;
+    private SocketChannel mSocket;
     private InetAddress mInetAddress;
     private InetSocketAddress mInetSocketAddress;
 
@@ -45,13 +45,13 @@ public class ClientThread extends Thread {
     // Maps a SocketChannel to a RspHandler
     private Map rspHandlers = Collections.synchronizedMap(new HashMap());
 
-    public ClientThread(Socket socket) {
+    /*public ClientThread(Socket socket) {
         mSocket = socket;
-    }
+    }*/
 
     public ClientThread(InetAddress address) throws IOException {
         mInetAddress = address;
-        mInetSocketAddress = new InetSocketAddress(mInetSocketAddress.getAddress(),PORT);
+        mInetSocketAddress = new InetSocketAddress(mInetAddress.getHostAddress(),PORT);
         //mSocket = new Socket(mInetAddress, PORT);
         this.selector = this.initSelector();
     }
@@ -62,6 +62,11 @@ public class ClientThread extends Thread {
     }
 
     public void run() {
+        try {
+             this.mSocket = this.initiateConnection();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         while (true) {
             try {
                 // Process any pending changes
@@ -142,17 +147,17 @@ public class ClientThread extends Thread {
 
     public void send(byte[] data, RspHandler handler) throws IOException {
         // Start a new connection
-        SocketChannel socket = this.initiateConnection();
+
 
         // Register the response handler
-        this.rspHandlers.put(socket, handler);
+        this.rspHandlers.put(mSocket, handler);
 
         // And queue the data we want written
         synchronized (this.pendingData) {
-            List queue = (List) this.pendingData.get(socket);
+            List queue = (List) this.pendingData.get(mSocket);
             if (queue == null) {
                 queue = new ArrayList();
-                this.pendingData.put(socket, queue);
+                this.pendingData.put(mSocket, queue);
             }
             queue.add(ByteBuffer.wrap(data));
         }

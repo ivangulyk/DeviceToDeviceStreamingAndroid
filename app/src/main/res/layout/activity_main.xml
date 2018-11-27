@@ -17,7 +17,9 @@
         android:layout_marginTop="16dp"
         android:layout_marginEnd="64dp"
         android:layout_marginRight="64dp"
+        android:layout_marginBottom="8dp"
         android:text="Wifi On"
+        app:layout_constraintBottom_toTopOf="@+id/peerListView"
         app:layout_constraintEnd_toStartOf="@+id/discover"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/connectionStatus" />
@@ -34,7 +36,9 @@
         android:layout_marginTop="16dp"
         android:layout_marginEnd="42dp"
         android:layout_marginRight="42dp"
+        android:layout_marginBottom="8dp"
         android:text="discover"
+        app:layout_constraintBottom_toTopOf="@+id/peerListView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/onOff"
         app:layout_constraintTop_toBottomOf="@+id/connectionStatus" />
@@ -45,7 +49,7 @@
         android:layout_height="200dp"
         android:layout_below="@+id/onOff"
         android:layout_alignParentStart="true"
-        android:layout_marginTop="80dp"
+        android:layout_marginTop="120dp"
         android:layout_marginBottom="196dp"
         android:background="@android:color/holo_orange_light"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -121,11 +125,15 @@
         android:layout_marginTop="16dp"
         android:layout_marginEnd="21dp"
         android:layout_marginRight="21dp"
+        android:layout_marginBottom="115dp"
         android:text="Message"
         android:textAlignment="center"
         android:textSize="20sp"
         android:textStyle="italic"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/peerListView" />
+        app:layout_constraintTop_toBottomOf="@+id/peerListView"
+        app:layout_constraintVertical_bias="0.504" />
 </android.support.constraint.ConstraintLayout>
