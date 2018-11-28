@@ -14,12 +14,16 @@
     <uses-permission
         android:required="true"
         android:name="android.permission.INTERNET"/>
+
     <uses-permission
         android:required="true"
         android:name="android.permission.CHANGE_NETWORK_STATE"/>
     <uses-permission
         android:required="true"
         android:name="android.permission.ACCESS_NETWORK_STATE"/>
+
+    <!-- Market filtering -->
+    <uses-feature android:name="android.hardware.wifi.direct" android:required="true"/>
 
     <application
         android:allowBackup="true"

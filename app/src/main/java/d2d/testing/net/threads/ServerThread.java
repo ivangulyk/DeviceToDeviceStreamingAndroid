@@ -52,7 +52,7 @@ public class ServerThread extends Thread {
     @RequiresApi(api = Build.VERSION_CODES.N)
     public ServerThread(InetAddress address) throws IOException {
         mInetAddress = address;
-        mInetSocketAddress = new InetSocketAddress(PORT);//address.getHostAddress(),PORT);
+        mInetSocketAddress = new InetSocketAddress(PORT);
         this.mWorker = new WorkerThread();
         new Thread(mWorker).start();
         mSelector = this.initSelector();
@@ -67,10 +67,9 @@ public class ServerThread extends Thread {
         mServerSocket.configureBlocking(false);
 
         // Bind the server socket to the specified address and port
-        mServerSocket.socket().bind(mInetSocketAddress);
+        mServerSocket.socket().bind(new InetSocketAddress(PORT));
 
-        // Register the server socket channel, indicating an interest in
-        // accepting new connections
+        // Register the server socket channel
         mServerSocket.register(socketSelector, SelectionKey.OP_ACCEPT);
 
         return socketSelector;

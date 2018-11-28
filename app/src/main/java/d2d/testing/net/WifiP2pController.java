@@ -1,6 +1,5 @@
 package d2d.testing.net;
 
-import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.net.wifi.WifiManager;
@@ -13,7 +12,6 @@ import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Build;
 import android.os.Looper;
 import android.support.annotation.RequiresApi;
-import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
 import java.io.IOException;
@@ -70,7 +68,6 @@ public class WifiP2pController {
         this.mReciever = new WiFiP2pBroadcastReceiver(this.mWifiP2pHandler);
 
         this.mWifiStatus = false;
-
     }
 
     public boolean isWifiEnabled() {
