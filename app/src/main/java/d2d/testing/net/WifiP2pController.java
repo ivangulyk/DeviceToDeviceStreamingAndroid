@@ -103,6 +103,12 @@ public class WifiP2pController {
         this.mWifiP2pManager.connect(this.mChannel, config, actionListener);
     }
 
+    public void send(String data) throws IOException {
+        RspHandler handler = new RspHandler();
+        mClientThread.send(data.getBytes(), handler);
+        //handler.waitForResponse();
+    }
+
     public WifiP2pManager.PeerListListener peerListListener = new WifiP2pManager.PeerListListener() {
 
         @Override
@@ -156,11 +162,7 @@ public class WifiP2pController {
 
                 try {
                     mClientThread = new ClientThread(groupOwnerAddress);
-                    mClientThread.setDaemon(true);
                     mClientThread.start();
-                    RspHandler handler = new RspHandler();
-                    mClientThread.send("GET / HTTP/1.0\r\n\r\n".getBytes(), handler);
-                    handler.waitForResponse();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

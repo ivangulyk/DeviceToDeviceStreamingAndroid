@@ -26,11 +26,10 @@ import d2d.testing.net.threads.WorkerThread;
 
 public class ServerThread extends Thread {
 
-    private static final int PORT = 958;
+    private static final int PORT = 3458;
 
-    private boolean enabled = false;
+    private boolean enabled = true;
 
-    private InetAddress mInetAddress;
     private InetSocketAddress  mInetSocketAddress;
 
     private Socket socket;
@@ -40,10 +39,10 @@ public class ServerThread extends Thread {
     private Selector mSelector;
     private WorkerThread mWorker;
     // A list of ChangeRequest instances
-    private List changeRequests = new LinkedList();
+    private List mPendingChangeRequests = new LinkedList();
 
     // Maps a SocketChannel to a list of ByteBuffer instances
-    private Map pendingData = new HashMap();
+    private Map mPendingData = new HashMap();
 
     // The buffer into which we'll read data when it's available
     private ByteBuffer mReadBuffer = ByteBuffer.allocate(8192);
@@ -51,7 +50,6 @@ public class ServerThread extends Thread {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     public ServerThread(InetAddress address) throws IOException {
-        mInetAddress = address;
         mInetSocketAddress = new InetSocketAddress(PORT);
         this.mWorker = new WorkerThread();
         new Thread(mWorker).start();
@@ -162,16 +160,16 @@ public class ServerThread extends Thread {
     }
 
     public void send(SocketChannel socket, byte[] data) {
-        synchronized (this.changeRequests) {
+        synchronized (this.mPendingChangeRequests) {
             // Indicate we want the interest ops set changed
-            this.changeRequests.add(new ChangeRequest(socket, ChangeRequest.CHANGEOPS, SelectionKey.OP_WRITE));
+            this.mPendingChangeRequests.add(new ChangeRequest(socket, ChangeRequest.CHANGEOPS, SelectionKey.OP_WRITE));
 
             // And queue the data we want written
-            synchronized (this.pendingData) {
-                List queue = (List) this.pendingData.get(socket);
+            synchronized (this.mPendingData) {
+                List queue = (List) this.mPendingData.get(socket);
                 if (queue == null) {
                     queue = new ArrayList();
-                    this.pendingData.put(socket, queue);
+                    this.mPendingData.put(socket, queue);
                 }
                 queue.add(ByteBuffer.wrap(data));
             }
@@ -184,8 +182,8 @@ public class ServerThread extends Thread {
     private void processChangeRequests()
     {
         // Process any pending changes
-        synchronized(this.changeRequests) {
-            Iterator changes = this.changeRequests.iterator();
+        synchronized(this.mPendingChangeRequests) {
+            Iterator changes = this.mPendingChangeRequests.iterator();
             while (changes.hasNext()) {
                 ChangeRequest change = (ChangeRequest) changes.next();
                 switch(change.type) {
@@ -194,7 +192,7 @@ public class ServerThread extends Thread {
                         key.interestOps(change.ops);
                 }
             }
-            this.changeRequests.clear();
+            this.mPendingChangeRequests.clear();
         }
     }
 }

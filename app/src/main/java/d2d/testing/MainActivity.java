@@ -18,6 +18,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.IOException;
+
 import d2d.testing.net.WifiP2pController;
 
 public class MainActivity extends AppCompatActivity {
@@ -25,6 +27,7 @@ public class MainActivity extends AppCompatActivity {
 
     Button btnOnOff;
     Button btnSearch;
+    Button btnSend;
     ListView listView;
     TextView textView;
 
@@ -72,6 +75,16 @@ public class MainActivity extends AppCompatActivity {
                 });
             }
         });
+        btnSend.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    mWifiP2pController.send("asdasd");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener(){
 
             @Override
@@ -94,6 +107,7 @@ public class MainActivity extends AppCompatActivity {
     private void initialWork() {
         btnOnOff = findViewById(R.id.onOff);
         btnSearch = findViewById(R.id.discover);
+        btnSend = findViewById(R.id.sendButton);
         listView = findViewById(R.id.peerListView);
         textView = findViewById(R.id.connectionStatus);
 

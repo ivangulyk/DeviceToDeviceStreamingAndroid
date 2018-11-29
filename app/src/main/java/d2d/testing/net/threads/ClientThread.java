@@ -5,6 +5,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.ByteBuffer;
+import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
@@ -22,7 +23,7 @@ import d2d.testing.net.helpers.RspHandler;
 
 public class ClientThread extends Thread {
 
-    private static final int PORT = 958;
+    private static final int PORT = 3458;
 
     private boolean enabled = false;
 
@@ -37,7 +38,7 @@ public class ClientThread extends Thread {
     private ByteBuffer readBuffer = ByteBuffer.allocate(8192);
 
     // A list of PendingChange instances
-    private List pendingChanges = new LinkedList();
+    private List mPendingChangeRequests = new LinkedList();
 
     // Maps a SocketChannel to a list of ByteBuffer instances
     private Map pendingData = new HashMap();
@@ -69,23 +70,7 @@ public class ClientThread extends Thread {
         }
         while (true) {
             try {
-                // Process any pending changes
-                synchronized (this.pendingChanges) {
-                    Iterator changes = this.pendingChanges.iterator();
-                    while (changes.hasNext()) {
-                        ChangeRequest change = (ChangeRequest) changes.next();
-                        switch (change.type) {
-                            case ChangeRequest.CHANGEOPS:
-                                SelectionKey key = change.socket.keyFor(this.selector);
-                                key.interestOps(change.ops);
-                                break;
-                            case ChangeRequest.REGISTER:
-                                change.socket.register(this.selector, change.ops);
-                                break;
-                        }
-                    }
-                    this.pendingChanges.clear();
-                }
+                this.processChangeRequests();
 
                 // Wait for an event one of the registered channels
                 this.selector.select();
@@ -112,6 +97,43 @@ public class ClientThread extends Thread {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    private void processChangeRequests() throws ClosedChannelException {
+        // Process any pending changes
+        synchronized (this.mPendingChangeRequests) {
+            Iterator changes = this.mPendingChangeRequests.iterator();
+            while (changes.hasNext()) {
+                ChangeRequest change = (ChangeRequest) changes.next();
+                switch (change.type) {
+                    case ChangeRequest.CHANGEOPS:
+                        SelectionKey key = change.socket.keyFor(this.selector);
+                        key.interestOps(change.ops);
+                        break;
+                    case ChangeRequest.REGISTER:
+                        change.socket.register(this.selector, change.ops);
+                        break;
+                }
+            }
+            this.mPendingChangeRequests.clear();
+        }
+    }
+
+    private void handleResponse(SocketChannel socketChannel, byte[] data, int numRead) throws IOException {
+        // Make a correctly sized copy of the data before handing it
+        // to the client
+        byte[] rspData = new byte[numRead];
+        System.arraycopy(data, 0, rspData, 0, numRead);
+
+        // Look up the handler for this channel
+        RspHandler handler = (RspHandler) this.rspHandlers.get(socketChannel);
+
+        // And pass the response to it
+        if (handler.handleResponse(rspData)) {
+            // The handler has seen enough, close the connection
+            socketChannel.close();
+            socketChannel.keyFor(this.selector).cancel();
         }
     }
 
@@ -166,23 +188,6 @@ public class ClientThread extends Thread {
         this.selector.wakeup();
     }
 
-    private void handleResponse(SocketChannel socketChannel, byte[] data, int numRead) throws IOException {
-        // Make a correctly sized copy of the data before handing it
-        // to the client
-        byte[] rspData = new byte[numRead];
-        System.arraycopy(data, 0, rspData, 0, numRead);
-
-        // Look up the handler for this channel
-        RspHandler handler = (RspHandler) this.rspHandlers.get(socketChannel);
-
-        // And pass the response to it
-        if (handler.handleResponse(rspData)) {
-            // The handler has seen enough, close the connection
-            socketChannel.close();
-            socketChannel.keyFor(this.selector).cancel();
-        }
-    }
-
     private void write(SelectionKey key) throws IOException {
         SocketChannel socketChannel = (SocketChannel) key.channel();
 
@@ -220,8 +225,8 @@ public class ClientThread extends Thread {
         // selecting thread. As part of the registration we'll register
         // an interest in connection events. These are raised when a channel
         // is ready to complete connection establishment.
-        synchronized(this.pendingChanges) {
-            this.pendingChanges.add(new ChangeRequest(socketChannel, ChangeRequest.REGISTER, SelectionKey.OP_CONNECT));
+        synchronized(this.mPendingChangeRequests) {
+            this.mPendingChangeRequests.add(new ChangeRequest(socketChannel, ChangeRequest.REGISTER, SelectionKey.OP_CONNECT));
         }
 
         return socketChannel;
