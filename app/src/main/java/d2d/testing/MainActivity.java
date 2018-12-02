@@ -24,6 +24,7 @@ import d2d.testing.net.WifiP2pController;
 
 public class MainActivity extends AppCompatActivity {
     public static final int REQUEST_COARSE_LOCATION_CODE = 101;
+    private static final int MY_CAMERA_REQUEST_CODE = 100;
 
     Button btnOnOff;
     Button btnSearch;
@@ -115,13 +116,10 @@ public class MainActivity extends AppCompatActivity {
         mIntentFilter = new IntentFilter();
         // Indicates a change in the Wi-Fi P2P status.
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
-
         // Indicates a change in the list of available peers.
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
-
         // Indicates the state of Wi-Fi P2P connectivity has changed.
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
-
         // Indicates this device's details have changed.
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
 
@@ -196,6 +194,29 @@ public class MainActivity extends AppCompatActivity {
                         REQUEST_COARSE_LOCATION_CODE);
             }
         }
+        if (ContextCompat.checkSelfPermission(this,Manifest.permission.CAMERA)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    Manifest.permission.CAMERA)) {
+
+                // Show an expanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+
+                Toast.makeText(getApplicationContext(), "WE NEED PERMISSIONS BECAUSE YES.. BLAH BLAH BLAH JA JA JA", Toast.LENGTH_SHORT).show();
+                //ask later
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        checkPermissions();
+                    }
+                }, 5 * 1000); // afterDelay will be executed after (secs*1000) milliseconds.
+            } else {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA},
+                        MY_CAMERA_REQUEST_CODE);
+            }
+        }
     }
 
     @Override
@@ -207,14 +228,28 @@ public class MainActivity extends AppCompatActivity {
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
                     // permission was granted,
-                    Toast.makeText(getApplicationContext(), "PERMISSON GRANTED", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "LOCATION PERMISSION GRANTED", Toast.LENGTH_SHORT).show();
                 } else {
 
                     // permission denied, wifi direct wont work under version ??? maybe we dont need it....
-                    Toast.makeText(getApplicationContext(), "PERMISSON NOT GRANTED", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "LOCATION PERMISSION NOT GRANTED", Toast.LENGTH_SHORT).show();
                 }
                 return;
             }
+            case MY_CAMERA_REQUEST_CODE: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                    // permission was granted,
+                    Toast.makeText(getApplicationContext(), "CAMERA PERMISSION GRANTED", Toast.LENGTH_SHORT).show();
+                } else {
+
+                    // permission denied, wifi direct wont work under version ??? maybe we dont need it....
+                    Toast.makeText(getApplicationContext(), "CAMERA PERMISSION NOT GRANTED", Toast.LENGTH_SHORT).show();
+                }
+                return;
+            }
+
 
             // other 'case' lines to check for other permissions
         }
