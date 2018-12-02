@@ -3,7 +3,6 @@ package d2d.testing.net.threads;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
@@ -25,7 +24,7 @@ public class ClientThread extends Thread {
 
     private static final int PORT = 3458;
 
-    private boolean enabled = false;
+    private boolean enabled = true;
 
     private SocketChannel mSocket;
     private InetAddress mInetAddress;
@@ -37,18 +36,12 @@ public class ClientThread extends Thread {
     // The buffer into which we'll read data when it's available
     private ByteBuffer readBuffer = ByteBuffer.allocate(8192);
 
-    // A list of PendingChange instances
-    private List mPendingChangeRequests = new LinkedList();
-
-    // Maps a SocketChannel to a list of ByteBuffer instances
-    private Map pendingData = new HashMap();
+    // A list of ChangeRequest instances and Data/socket map
+    private final List mPendingChangeRequests = new LinkedList();
+    private final Map mPendingData = new HashMap();
 
     // Maps a SocketChannel to a RspHandler
     private Map rspHandlers = Collections.synchronizedMap(new HashMap());
-
-    /*public ClientThread(Socket socket) {
-        mSocket = socket;
-    }*/
 
     public ClientThread(InetAddress address) throws IOException {
         mInetAddress = address;
@@ -68,7 +61,7 @@ public class ClientThread extends Thread {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        while (true) {
+        while (enabled) {
             try {
                 this.processChangeRequests();
 
@@ -167,21 +160,24 @@ public class ClientThread extends Thread {
         this.handleResponse(socketChannel, this.readBuffer.array(), numRead);
     }
 
-    public void send(byte[] data, RspHandler handler) throws IOException {
-        // Start a new connection
+    public void send(byte[] data, RspHandler handler) {
 
+        synchronized(this.mPendingChangeRequests) {
+            this.mPendingChangeRequests.add(new ChangeRequest(mSocket, ChangeRequest.CHANGEOPS, SelectionKey.OP_WRITE));
+            // Register the response handler
+            this.rspHandlers.put(mSocket, handler);
 
-        // Register the response handler
-        this.rspHandlers.put(mSocket, handler);
-
-        // And queue the data we want written
-        synchronized (this.pendingData) {
-            List queue = (List) this.pendingData.get(mSocket);
-            if (queue == null) {
-                queue = new ArrayList();
-                this.pendingData.put(mSocket, queue);
+            // And queue the data we want written
+            synchronized (this.mPendingData) {
+                List queue = (List) this.mPendingData.get(mSocket);
+                if (queue == null) {
+                    queue = new ArrayList();
+                    this.mPendingData.put(mSocket, queue);
+                }
+                queue.add(ByteBuffer.wrap(data));
             }
-            queue.add(ByteBuffer.wrap(data));
+
+
         }
 
         // Finally, wake up our selecting thread so it can make the required changes
@@ -191,8 +187,8 @@ public class ClientThread extends Thread {
     private void write(SelectionKey key) throws IOException {
         SocketChannel socketChannel = (SocketChannel) key.channel();
 
-        synchronized (this.pendingData) {
-            List queue = (List) this.pendingData.get(socketChannel);
+        synchronized (this.mPendingData) {
+            List queue = (List) this.mPendingData.get(socketChannel);
 
             // Write until there's not more data ...
             while (!queue.isEmpty()) {
@@ -247,7 +243,7 @@ public class ClientThread extends Thread {
         }
 
         // Register an interest in writing on this channel
-        key.interestOps(SelectionKey.OP_WRITE);
+        key.interestOps(SelectionKey.OP_READ);
     }
 }
 

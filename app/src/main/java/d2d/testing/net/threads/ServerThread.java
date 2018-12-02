@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 
 import d2d.testing.net.events.ChangeRequest;
-import d2d.testing.net.threads.WorkerThread;
 
 public class ServerThread extends Thread {
 
@@ -31,18 +30,14 @@ public class ServerThread extends Thread {
     private boolean enabled = true;
 
     private InetSocketAddress  mInetSocketAddress;
-
-    private Socket socket;
     private ServerSocketChannel mServerSocket;
 
-    private SelectionKey mSelectKey;
     private Selector mSelector;
     private WorkerThread mWorker;
-    // A list of ChangeRequest instances
-    private List mPendingChangeRequests = new LinkedList();
 
-    // Maps a SocketChannel to a list of ByteBuffer instances
-    private Map mPendingData = new HashMap();
+    // A list of ChangeRequest instances and Data/socket map
+    private final List mPendingChangeRequests = new LinkedList();
+    private final Map mPendingData = new HashMap();
 
     // The buffer into which we'll read data when it's available
     private ByteBuffer mReadBuffer = ByteBuffer.allocate(8192);
