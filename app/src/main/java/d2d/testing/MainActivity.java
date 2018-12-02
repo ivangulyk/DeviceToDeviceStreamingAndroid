@@ -259,4 +259,15 @@ public class MainActivity extends AppCompatActivity {
             // other 'case' lines to check for other permissions
         }
     }
+    //use this function when user trys to stream
+    private boolean checkCameraHardware() {
+        if (this.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)){
+            // this device has a camera
+            return true;
+        } else {
+            // no camera on this device
+            Toast.makeText(getApplicationContext(), "YOUR DEVICE HAS NO CAMERA", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+    }
 }
