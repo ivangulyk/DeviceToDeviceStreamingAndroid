@@ -22,7 +22,7 @@ import d2d.testing.net.helpers.RspHandler;
 
 public class ClientThread extends Thread {
 
-    private static final int PORT = 3458;
+    private static final int PORT = 3462;
 
     private boolean enabled = true;
 
@@ -176,8 +176,6 @@ public class ClientThread extends Thread {
                 }
                 queue.add(ByteBuffer.wrap(data));
             }
-
-
         }
 
         // Finally, wake up our selecting thread so it can make the required changes
@@ -228,7 +226,7 @@ public class ClientThread extends Thread {
         return socketChannel;
     }
 
-    private void finishConnection(SelectionKey key) throws IOException {
+    private void finishConnection(SelectionKey key) {
         SocketChannel socketChannel = (SocketChannel) key.channel();
 
         // Finish the connection. If the connection operation failed

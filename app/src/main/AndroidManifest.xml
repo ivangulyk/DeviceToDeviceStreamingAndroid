@@ -27,6 +27,8 @@
 
     <!-- Market filtering -->
     <uses-feature android:name="android.hardware.wifi.direct" android:required="true"/>
+    <uses-feature android:name="android.hardware.camera"/>
+    <uses-feature android:name="android.hardware.camera.autofocus"/>
 
     <application
         android:allowBackup="true"

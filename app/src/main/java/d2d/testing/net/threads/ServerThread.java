@@ -25,7 +25,7 @@ import d2d.testing.net.events.ChangeRequest;
 
 public class ServerThread extends Thread {
 
-    private static final int PORT = 3458;
+    private static final int PORT = 3462;
 
     private boolean enabled = true;
 
@@ -64,7 +64,6 @@ public class ServerThread extends Thread {
 
         // Register the server socket channel
         mServerSocket.register(socketSelector, SelectionKey.OP_ACCEPT);
-
         return socketSelector;
     }
 
@@ -101,6 +100,8 @@ public class ServerThread extends Thread {
                         this.accept(myKey);
                     } else if (myKey.isReadable()) {
                         this.read(myKey);
+                    } else if (myKey.isWritable()) {
+                        this.write(myKey);
                     }
                 }
             }
@@ -152,6 +153,32 @@ public class ServerThread extends Thread {
 
         // Hand the data off to our worker thread
         this.mWorker.processData(this, socketChannel, this.mReadBuffer.array(), numRead);
+    }
+
+    private void write(SelectionKey key) throws IOException {
+        SocketChannel socketChannel = (SocketChannel) key.channel();
+
+        synchronized (this.mPendingData) {
+            List queue = (List) this.mPendingData.get(socketChannel);
+
+            // Write until there's not more data ...
+            while (!queue.isEmpty()) {
+                ByteBuffer buf = (ByteBuffer) queue.get(0);
+                socketChannel.write(buf);
+                if (buf.remaining() > 0) {
+                    // ... or the socket's buffer fills up
+                    break;
+                }
+                queue.remove(0);
+            }
+
+            if (queue.isEmpty()) {
+                // We wrote away all data, so we're no longer interested
+                // in writing on this socket. Switch back to waiting for
+                // data.
+                key.interestOps(SelectionKey.OP_READ);
+            }
+        }
     }
 
     public void send(SocketChannel socket, byte[] data) {

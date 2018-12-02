@@ -14,9 +14,12 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import org.w3c.dom.Text;
 
 import java.io.IOException;
 
@@ -32,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
     Button btnCamera;
     ListView listView;
     TextView textView;
+    EditText editTextMsg;
 
     WifiP2pController mWifiP2pController;
     WiFiP2pPermissions wiFiP2pPermissions;
@@ -120,6 +124,7 @@ public class MainActivity extends AppCompatActivity {
         btnSend = findViewById(R.id.sendButton);
         listView = findViewById(R.id.peerListView);
         textView = findViewById(R.id.connectionStatus);
+        editTextMsg = findViewById(R.id.writeMsg);
 
         mWifiP2pController = new WifiP2pController(this);
         mIntentFilter = new IntentFilter();
@@ -165,6 +170,7 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
 
         registerReceiver(this.mWifiP2pController.getWiFiP2pBroadcastReceiver(), mIntentFilter);
+//        editText.clearFocus();
     }
 
     @Override
@@ -201,6 +207,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 return;
             }
+
         }
     }
     //use this function when user trys to stream
