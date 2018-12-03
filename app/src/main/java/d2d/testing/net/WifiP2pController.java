@@ -20,15 +20,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import d2d.testing.MainActivity;
-import d2d.testing.net.helpers.RspHandler;
-import d2d.testing.net.threads.ClientThread;
-import d2d.testing.net.threads.ServerThread;
-import d2d.testing.net.threads.ServerWorker;
+import d2d.testing.net.threads.selectors.ClientSelectorThread;
+import d2d.testing.net.threads.selectors.ServerSelectorThread;
 
 /*
-
+TODO IMPORTANTE LEGACY USERS... HE LEIDO EN ALGUN SITIO QUE ERA MAS RAPIDO PARA SALTAR ENTRE REDES SI LO TENEMOS QUE USAR
 If each of the devices in your group supports Wi-Fi direct, you don't need to explicitly ask for the group's password when connecting. To allow a device that doesn't support Wi-Fi Direct to join a group, however, you need to retrieve this password by calling requestGroupInfo(), as shown in the following code snippet:
-
 KOTLINJAVA
 mManager.requestGroupInfo(mChannel, new GroupInfoListener() {
   @Override
@@ -49,8 +46,8 @@ public class WifiP2pController {
     private WifiP2pManager.Channel mChannel;
 
     private WiFiP2pBroadcastReceiver mReciever;
-    private ServerThread mServerThread;
-    private ClientThread mClientThread;
+    private ServerSelectorThread mServerSelectorThread;
+    private ClientSelectorThread mClientSelectorThread;
     private boolean mWifiStatus;
     private boolean mWifiP2pAvailable = false;
 
@@ -106,9 +103,13 @@ public class WifiP2pController {
     }
 
     public void send(String data) throws IOException {
-        RspHandler handler = new RspHandler();
-        mClientThread.send(data.getBytes(), handler);
-        //handler.waitForResponse();
+        if(mClientSelectorThread != null) {
+            mClientSelectorThread.send(data.getBytes());
+        }
+        if(mServerSelectorThread != null) {
+            //mServerThread.send(data.getBytes());
+            //TODO necesitamos tener en la GUI el socket o algo con lo que mapear los envios
+        }
     }
 
     public WifiP2pManager.PeerListListener peerListListener = new WifiP2pManager.PeerListListener() {
@@ -150,18 +151,18 @@ public class WifiP2pController {
                 // Do whatever tasks are specific to the group owner.
                 // One common case is creating a group owner thread and accepting
                 // incoming connections.
-                if(mServerThread != null)
-                {
-
-                }
-                else
+                if(mServerSelectorThread == null)
                 {
                     try {
-                        mServerThread = new ServerThread();
-                        new Thread(mServerThread).start();
+                        mServerSelectorThread = new ServerSelectorThread();
+                        new Thread(mServerSelectorThread).start();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
+                }
+                else
+                {
+                    //somos el owner y ya tenemos el thread comprobar el estado de bind, conexion y seguis si no hay error
                 }
 
                 //
@@ -172,8 +173,8 @@ public class WifiP2pController {
                 // to the group owner.
 
                 try {
-                    mClientThread = new ClientThread(groupOwnerAddress);
-                    new Thread(mClientThread).start();
+                    mClientSelectorThread = new ClientSelectorThread(groupOwnerAddress);
+                    new Thread(mClientSelectorThread).start();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

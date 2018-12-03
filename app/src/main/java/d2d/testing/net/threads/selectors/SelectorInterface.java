@@ -1,4 +1,4 @@
-package d2d.testing.net.threads;
+package d2d.testing.net.threads.selectors;
 
 import java.nio.channels.SocketChannel;
 

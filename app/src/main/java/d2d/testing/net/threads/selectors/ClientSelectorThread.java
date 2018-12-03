@@ -1,4 +1,4 @@
-package d2d.testing.net.threads;
+package d2d.testing.net.threads.selectors;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -10,7 +10,6 @@ import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.SelectorProvider;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -18,9 +17,9 @@ import java.util.List;
 import java.util.Map;
 
 import d2d.testing.net.events.ChangeRequest;
-import d2d.testing.net.helpers.RspHandler;
+import d2d.testing.net.threads.workers.ClientWorker;
 
-public class ClientThread implements Runnable{
+public class ClientSelectorThread implements Runnable{
 
     private static final int PORT = 3462;
     private static final int BUFF_SIZE = 8192;
@@ -41,7 +40,7 @@ public class ClientThread implements Runnable{
     private final List mPendingChangeRequests = new LinkedList();
     private final Map mPendingData = new HashMap();
 
-    public ClientThread(InetAddress address) throws IOException {
+    public ClientSelectorThread(InetAddress address) throws IOException {
         mInetAddress = address;
         mInetSocketAddress = new InetSocketAddress(mInetAddress.getHostAddress(),PORT);
         //mSocket = new Socket(mInetAddress, PORT);

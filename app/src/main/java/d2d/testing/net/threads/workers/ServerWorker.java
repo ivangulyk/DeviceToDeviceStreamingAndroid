@@ -1,4 +1,4 @@
-package d2d.testing.net.threads;
+package d2d.testing.net.threads.workers;
 
 import android.util.Log;
 
@@ -7,11 +7,12 @@ import java.util.LinkedList;
 import java.util.List;
 
 import d2d.testing.net.events.ServerDataEvent;
+import d2d.testing.net.threads.selectors.ServerSelectorThread;
 
 public class ServerWorker implements Runnable {
     private List queue = new LinkedList();
 
-    public void addData(ServerThread server, SocketChannel socket, byte[] data, int count) {
+    public void addData(ServerSelectorThread server, SocketChannel socket, byte[] data, int count) {
         byte[] dataCopy = new byte[count];
         System.arraycopy(data, 0, dataCopy, 0, count);
         synchronized(queue) {

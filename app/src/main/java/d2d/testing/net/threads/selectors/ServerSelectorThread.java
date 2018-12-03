@@ -1,4 +1,4 @@
-package d2d.testing.net.threads;
+package d2d.testing.net.threads.selectors;
 
 import android.os.Build;
 import android.support.annotation.RequiresApi;
@@ -21,8 +21,9 @@ import java.util.List;
 import java.util.Map;
 
 import d2d.testing.net.events.ChangeRequest;
+import d2d.testing.net.threads.workers.ServerWorker;
 
-public class ServerThread implements Runnable {
+public class ServerSelectorThread implements Runnable {
 
     private static final int PORT = 3462;
 
@@ -42,7 +43,7 @@ public class ServerThread implements Runnable {
 
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    public ServerThread() throws IOException {
+    public ServerSelectorThread() throws IOException {
         this.mWorker = new ServerWorker();
         new Thread(mWorker).start();
         mSelector = this.initSelector();
