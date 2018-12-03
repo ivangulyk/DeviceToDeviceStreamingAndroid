@@ -11,6 +11,7 @@ import d2d.testing.net.events.DataEvent;
 import d2d.testing.net.threads.selectors.ClientSelectorThread;
 
 public class ClientWorker implements Runnable {
+    //TODO Externalizar constantes... SSL??
     private byte[] PREFIX_CONST = {0x11,0x12,0x11,0x14};
     private byte[] TYPE_MSG = {0x15,0x00};
     private byte[] TYPE_MSG2 = {0x15,0x01};
@@ -54,7 +55,7 @@ public class ClientWorker implements Runnable {
     {
         if(openMessage.isEmpty())
         {
-            Log.d("ClientWorker","ClientWorker received: " + dataEvent.data);
+            Log.d("ClientWorker","ClientWorker received: " + new String(dataEvent.data));
 
             if(Arrays.equals(Arrays.copyOfRange(dataEvent.data, 0, 3),PREFIX_CONST))            //UN PREFIX DE BYTES PARA DAR COMIENZO AL MENSAJE - OPCIONAL?
             {

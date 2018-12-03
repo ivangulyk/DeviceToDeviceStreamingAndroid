@@ -24,21 +24,18 @@ import d2d.testing.net.events.ChangeRequest;
 import d2d.testing.net.threads.workers.ServerWorker;
 
 public class ServerSelectorThread implements Runnable {
-
     private static final int PORT = 3462;
 
-    private boolean enabled = true;
+    private boolean listening = true;
 
     private ServerSocketChannel mServerSocket;
-
     private Selector mSelector;
     private ServerWorker mWorker; //TODO convert to array??
 
     // A list of ChangeRequest instances and Data/socket map
+    private final List mConnections = new ArrayList<SocketChannel>();
     private final List mPendingChangeRequests = new LinkedList();
     private final Map mPendingData = new HashMap();
-
-    // The buffer into which we'll read data when it's available
     private ByteBuffer mReadBuffer = ByteBuffer.allocate(8192);
 
 
@@ -59,25 +56,22 @@ public class ServerSelectorThread implements Runnable {
         return socketSelector;
     }
 
-
     public void stopServer(){
         //cerrar conexiones etetetete
-        this.enabled = false;
+        this.listening = false;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void run(){
         try {
-            while(enabled)
+            while(listening)
             {
                 this.processChangeRequests();
 
-                Log.d("SERVER","i'm a server and i'm waiting for new connection and buffer select...");
-                // Selects a set of keys whose corresponding channels are ready for I/O operations
+                Log.d("ServerSelector","ServerSelector: i'm a server and i'm waiting for selection keys...");
                 mSelector.select();
 
-                // iterator
                 Iterator<SelectionKey> itKeys = mSelector.selectedKeys().iterator();
                 while (itKeys.hasNext()) {
                     SelectionKey myKey = itKeys.next();
@@ -87,7 +81,6 @@ public class ServerSelectorThread implements Runnable {
                         continue;
                     }
 
-                    // Tests whether this key's channel is ready to accept a new socket connection
                     if (myKey.isAcceptable()) {
                         this.accept(myKey);
                     } else if (myKey.isReadable()) {
@@ -100,10 +93,18 @@ public class ServerSelectorThread implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        for (SelectionKey key : mSelector.keys()) {
+            try {
+                key.channel().close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            key.cancel();
+        }
     }
 
     private void accept(SelectionKey key) throws IOException {
-        // For an accept to be pending the channel must be a server socket channel.
         ServerSocketChannel serverSocketChannel = (ServerSocketChannel) key.channel();
 
         // Accept the connection and make it non-blocking
@@ -111,35 +112,32 @@ public class ServerSelectorThread implements Runnable {
         Socket socket = socketChannel.socket();
         socketChannel.configureBlocking(false);
 
-        // Register the new SocketChannel with our Selector, indicating
-        // we'd like to be notified when there's data waiting to be read
+        // Register the SocketChannel with our Selector, indicating to be notified for READING
         socketChannel.register(this.mSelector, SelectionKey.OP_READ);
+        mConnections.add(socketChannel);
+
         Log.d("SERVER","Connection Accepted: " + socket.getLocalAddress() + "\n");
     }
 
     private void read(SelectionKey key) throws IOException {
-        SocketChannel socketChannel = (SocketChannel) key.channel();
-
-        // Clear out our read buffer so it's ready for new data
-        this.mReadBuffer.clear();
-
-        // Attempt to read off the channel
         int numRead;
+        SocketChannel socketChannel = (SocketChannel) key.channel();
+        this.mReadBuffer.clear();   //Clear out our read buffer
+
         try {
-            numRead = socketChannel.read(this.mReadBuffer);
+            numRead = socketChannel.read(this.mReadBuffer); // Attempt to read off the channel
         } catch (IOException e) {
-            // The remote forcibly closed the connection, cancel
-            // the selection key and close the channel.
-            key.cancel();
+            key.cancel();       // Forced to close the connection, cancel key and close the channel.
             socketChannel.close();
+            mConnections.remove(socketChannel);
             return;
         }
 
         if (numRead == -1) {
-            // Remote entity shut the socket down cleanly. Do the
-            // same from our end and cancel the channel.
-            key.channel().close();
-            key.cancel();
+            key.cancel();       // Remote entity shut the socket down cleanly. Do the same
+            socketChannel.close();
+            mConnections.remove(socketChannel);
+            Log.d("ServerSelector","ServerSelector: client closed connection...");
             return;
         }
 
@@ -153,45 +151,38 @@ public class ServerSelectorThread implements Runnable {
         synchronized (this.mPendingData) {
             List queue = (List) this.mPendingData.get(socketChannel);
 
-            // Write until there's not more data ...
-            while (!queue.isEmpty()) {
+            while (!queue.isEmpty()) {                  // Write until there's not more data ...
                 ByteBuffer buf = (ByteBuffer) queue.get(0);
                 socketChannel.write(buf);
-                if (buf.remaining() > 0) {
-                    // ... or the socket's buffer fills up
+                if (buf.remaining() > 0) {              // ... or the socket's buffer fills up
                     break;
                 }
                 queue.remove(0);
             }
 
             if (queue.isEmpty()) {
-                // We wrote away all data, so we're no longer interested
-                // in writing on this socket. Switch back to waiting for
-                // data.
-                key.interestOps(SelectionKey.OP_READ);
+                key.interestOps(SelectionKey.OP_READ);  // We wrote away all data, switch back to READING
             }
         }
     }
 
     public void send(SocketChannel socket, byte[] data) {
-        synchronized (this.mPendingChangeRequests) {
-            // Indicate we want the interest ops set changed
-            this.mPendingChangeRequests.add(new ChangeRequest(socket, ChangeRequest.CHANGEOPS, SelectionKey.OP_WRITE));
+            synchronized(this.mPendingChangeRequests) {
+                this.mPendingChangeRequests.add(new ChangeRequest(socket, ChangeRequest.CHANGEOPS, SelectionKey.OP_WRITE));
 
-            // And queue the data we want written
-            synchronized (this.mPendingData) {
-                List queue = (List) this.mPendingData.get(socket);
-                if (queue == null) {
-                    queue = new ArrayList();
-                    this.mPendingData.put(socket, queue);
+                synchronized (this.mPendingData) {  // And queue the data we want written
+                    List queue = (List) this.mPendingData.get(socket);
+                    if (queue == null) {
+                        queue = new ArrayList();
+                        this.mPendingData.put(socket, queue);
+                    }
+                    queue.add(ByteBuffer.wrap(data));
                 }
-                queue.add(ByteBuffer.wrap(data));
             }
-        }
 
-        // Finally, wake up our selecting thread so it can make the required changes
-        this.mSelector.wakeup();
-    }
+            // Finally, wake up our selecting thread so it can make the required changes
+            this.mSelector.wakeup();
+        }
 
     private void processChangeRequests()
     {

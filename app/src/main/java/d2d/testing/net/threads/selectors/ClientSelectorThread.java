@@ -1,5 +1,7 @@
 package d2d.testing.net.threads.selectors;
 
+import android.util.Log;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -114,43 +116,34 @@ public class ClientSelectorThread implements Runnable{
     }
 
     private void read(SelectionKey key) throws IOException {
-        SocketChannel socketChannel = (SocketChannel) key.channel();
-
-        // Clear out our read buffer so it's ready for new data
-        this.mReadBuffer.clear();
-
-        // Attempt to read off the channel
         int numRead;
+        SocketChannel socketChannel = (SocketChannel) key.channel();
+        this.mReadBuffer.clear();   //Clear out our read buffer
+
         try {
-            numRead = socketChannel.read(this.mReadBuffer);
+            numRead = socketChannel.read(this.mReadBuffer); // Attempt to read off the channel
         } catch (IOException e) {
-            // The remote forcibly closed the connection, cancel
-            // the selection key and close the channel.
-            key.cancel();
+            key.cancel();       // Forced to close the connection, cancel key and close the channel.
             socketChannel.close();
             return;
         }
 
         if (numRead == -1) {
-            // Remote entity shut the socket down cleanly. Do the
-            // same from our end and cancel the channel.
-            key.channel().close();
-            key.cancel();
+            key.cancel();       // Remote entity shut the socket down cleanly. Do the same
+            socketChannel.close();
+            Log.d("ServerSelector","ServerSelector: client closed connection...");
             return;
         }
 
-        // Handle the response
+        // Hand the data off to our worker thread
         this.mWorker.addData(this, socketChannel, this.mReadBuffer.array(), numRead);
-        //this.handleResponse(socketChannel, this.readBuffer.array(), numRead);
     }
 
     public void send(byte[] data) {
-
         synchronized(this.mPendingChangeRequests) {
             this.mPendingChangeRequests.add(new ChangeRequest(mSocket, ChangeRequest.CHANGEOPS, SelectionKey.OP_WRITE));
 
-            // And queue the data we want written
-            synchronized (this.mPendingData) {
+            synchronized (this.mPendingData) {  // And queue the data we want written
                 List queue = (List) this.mPendingData.get(mSocket);
                 if (queue == null) {
                     queue = new ArrayList();
@@ -170,20 +163,17 @@ public class ClientSelectorThread implements Runnable{
         synchronized (this.mPendingData) {
             List queue = (List) this.mPendingData.get(socketChannel);
 
-            // Write until there's not more data ...
-            while (!queue.isEmpty()) {
+            while (!queue.isEmpty()) {                  // Write until there's not more data ...
                 ByteBuffer buf = (ByteBuffer) queue.get(0);
                 socketChannel.write(buf);
-                if (buf.remaining() > 0) {
-                    // ... or the socket's buffer fills up
+                if (buf.remaining() > 0) {              // ... or the socket's buffer fills up
                     break;
                 }
                 queue.remove(0);
             }
 
             if (queue.isEmpty()) {
-                // We wrote away all data, so we're no longer interested in writing
-                key.interestOps(SelectionKey.OP_READ);
+                key.interestOps(SelectionKey.OP_READ);  // We wrote away all data, switch back to READING
             }
         }
     }

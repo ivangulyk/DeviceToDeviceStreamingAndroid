@@ -37,7 +37,7 @@ public class ServerWorker implements Runnable {
             }
 
             // Return to sender
-            Log.d("ServerWorker","ServerWorker received: " + dataEvent.data);
+            Log.d("ServerWorker","ServerWorker received: " +  new String(dataEvent.data));
             dataEvent.server.send(dataEvent.socket, dataEvent.data);
         }
     }
