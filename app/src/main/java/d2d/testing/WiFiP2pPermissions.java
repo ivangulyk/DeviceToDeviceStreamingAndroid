@@ -1,13 +1,10 @@
 package d2d.testing;
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.widget.Toast;
 
 public class WiFiP2pPermissions {
     public static final int REQUEST_COARSE_LOCATION_CODE = 101;
