@@ -32,11 +32,13 @@ public class MainActivity extends AppCompatActivity {
     Button btnOnOff;
     Button btnSearch;
     Button btnSend;
+    Button btnCamera;
     ListView listView;
     TextView textView;
     EditText editTextMsg;
 
     WifiP2pController mWifiP2pController;
+    WiFiP2pPermissions wiFiP2pPermissions;
 
     IntentFilter mIntentFilter;
     WifiP2pDevice[] mDeviceArray;
@@ -47,10 +49,15 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         initialWork();
         execListener();
-        this.checkPermissions();
     }
 
     private void execListener() {
+        btnCamera.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                wiFiP2pPermissions.camera();
+            }
+        });
         btnOnOff.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -67,6 +74,7 @@ public class MainActivity extends AppCompatActivity {
         btnSearch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                wiFiP2pPermissions.location();
                 mWifiP2pController.discoverPeers(new WifiP2pManager.ActionListener() {
                     @Override
                     public void onSuccess() {
@@ -111,6 +119,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void initialWork() {
         btnOnOff = findViewById(R.id.onOff);
+        btnCamera = findViewById(R.id.camara);
         btnSearch = findViewById(R.id.discover);
         btnSend = findViewById(R.id.sendButton);
         listView = findViewById(R.id.peerListView);
@@ -119,6 +128,7 @@ public class MainActivity extends AppCompatActivity {
 
         mWifiP2pController = new WifiP2pController(this);
         mIntentFilter = new IntentFilter();
+        wiFiP2pPermissions = new WiFiP2pPermissions(this,this);
         // Indicates a change in the Wi-Fi P2P status.
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
         // Indicates a change in the list of available peers.
@@ -168,64 +178,6 @@ public class MainActivity extends AppCompatActivity {
         super.onPause();
         unregisterReceiver(this.mWifiP2pController.getWiFiP2pBroadcastReceiver());
     }
-
-    public void checkPermissions()
-    {
-        // Here, thisActivity is the current activity
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_COARSE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED) {
-
-            // Should we show an explanation?
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                    Manifest.permission.ACCESS_COARSE_LOCATION)) {
-
-                // Show an expanation to the user *asynchronously* -- don't block
-                // this thread waiting for the user's response! After the user
-                // sees the explanation, try again to request the permission.
-
-                Toast.makeText(getApplicationContext(), "WE NEED PERMISSIONS BECAUSE YES.. BLAH BLAH BLAH JA JA JA", Toast.LENGTH_SHORT).show();
-                //ask later
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        checkPermissions();
-                    }
-                }, 5 * 1000); // afterDelay will be executed after (secs*1000) milliseconds.
-            } else {
-
-                // We can request the permission.
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
-                        REQUEST_COARSE_LOCATION_CODE);
-            }
-        }
-        if (ContextCompat.checkSelfPermission(this,Manifest.permission.CAMERA)
-                != PackageManager.PERMISSION_GRANTED) {
-
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                    Manifest.permission.CAMERA)) {
-
-                // Show an expanation to the user *asynchronously* -- don't block
-                // this thread waiting for the user's response! After the user
-                // sees the explanation, try again to request the permission.
-
-                Toast.makeText(getApplicationContext(), "WE NEED PERMISSIONS BECAUSE YES.. BLAH BLAH BLAH JA JA JA", Toast.LENGTH_SHORT).show();
-                //ask later
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        checkPermissions();
-                    }
-                }, 5 * 1000); // afterDelay will be executed after (secs*1000) milliseconds.
-            } else {
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA},
-                        MY_CAMERA_REQUEST_CODE);
-            }
-        }
-    }
-
-    @Override
     public void onRequestPermissionsResult(int requestCode,
                                            String permissions[], int[] grantResults) {
         switch (requestCode) {
@@ -256,7 +208,6 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
-            // other 'case' lines to check for other permissions
         }
     }
     //use this function when user trys to stream

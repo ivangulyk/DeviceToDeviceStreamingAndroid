@@ -15,12 +15,9 @@
         android:layout_marginStart="42dp"
         android:layout_marginLeft="42dp"
         android:layout_marginTop="16dp"
-        android:layout_marginEnd="64dp"
-        android:layout_marginRight="64dp"
         android:layout_marginBottom="8dp"
         android:text="Wifi On"
         app:layout_constraintBottom_toTopOf="@+id/peerListView"
-        app:layout_constraintEnd_toStartOf="@+id/discover"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/connectionStatus" />
 
@@ -31,8 +28,8 @@
         android:layout_alignBaseline="@+id/onOff"
         android:layout_alignBottom="@+id/onOff"
         android:layout_centerHorizontal="true"
-        android:layout_marginStart="64dp"
-        android:layout_marginLeft="64dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginLeft="8dp"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="42dp"
         android:layout_marginRight="42dp"
@@ -40,6 +37,22 @@
         android:text="discover"
         app:layout_constraintBottom_toTopOf="@+id/peerListView"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/camara"
+        app:layout_constraintTop_toBottomOf="@+id/connectionStatus" />
+
+    <Button
+        android:id="@+id/camara"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/onOff"
+        android:layout_alignBottom="@+id/onOff"
+        android:layout_centerHorizontal="true"
+        android:layout_marginStart="16dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="8dp"
+        android:text="camara"
+        app:layout_constraintBottom_toTopOf="@+id/peerListView"
         app:layout_constraintStart_toEndOf="@+id/onOff"
         app:layout_constraintTop_toBottomOf="@+id/connectionStatus" />
 
