@@ -1,15 +1,17 @@
 package d2d.testing.net.threads;
 
+import android.util.Log;
+
 import java.nio.channels.SocketChannel;
 import java.util.LinkedList;
 import java.util.List;
 
 import d2d.testing.net.events.ServerDataEvent;
 
-public class WorkerThread implements Runnable {
+public class ServerWorker implements Runnable {
     private List queue = new LinkedList();
 
-    public void processData(ServerThread server, SocketChannel socket, byte[] data, int count) {
+    public void addData(ServerThread server, SocketChannel socket, byte[] data, int count) {
         byte[] dataCopy = new byte[count];
         System.arraycopy(data, 0, dataCopy, 0, count);
         synchronized(queue) {
@@ -34,6 +36,7 @@ public class WorkerThread implements Runnable {
             }
 
             // Return to sender
+            Log.d("ServerWorker","ServerWorker received: " + dataEvent.data);
             dataEvent.server.send(dataEvent.socket, dataEvent.data);
         }
     }

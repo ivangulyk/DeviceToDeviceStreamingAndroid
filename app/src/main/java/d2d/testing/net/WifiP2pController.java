@@ -23,6 +23,7 @@ import d2d.testing.MainActivity;
 import d2d.testing.net.helpers.RspHandler;
 import d2d.testing.net.threads.ClientThread;
 import d2d.testing.net.threads.ServerThread;
+import d2d.testing.net.threads.ServerWorker;
 
 /*
 
@@ -86,6 +87,7 @@ public class WifiP2pController {
 
         if(enabled==false)
         {
+            //TODO
             //close connections, threads  etc...
         }
         mWifiManager.setWifiEnabled(enabled);
@@ -144,16 +146,25 @@ public class WifiP2pController {
             // After the group negotiation, we can determine the group owner
             // (server).
             if (info.groupFormed && info.isGroupOwner) {
+                //TODO
                 // Do whatever tasks are specific to the group owner.
                 // One common case is creating a group owner thread and accepting
                 // incoming connections.
-                try {
-                    mServerThread = new ServerThread(groupOwnerAddress);
-                    mServerThread.start();
-                } catch (IOException e) {
-                    e.printStackTrace();
+                if(mServerThread != null)
+                {
+
+                }
+                else
+                {
+                    try {
+                        mServerThread = new ServerThread();
+                        new Thread(mServerThread).start();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
 
+                //
                 Toast.makeText(mContext,"You are Host", Toast.LENGTH_SHORT).show();
             } else if (info.groupFormed) {
                 // The other device acts as the peer (client). In this case,
@@ -162,7 +173,7 @@ public class WifiP2pController {
 
                 try {
                     mClientThread = new ClientThread(groupOwnerAddress);
-                    mClientThread.start();
+                    new Thread(mClientThread).start();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

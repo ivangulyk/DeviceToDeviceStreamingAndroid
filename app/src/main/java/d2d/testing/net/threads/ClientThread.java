@@ -20,10 +20,10 @@ import java.util.Map;
 import d2d.testing.net.events.ChangeRequest;
 import d2d.testing.net.helpers.RspHandler;
 
-public class ClientThread extends Thread {
+public class ClientThread implements Runnable{
 
     private static final int PORT = 3462;
-
+    private static final int BUFF_SIZE = 8192;
     private boolean enabled = true;
 
     private SocketChannel mSocket;
@@ -32,21 +32,21 @@ public class ClientThread extends Thread {
 
     // The selector we'll be monitoring
     private Selector selector;
+    private ClientWorker mWorker; //TODO convert to array??
 
     // The buffer into which we'll read data when it's available
-    private ByteBuffer readBuffer = ByteBuffer.allocate(8192);
+    private ByteBuffer mReadBuffer = ByteBuffer.allocate(BUFF_SIZE);
 
     // A list of ChangeRequest instances and Data/socket map
     private final List mPendingChangeRequests = new LinkedList();
     private final Map mPendingData = new HashMap();
 
-    // Maps a SocketChannel to a RspHandler
-    private Map rspHandlers = Collections.synchronizedMap(new HashMap());
-
     public ClientThread(InetAddress address) throws IOException {
         mInetAddress = address;
         mInetSocketAddress = new InetSocketAddress(mInetAddress.getHostAddress(),PORT);
         //mSocket = new Socket(mInetAddress, PORT);
+        this.mWorker = new ClientWorker();
+        new Thread(mWorker).start();
         this.selector = this.initSelector();
     }
 
@@ -55,6 +55,7 @@ public class ClientThread extends Thread {
         return SelectorProvider.provider().openSelector();
     }
 
+    @Override
     public void run() {
         try {
              this.mSocket = this.initiateConnection();
@@ -113,33 +114,16 @@ public class ClientThread extends Thread {
         }
     }
 
-    private void handleResponse(SocketChannel socketChannel, byte[] data, int numRead) throws IOException {
-        // Make a correctly sized copy of the data before handing it
-        // to the client
-        byte[] rspData = new byte[numRead];
-        System.arraycopy(data, 0, rspData, 0, numRead);
-
-        // Look up the handler for this channel
-        RspHandler handler = (RspHandler) this.rspHandlers.get(socketChannel);
-
-        // And pass the response to it
-        if (handler.handleResponse(rspData)) {
-            // The handler has seen enough, close the connection
-            socketChannel.close();
-            socketChannel.keyFor(this.selector).cancel();
-        }
-    }
-
     private void read(SelectionKey key) throws IOException {
         SocketChannel socketChannel = (SocketChannel) key.channel();
 
         // Clear out our read buffer so it's ready for new data
-        this.readBuffer.clear();
+        this.mReadBuffer.clear();
 
         // Attempt to read off the channel
         int numRead;
         try {
-            numRead = socketChannel.read(this.readBuffer);
+            numRead = socketChannel.read(this.mReadBuffer);
         } catch (IOException e) {
             // The remote forcibly closed the connection, cancel
             // the selection key and close the channel.
@@ -157,15 +141,14 @@ public class ClientThread extends Thread {
         }
 
         // Handle the response
-        this.handleResponse(socketChannel, this.readBuffer.array(), numRead);
+        this.mWorker.addData(this, socketChannel, this.mReadBuffer.array(), numRead);
+        //this.handleResponse(socketChannel, this.readBuffer.array(), numRead);
     }
 
-    public void send(byte[] data, RspHandler handler) {
+    public void send(byte[] data) {
 
         synchronized(this.mPendingChangeRequests) {
             this.mPendingChangeRequests.add(new ChangeRequest(mSocket, ChangeRequest.CHANGEOPS, SelectionKey.OP_WRITE));
-            // Register the response handler
-            this.rspHandlers.put(mSocket, handler);
 
             // And queue the data we want written
             synchronized (this.mPendingData) {
@@ -200,9 +183,7 @@ public class ClientThread extends Thread {
             }
 
             if (queue.isEmpty()) {
-                // We wrote away all data, so we're no longer interested
-                // in writing on this socket. Switch back to waiting for
-                // data.
+                // We wrote away all data, so we're no longer interested in writing
                 key.interestOps(SelectionKey.OP_READ);
             }
         }
@@ -215,11 +196,8 @@ public class ClientThread extends Thread {
 
         socketChannel.connect(mInetSocketAddress);          // Connection establishment
 
-        // Queue a channel registration since the caller is not the
-        // selecting thread. As part of the registration we'll register
-        // an interest in connection events. These are raised when a channel
-        // is ready to complete connection establishment.
-        synchronized(this.mPendingChangeRequests) {
+
+        synchronized(this.mPendingChangeRequests) {         // Queue a channel registration
             this.mPendingChangeRequests.add(new ChangeRequest(socketChannel, ChangeRequest.REGISTER, SelectionKey.OP_CONNECT));
         }
 
@@ -229,19 +207,17 @@ public class ClientThread extends Thread {
     private void finishConnection(SelectionKey key) {
         SocketChannel socketChannel = (SocketChannel) key.channel();
 
-        // Finish the connection. If the connection operation failed
-        // this will raise an IOException.
         try {
-            socketChannel.finishConnect();
+            socketChannel.finishConnect(); //Finish connecting.
+            //negociar algo sobre la conexion?? donde ??
         } catch (IOException e) {
-            // Cancel the channel's registration with our selector
+
             System.out.println(e);
-            key.cancel();
+            key.cancel();               // Cancel the channel's registration with our selector
             return;
         }
 
-        // Register an interest in writing on this channel
-        key.interestOps(SelectionKey.OP_READ);
+        key.interestOps(SelectionKey.OP_READ);  // Register an interest in reading till send
     }
 }
 

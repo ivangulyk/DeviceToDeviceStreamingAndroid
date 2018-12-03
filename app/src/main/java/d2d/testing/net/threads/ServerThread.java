@@ -5,7 +5,6 @@ import android.support.annotation.RequiresApi;
 import android.util.Log;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.ByteBuffer;
@@ -23,17 +22,16 @@ import java.util.Map;
 
 import d2d.testing.net.events.ChangeRequest;
 
-public class ServerThread extends Thread {
+public class ServerThread implements Runnable {
 
     private static final int PORT = 3462;
 
     private boolean enabled = true;
 
-    private InetSocketAddress  mInetSocketAddress;
     private ServerSocketChannel mServerSocket;
 
     private Selector mSelector;
-    private WorkerThread mWorker;
+    private ServerWorker mWorker; //TODO convert to array??
 
     // A list of ChangeRequest instances and Data/socket map
     private final List mPendingChangeRequests = new LinkedList();
@@ -44,26 +42,19 @@ public class ServerThread extends Thread {
 
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    public ServerThread(InetAddress address) throws IOException {
-        mInetSocketAddress = new InetSocketAddress(PORT);
-        this.mWorker = new WorkerThread();
+    public ServerThread() throws IOException {
+        this.mWorker = new ServerWorker();
         new Thread(mWorker).start();
         mSelector = this.initSelector();
     }
 
     private Selector initSelector() throws IOException {
-        // Create a new selector
-        Selector socketSelector = SelectorProvider.provider().openSelector();
 
-        // Create a new non-blocking server socket channel
-        this.mServerSocket = ServerSocketChannel.open();
+        Selector socketSelector = SelectorProvider.provider().openSelector();   // Create a new selector
+        this.mServerSocket = ServerSocketChannel.open();                        // Create a new non-blocking server socket channel
         mServerSocket.configureBlocking(false);
-
-        // Bind the server socket to the specified address and port
-        mServerSocket.socket().bind(new InetSocketAddress(PORT));
-
-        // Register the server socket channel
-        mServerSocket.register(socketSelector, SelectionKey.OP_ACCEPT);
+        mServerSocket.socket().bind(new InetSocketAddress(PORT));               // Bind the server socket
+        mServerSocket.register(socketSelector, SelectionKey.OP_ACCEPT);         // Register the server socket channel
         return socketSelector;
     }
 
@@ -152,7 +143,7 @@ public class ServerThread extends Thread {
         }
 
         // Hand the data off to our worker thread
-        this.mWorker.processData(this, socketChannel, this.mReadBuffer.array(), numRead);
+        this.mWorker.addData(this, socketChannel, this.mReadBuffer.array(), numRead);
     }
 
     private void write(SelectionKey key) throws IOException {
