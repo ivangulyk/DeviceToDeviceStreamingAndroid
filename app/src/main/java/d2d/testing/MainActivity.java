@@ -26,8 +26,10 @@ import java.io.IOException;
 import d2d.testing.net.WifiP2pController;
 
 public class MainActivity extends AppCompatActivity {
-    public static final int REQUEST_COARSE_LOCATION_CODE = 101;
+    private static final int REQUEST_COARSE_LOCATION_CODE = 101;
     private static final int MY_CAMERA_REQUEST_CODE = 100;
+    private boolean camera_has_perm = false;
+    private boolean location_has_perm = false;
 
     Button btnOnOff;
     Button btnSearch;
@@ -51,11 +53,28 @@ public class MainActivity extends AppCompatActivity {
         execListener();
     }
 
+    public void set_camera_has_perm(boolean camera){
+        this.camera_has_perm = camera;
+    }
+    public void set_location_has_perm(boolean location){
+        this.location_has_perm = location;
+    }
+
     private void execListener() {
         btnCamera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                wiFiP2pPermissions.camera();
+                if(checkCameraHardware()) {
+                    wiFiP2pPermissions.camera();
+                    if(camera_has_perm) {
+                       //here goes all the functionality
+                    }
+                    /*
+                    else{
+                        Toast.makeText(getApplicationContext(), "You wont be able to use this function until you provide us camera permission", Toast.LENGTH_SHORT).show();
+                    }
+                    */
+                }
             }
         });
         btnOnOff.setOnClickListener(new View.OnClickListener() {
@@ -75,17 +94,24 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 wiFiP2pPermissions.location();
-                mWifiP2pController.discoverPeers(new WifiP2pManager.ActionListener() {
-                    @Override
-                    public void onSuccess() {
-                        textView.setText("Discovery Started");
-                    }
+                if(location_has_perm) {
+                    mWifiP2pController.discoverPeers(new WifiP2pManager.ActionListener() {
+                        @Override
+                        public void onSuccess() {
+                            textView.setText("Discovery Started");
+                        }
 
-                    @Override
-                    public void onFailure(int reason) {
-                        textView.setText("Discovery Starting Failed");
-                    }
-                });
+                        @Override
+                        public void onFailure(int reason) {
+                            textView.setText("Discovery Starting Failed");
+                        }
+                    });
+                }
+                /*
+                else{
+                    Toast.makeText(getApplicationContext(), "You wont be able to use this function until you provide us location permission", Toast.LENGTH_SHORT).show();
+                }
+                */
             }
         });
         btnSend.setOnClickListener(new View.OnClickListener() {
@@ -184,36 +210,49 @@ public class MainActivity extends AppCompatActivity {
             case REQUEST_COARSE_LOCATION_CODE: {
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
+                    this.location_has_perm = true;
                     // permission was granted,
                     Toast.makeText(getApplicationContext(), "LOCATION PERMISSION GRANTED", Toast.LENGTH_SHORT).show();
                 } else {
 
                     // permission denied, wifi direct wont work under version ??? maybe we dont need it....
-                    Toast.makeText(getApplicationContext(), "LOCATION PERMISSION NOT GRANTED", Toast.LENGTH_SHORT).show();
+
+                    if (!ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_COARSE_LOCATION)) {
+                        //Show permission explanation dialog...
+                        Toast.makeText(getApplicationContext(), "YOU DENIED PERMISSION AND CHECKED TO NEVER ASK AGAIN, GO SETTING AND ADD LOCATION PERMISSION MANUALLY TO USE THIS", Toast.LENGTH_SHORT).show();
+                    }
+                    else{
+                        Toast.makeText(getApplicationContext(), "LOCATION PERMISSION NOT GRANTED, YOU WONT BE ABLE TO USE THIS", Toast.LENGTH_SHORT).show();
+                    }
                 }
                 return;
             }
             case MY_CAMERA_REQUEST_CODE: {
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
+                    this.camera_has_perm = true;
                     // permission was granted,
                     Toast.makeText(getApplicationContext(), "CAMERA PERMISSION GRANTED", Toast.LENGTH_SHORT).show();
                 } else {
 
-                    // permission denied, wifi direct wont work under version ??? maybe we dont need it....
-                    Toast.makeText(getApplicationContext(), "CAMERA PERMISSION NOT GRANTED", Toast.LENGTH_SHORT).show();
+                    // permission denied, wifi direct wont work under version ??? maybe we dont need it...
+                    if (!ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA)) {
+                        //Show permission explanation dialog...
+                        Toast.makeText(getApplicationContext(), "YOU DENIED PERMISSION AND CHECKED TO NEVER ASK AGAIN, GO SETTING AND ADD CAMERA PERMISSION MANUALLY YO USE THIS", Toast.LENGTH_SHORT).show();
+                    }
+                    else{
+                        Toast.makeText(getApplicationContext(), "CAMERA PERMISSION NOT GRANTED, YOU WONT BE ABLE TO USE THIS", Toast.LENGTH_SHORT).show();
+                    }
                 }
                 return;
             }
-
         }
     }
     //use this function when user trys to stream
     private boolean checkCameraHardware() {
         if (this.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)){
             // this device has a camera
+            //Toast.makeText(getApplicationContext(), "YOUR DEVICE HAS CAMERA", Toast.LENGTH_SHORT).show();
             return true;
         } else {
             // no camera on this device

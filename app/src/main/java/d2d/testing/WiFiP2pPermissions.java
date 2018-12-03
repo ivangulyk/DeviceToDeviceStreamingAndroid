@@ -26,7 +26,7 @@ public class WiFiP2pPermissions {
         // Here, thisActivity is the current activity
         if (ContextCompat.checkSelfPermission(context,Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED) {
-
+            this.activity.set_camera_has_perm(false);
             if (ActivityCompat.shouldShowRequestPermissionRationale(activity,
                     Manifest.permission.CAMERA)) {
 
@@ -34,20 +34,16 @@ public class WiFiP2pPermissions {
                 // this thread waiting for the user's response! After the user
                 // sees the explanation, try again to request the permission.
 
-                Toast.makeText(activity.getApplicationContext(), "WE NEED PERMISSIONS BECAUSE YES.. BLAH BLAH BLAH JA JA JA", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(activity.getApplicationContext(), "WE NEED YOU TO ALLOW US TO USE YOUR CAMERA", Toast.LENGTH_SHORT).show();
                 //ask later
-                /*
-              new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        checkPermissions();
-                    }
-                }, 5 * 1000); // afterDelay will be executed after (secs*1000) milliseconds.
-                */
+                ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.CAMERA}, MY_CAMERA_REQUEST_CODE);
+
             } else {
-                ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.CAMERA},
-                        MY_CAMERA_REQUEST_CODE);
+                ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.CAMERA}, MY_CAMERA_REQUEST_CODE);
             }
+        }
+        else{
+            this.activity.set_camera_has_perm(true);
         }
     }
     public void location()
@@ -56,7 +52,7 @@ public class WiFiP2pPermissions {
         if (ContextCompat.checkSelfPermission(context,
                 Manifest.permission.ACCESS_COARSE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
-
+            this.activity.set_location_has_perm(false);
             // Should we show an explanation?
             if (ActivityCompat.shouldShowRequestPermissionRationale(activity,
                     Manifest.permission.ACCESS_COARSE_LOCATION)) {
@@ -65,16 +61,10 @@ public class WiFiP2pPermissions {
                 // this thread waiting for the user's response! After the user
                 // sees the explanation, try again to request the permission.
 
-                Toast.makeText(activity.getApplicationContext(), "WE NEED PERMISSIONS BECAUSE YES.. BLAH BLAH BLAH JA JA JA", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(activity.getApplicationContext(), "WE NEED YOUR LOCATION FOR THIS FUNCTIONALITY", Toast.LENGTH_SHORT).show();
                 //ask later
-                /*
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        checkPermissions();
-                    }
-                }, 5 * 1000); // afterDelay will be executed after (secs*1000) milliseconds.
-                */
+                ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_COARSE_LOCATION_CODE);
+
             } else {
 
                 // We can request the permission.
@@ -83,6 +73,8 @@ public class WiFiP2pPermissions {
                         REQUEST_COARSE_LOCATION_CODE);
             }
         }
-
+        else{
+            this.activity.set_location_has_perm(true);
+        }
     }
 }
