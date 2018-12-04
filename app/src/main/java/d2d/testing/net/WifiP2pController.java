@@ -21,7 +21,7 @@ import java.util.List;
 
 import d2d.testing.MainActivity;
 import d2d.testing.net.threads.selectors.ClientSelectorThread;
-import d2d.testing.net.threads.selectors.ServerSelectorThread;
+import d2d.testing.net.threads.selectors.ServerSelector;
 
 /*
 TODO IMPORTANTE LEGACY USERS... HE LEIDO EN ALGUN SITIO QUE ERA MAS RAPIDO PARA SALTAR ENTRE REDES SI LO TENEMOS QUE USAR
@@ -46,7 +46,7 @@ public class WifiP2pController {
     private WifiP2pManager.Channel mChannel;
 
     private WiFiP2pBroadcastReceiver mReciever;
-    private ServerSelectorThread mServerSelectorThread;
+    private ServerSelector mServerSelectorThread;
     private ClientSelectorThread mClientSelectorThread;
     private boolean mWifiStatus;
     private boolean mWifiP2pAvailable = false;
@@ -154,9 +154,9 @@ public class WifiP2pController {
                 if(mServerSelectorThread == null)
                 {
                     try {
-                        mServerSelectorThread = new ServerSelectorThread();
+                        mServerSelectorThread = new ServerSelector();
                         new Thread(mServerSelectorThread).start();
-                    } catch (IOException e) {
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }

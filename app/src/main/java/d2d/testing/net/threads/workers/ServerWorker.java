@@ -6,23 +6,23 @@ import java.nio.channels.SocketChannel;
 import java.util.LinkedList;
 import java.util.List;
 
-import d2d.testing.net.events.ServerDataEvent;
-import d2d.testing.net.threads.selectors.ServerSelectorThread;
+import d2d.testing.net.events.DataEvent;
+import d2d.testing.net.threads.selectors.NioSelectorThread;
 
 public class ServerWorker implements Runnable {
     private List queue = new LinkedList();
 
-    public void addData(ServerSelectorThread server, SocketChannel socket, byte[] data, int count) {
+    public void addData(NioSelectorThread selector, SocketChannel socket, byte[] data, int count) {
         byte[] dataCopy = new byte[count];
         System.arraycopy(data, 0, dataCopy, 0, count);
         synchronized(queue) {
-            queue.add(new ServerDataEvent(server, socket, dataCopy));
+            queue.add(new DataEvent(selector, socket, dataCopy));
             queue.notify();
         }
     }
 
     public void run() {
-        ServerDataEvent dataEvent;
+        DataEvent dataEvent;
 
         while(true) {
             // Wait for data to become available
@@ -33,12 +33,12 @@ public class ServerWorker implements Runnable {
                     } catch (InterruptedException e) {
                     }
                 }
-                dataEvent = (ServerDataEvent) queue.remove(0);
+                dataEvent = (DataEvent) queue.remove(0);
             }
 
             // Return to sender
             Log.d("ServerWorker","ServerWorker received: " +  new String(dataEvent.data));
-            dataEvent.server.send(dataEvent.socket, dataEvent.data);
+            dataEvent.selector.send(dataEvent.socket, dataEvent.data);
         }
     }
 }
