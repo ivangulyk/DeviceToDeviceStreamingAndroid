@@ -5,25 +5,21 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
-import android.os.Handler;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.w3c.dom.Text;
-
 import java.io.IOException;
 
 import d2d.testing.net.WifiP2pController;
+
 
 public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_COARSE_LOCATION_CODE = 101;
@@ -36,11 +32,17 @@ public class MainActivity extends AppCompatActivity {
     Button btnSend;
     Button btnCamera;
     ListView listView;
+    ListView listMsg;
     TextView textView;
     EditText editTextMsg;
+    TextView redMsg;
+    TextView myName;
+    TextView myAdd;
+    TextView myStatus;
 
     WifiP2pController mWifiP2pController;
     WiFiP2pPermissions wiFiP2pPermissions;
+
 
     IntentFilter mIntentFilter;
     WifiP2pDevice[] mDeviceArray;
@@ -69,11 +71,6 @@ public class MainActivity extends AppCompatActivity {
                     if(camera_has_perm) {
                        //here goes all the functionality
                     }
-                    /*
-                    else{
-                        Toast.makeText(getApplicationContext(), "You wont be able to use this function until you provide us camera permission", Toast.LENGTH_SHORT).show();
-                    }
-                    */
                 }
             }
         });
@@ -107,18 +104,13 @@ public class MainActivity extends AppCompatActivity {
                         }
                     });
                 }
-                /*
-                else{
-                    Toast.makeText(getApplicationContext(), "You wont be able to use this function until you provide us location permission", Toast.LENGTH_SHORT).show();
-                }
-                */
             }
         });
         btnSend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 try {
-                    mWifiP2pController.send("asdasd");
+                    mWifiP2pController.send(editTextMsg.getText().toString());
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -151,6 +143,10 @@ public class MainActivity extends AppCompatActivity {
         listView = findViewById(R.id.peerListView);
         textView = findViewById(R.id.connectionStatus);
         editTextMsg = findViewById(R.id.writeMsg);
+        redMsg = findViewById(R.id.readMsg);
+        myAdd = findViewById(R.id.my_address);
+        myName = findViewById(R.id.my_name);
+        myStatus = findViewById(R.id.my_status);
 
         mWifiP2pController = new WifiP2pController(this);
         mIntentFilter = new IntentFilter();
@@ -164,6 +160,31 @@ public class MainActivity extends AppCompatActivity {
         // Indicates this device's details have changed.
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
 
+    }
+
+    public static String getDeviceStatus(int deviceStatus) {
+        //Log.d(MainActivity.TAG, "Peer status :" + deviceStatus);
+        switch (deviceStatus) {
+            case WifiP2pDevice.AVAILABLE:
+                return "Available";
+            case WifiP2pDevice.INVITED:
+                return "Invited";
+            case WifiP2pDevice.CONNECTED:
+                return "Connected";
+            case WifiP2pDevice.FAILED:
+                return "Failed";
+            case WifiP2pDevice.UNAVAILABLE:
+                return "Unavailable";
+            default:
+                return "Unknown";
+
+        }
+    }
+
+    public void updateThisDevice(WifiP2pDevice device) {
+     myName.setText(device.deviceName);
+     myStatus.setText(getDeviceStatus(device.status));
+     myAdd.setText(device.deviceAddress);
     }
 
     public void updatePeers(WifiP2pDevice[] deviceArray)

@@ -6,18 +6,85 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginRight="8dp"
+        android:gravity="center_vertical"
+        android:text="MI DISPOSITIVO"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/camara" />
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:layout_height="?android:attr/listPreferredItemHeight"
+        android:layout_marginStart="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginBottom="8dp"
+        android:background="?android:attr/activatedBackgroundIndicator"
+        android:padding="3dip"
+        app:layout_constraintBottom_toTopOf="@+id/peerListView"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView">
+
+        <ImageView
+            android:id="@+id/icon"
+            android:layout_width="wrap_content"
+            android:layout_height="51dp"
+            android:layout_marginRight="2dp"
+            android:src="@drawable/machine" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="64dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/my_name"
+                android:layout_width="fill_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:gravity="center_vertical" />
+
+            <TextView
+                android:id="@+id/my_address"
+                android:layout_width="fill_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:ellipsize="marquee"
+                android:singleLine="true" />
+
+            <TextView
+                android:id="@+id/my_status"
+                android:layout_width="fill_parent"
+                android:layout_height="3dp"
+                android:layout_weight="1"
+                android:ellipsize="marquee"
+                android:singleLine="true" />
+
+        </LinearLayout>
+    </LinearLayout>
+
     <Button
         android:id="@+id/onOff"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
-        android:layout_marginStart="42dp"
-        android:layout_marginLeft="42dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="8dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginLeft="16dp"
         android:text="Wifi On"
-        app:layout_constraintBottom_toTopOf="@+id/peerListView"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/connectionStatus" />
 
@@ -30,29 +97,24 @@
         android:layout_centerHorizontal="true"
         android:layout_marginStart="8dp"
         android:layout_marginLeft="8dp"
-        android:layout_marginTop="16dp"
         android:layout_marginEnd="42dp"
         android:layout_marginRight="42dp"
-        android:layout_marginBottom="8dp"
         android:text="discover"
-        app:layout_constraintBottom_toTopOf="@+id/peerListView"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toEndOf="@+id/camara"
         app:layout_constraintTop_toBottomOf="@+id/connectionStatus" />
 
     <Button
         android:id="@+id/camara"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="49dp"
         android:layout_alignBaseline="@+id/onOff"
         android:layout_alignBottom="@+id/onOff"
         android:layout_centerHorizontal="true"
-        android:layout_marginStart="16dp"
-        android:layout_marginLeft="16dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="8dp"
+        android:layout_marginStart="28dp"
+        android:layout_marginLeft="28dp"
         android:text="camara"
-        app:layout_constraintBottom_toTopOf="@+id/peerListView"
         app:layout_constraintStart_toEndOf="@+id/onOff"
         app:layout_constraintTop_toBottomOf="@+id/connectionStatus" />
 
@@ -62,14 +124,12 @@
         android:layout_height="200dp"
         android:layout_below="@+id/onOff"
         android:layout_alignParentStart="true"
-        android:layout_marginTop="120dp"
-        android:layout_marginBottom="196dp"
+        android:layout_marginBottom="116dp"
         android:background="@android:color/holo_orange_light"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.47"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/connectionStatus" />
+        app:layout_constraintHorizontal_bias="0.382"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <TextView
         android:id="@+id/connectionStatus"
@@ -92,15 +152,13 @@
         android:id="@+id/linearLayout"
         android:layout_width="238dp"
         android:layout_height="40dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginLeft="8dp"
-        android:layout_marginTop="70dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginLeft="16dp"
         android:layout_marginBottom="8dp"
         android:focusable="true"
         android:focusableInTouchMode="true"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/readMsg">
+        app:layout_constraintStart_toStartOf="parent">
 
         <EditText
             android:id="@+id/writeMsg"
@@ -126,7 +184,7 @@
         android:layout_alignParentBottom="true"
         android:layout_marginStart="8dp"
         android:layout_marginLeft="8dp"
-        android:layout_marginTop="70dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginRight="8dp"
         android:text="Send"
@@ -146,16 +204,15 @@
         android:layout_marginTop="16dp"
         android:layout_marginEnd="21dp"
         android:layout_marginRight="21dp"
-        android:layout_marginBottom="115dp"
+        android:layout_marginBottom="8dp"
         android:text="Message"
         android:textAlignment="center"
         android:textSize="20sp"
         android:textStyle="italic"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/linearLayout"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/peerListView"
-        app:layout_constraintVertical_bias="0.504" />
+        app:layout_constraintTop_toBottomOf="@+id/peerListView" />
 
 </android.support.constraint.ConstraintLayout>
