@@ -79,11 +79,11 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 if(mWifiP2pController.isWifiEnabled()) {
                     mWifiP2pController.setWifiEnabled(false);
-                    btnOnOff.setText("Turn Wifi ON");
+                    btnOnOff.setText("Wifi is OFF");
                 }
                 else{
                     mWifiP2pController.setWifiEnabled(true);
-                    btnOnOff.setText("Turn Wifi OFF");
+                    btnOnOff.setText("Wifi is ON");
                 }
             }
         });
@@ -185,6 +185,10 @@ public class MainActivity extends AppCompatActivity {
      myName.setText(device.deviceName);
      myStatus.setText(getDeviceStatus(device.status));
      myAdd.setText(device.deviceAddress);
+    }
+
+    public void updateMsg(String str){
+        redMsg.setText(str);
     }
 
     public void updatePeers(WifiP2pDevice[] deviceArray)

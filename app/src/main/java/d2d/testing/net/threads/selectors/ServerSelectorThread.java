@@ -20,11 +20,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import d2d.testing.MainActivity;
 import d2d.testing.net.events.ChangeRequest;
 import d2d.testing.net.threads.workers.ServerWorker;
 
 public class ServerSelectorThread implements Runnable {
     private static final int PORT = 3462;
+    private MainActivity mainActivity;
 
     private boolean listening = true;
 
@@ -40,12 +42,16 @@ public class ServerSelectorThread implements Runnable {
 
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    public ServerSelectorThread() throws IOException {
+    public ServerSelectorThread(MainActivity mainActivity) throws IOException {
+        this.mainActivity = mainActivity;
         this.mWorker = new ServerWorker();
         new Thread(mWorker).start();
         mSelector = this.initSelector();
     }
 
+    public MainActivity getMainActivity(){
+        return this.mainActivity;
+    }
     private Selector initSelector() throws IOException {
 
         Selector socketSelector = SelectorProvider.provider().openSelector();   // Create a new selector
