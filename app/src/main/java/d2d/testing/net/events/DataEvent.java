@@ -2,7 +2,6 @@ package d2d.testing.net.events;
 
 import java.nio.channels.SocketChannel;
 
-import d2d.testing.net.threads.selectors.ClientSelector;
 import d2d.testing.net.threads.selectors.NioSelectorThread;
 
 public class DataEvent {

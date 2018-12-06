@@ -128,7 +128,7 @@ public abstract class NioSelectorThread implements Runnable{
             this.mPendingChangeRequests.add(new ChangeRequest(socket, ChangeRequest.CHANGE_OPS, SelectionKey.OP_WRITE));
 
             synchronized (mPendingData) {  // And queue the data we want written
-                List queue = (List) mPendingData.get(socket);
+                List queue = mPendingData.get(socket);
                 if (queue == null) {
                     queue = new ArrayList();
                     mPendingData.put(socket, queue);
@@ -202,6 +202,13 @@ public abstract class NioSelectorThread implements Runnable{
 
         synchronized (mPendingData) {
             List queue = mPendingData.get(socketChannel);
+            if(queue == null)
+            {
+                queue = new ArrayList();
+                mPendingData.put(socketChannel, queue);
+                //TODO error no deberia haber ocurrido lo metemos en logs o algo!
+                return;
+            }
 
             while (!queue.isEmpty()) {                  // Write until there's not more data ...
                 ByteBuffer buf = (ByteBuffer) queue.get(0);

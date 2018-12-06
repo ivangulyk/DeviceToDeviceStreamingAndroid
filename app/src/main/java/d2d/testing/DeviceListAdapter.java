@@ -37,12 +37,8 @@ public class DeviceListAdapter  extends BaseAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        View v = convertView;
-
-        LayoutInflater vi = (LayoutInflater) activity.getSystemService(
-                Context.LAYOUT_INFLATER_SERVICE);
-
-        v = vi.inflate(R.layout.device_detail,null);
+        LayoutInflater vi = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View v = vi.inflate(R.layout.device_detail,null);
 
         TextView name = v.findViewById(R.id.device_name);
         TextView address = v.findViewById(R.id.device_adress);
@@ -51,6 +47,7 @@ public class DeviceListAdapter  extends BaseAdapter {
         name.setText(deviceArray[position].deviceName);
         address.setText(deviceArray[position].deviceAddress);
         status.setText(activity.getDeviceStatus(deviceArray[position].status));
+
         return v;
     }
 }

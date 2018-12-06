@@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -67,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
                 if(checkCameraHardware()) {
                     wiFiP2pPermissions.camera();
                     if(camera_has_perm) {
-                       //here goes all the functionality
+                       //TODO here goes all the functionality
                     }
                 }
             }
@@ -195,18 +196,6 @@ public class MainActivity extends AppCompatActivity {
         }
         else
         {
-            int index = 0;
-            String [] deviceNameArray = new String[deviceArray.length];
-
-            for (WifiP2pDevice device : deviceArray) {
-                deviceNameArray[index] = device.deviceName;
-                index++;
-            }
-
-            /*
-            ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(),
-                                                              android.R.layout.simple_list_item_1, deviceNameArray);
-                                                              */
             DeviceListAdapter deviceListAdapter = new DeviceListAdapter(this,deviceArray,this);
             listView.setAdapter(deviceListAdapter);
         }
@@ -225,7 +214,7 @@ public class MainActivity extends AppCompatActivity {
         super.onPause();
         unregisterReceiver(this.mWifiP2pController.getWiFiP2pBroadcastReceiver());
     }
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
         switch (requestCode) {
             case REQUEST_COARSE_LOCATION_CODE: {
                 // If request is cancelled, the result arrays are empty.

@@ -157,7 +157,7 @@ public class WifiP2pController {
                 }
                 else
                 {
-                    //somos el owner y ya tenemos el thread comprobar el estado de bind, conexion y seguir si no hay error
+                    //TODO somos el owner y ya tenemos el thread comprobar el estado de bind, conexion y seguir si no hay error
                 }
             } else if (info.groupFormed) {
                 // The other device acts as the peer (client). In this case,
@@ -172,7 +172,7 @@ public class WifiP2pController {
                     }
                 }
                 else{
-                    //somos el cliente y ya tenemos el thread comprobar el estado de  conexion y seguir si no hay error
+                    //TODO somos el cliente y ya tenemos el thread comprobar el estado de  conexion y seguir si no hay error
                 }
 
                 Toast.makeText(mContext,"You are Client", Toast.LENGTH_SHORT).show();
