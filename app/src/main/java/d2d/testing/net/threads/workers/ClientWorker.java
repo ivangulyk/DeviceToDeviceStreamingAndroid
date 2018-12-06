@@ -8,10 +8,11 @@ import java.util.LinkedList;
 import java.util.List;
 
 import d2d.testing.net.events.DataEvent;
-import d2d.testing.net.threads.selectors.ClientSelectorThread;
+import d2d.testing.net.threads.selectors.NioSelectorThread;
 
-public class ClientWorker implements Runnable {
+public class ClientWorker implements Runnable, WorkerInterface {
     //TODO Externalizar constantes... SSL??
+    //TODO COMPARTIR MISMOS WORKERS? Ya veremos
     private byte[] PREFIX_CONST = {0x11,0x12,0x11,0x14};
     private byte[] TYPE_MSG = {0x15,0x00};
     private byte[] TYPE_MSG2 = {0x15,0x01};
@@ -20,15 +21,17 @@ public class ClientWorker implements Runnable {
 
     private List openMessage = new LinkedList();
 
-    public void addData(ClientSelectorThread client, SocketChannel socket, byte[] data, int count) {
+    @Override
+    public void addData(NioSelectorThread selectorThread, SocketChannel socket, byte[] data, int count) {
         byte[] dataCopy = new byte[count];
         System.arraycopy(data, 0, dataCopy, 0, count);
         synchronized(queue) {
-            queue.add(new DataEvent(client, socket, dataCopy));
+            queue.add(new DataEvent(selectorThread, socket, dataCopy));
             queue.notify();
         }
     }
 
+    @Override
     public void run() {
         DataEvent dataEvent;
 

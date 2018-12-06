@@ -5,13 +5,14 @@ import android.support.annotation.RequiresApi;
 import android.util.Log;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.nio.ByteBuffer;
-import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.nio.channels.spi.SelectorProvider;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -21,35 +22,48 @@ import java.util.Map;
 
 import d2d.testing.MainActivity;
 import d2d.testing.net.events.ChangeRequest;
-import d2d.testing.net.threads.workers.ServerWorker;
+import d2d.testing.net.threads.workers.WorkerInterface;
+
+import static java.lang.Thread.sleep;
 
 public abstract class NioSelectorThread implements Runnable{
     //TODO
     protected static final int PORT = 3462;
+
+    protected static final int STATUS_DISCONNECTED = 0;
+    protected static final int STATUS_LISTENING = 1;
+    protected static final int STATUS_CONNECTING = 2;
+    protected static final int STATUS_CONNECTED = 4;
+
     private MainActivity mMainActivity;
+    private InetAddress mInetAddress;
 
-    private boolean mEnabled = true;
+    protected boolean mEnabled = true;
+    protected int mStatus = STATUS_DISCONNECTED;
 
-    protected ServerSocketChannel mServerSocket;
     protected Selector mSelector;
-    protected ServerWorker mWorker; //TODO convert to array??
+    protected WorkerInterface mWorker; //TODO convert to array??
 
     // A list of ChangeRequest instances and Data/socket map
-    private final List mConnections = new ArrayList<SocketChannel>();
+    protected final List<SocketChannel> mConnections = new ArrayList<>();
     protected final List mPendingChangeRequests = new LinkedList();
     protected final Map mPendingData = new HashMap();
     private ByteBuffer mReadBuffer = ByteBuffer.allocate(8192);
 
-    protected Selector initSelector() {
-        return null;
-    }
+    public abstract void send(byte[] data);
+    protected abstract void initiateConnection();
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    public NioSelectorThread(MainActivity mainActivity) {
-        this.mMainActivity  = mainActivity;
-        this.mSelector      = this.initSelector();
+    public NioSelectorThread(MainActivity mainActivity) throws IOException {
+        this(mainActivity,null);
+    }
 
+    public NioSelectorThread(MainActivity mainActivity, InetAddress inetAddress) throws IOException {
+        this.mMainActivity  = mainActivity;
+        this.mSelector      = SelectorProvider.provider().openSelector();
+        this.initiateConnection();
         //WORKER MOVIDO A CLIENT/SELECTOR THREAD.. MAS FLEXIBLE SE PUEDE DEVOLVER AQUI EN UN FUTURO ALOMEJOR
+
     }
 
     public MainActivity getMainActivity(){
@@ -60,14 +74,18 @@ public abstract class NioSelectorThread implements Runnable{
         this.mEnabled = false;
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.N)
     public void run(){
         try {
             while(mEnabled)
             {
+                if(mStatus == this.STATUS_DISCONNECTED)
+                {
+                    this.initiateConnection();
+                    sleep(5000);
+                }
+
                 this.processChangeRequests();
 
-                //Log.d("ServerSelector","ServerSelector: i'm a server and i'm waiting for selection keys...");
                 mSelector.select();
 
                 Iterator<SelectionKey> itKeys = mSelector.selectedKeys().iterator();
@@ -81,6 +99,8 @@ public abstract class NioSelectorThread implements Runnable{
 
                     if (myKey.isAcceptable()) {
                         this.accept(myKey);
+                    } else if (myKey.isConnectable()) {
+                        this.finishConnection(myKey);
                     } else if (myKey.isReadable()) {
                         this.read(myKey);
                     } else if (myKey.isWritable()) {
@@ -102,6 +122,24 @@ public abstract class NioSelectorThread implements Runnable{
         }
     }
 
+    protected void send(SocketChannel socket, byte[] data) {
+        synchronized(mPendingChangeRequests) {
+            this.mPendingChangeRequests.add(new ChangeRequest(socket, ChangeRequest.CHANGE_OPS, SelectionKey.OP_WRITE));
+
+            synchronized (mPendingData) {  // And queue the data we want written
+                List queue = (List) mPendingData.get(socket);
+                if (queue == null) {
+                    queue = new ArrayList();
+                    mPendingData.put(socket, queue);
+                }
+                queue.add(ByteBuffer.wrap(data));
+            }
+        }
+
+        // Finally, wake up our selecting thread so it can make the required changes
+        this.mSelector.wakeup();
+    }
+
     private void accept(SelectionKey key) throws IOException {
         ServerSocketChannel serverSocketChannel = (ServerSocketChannel) key.channel();
 
@@ -115,6 +153,21 @@ public abstract class NioSelectorThread implements Runnable{
         mConnections.add(socketChannel);
 
         Log.d("SERVER","Connection Accepted: " + socket.getLocalAddress() + "\n");
+    }
+
+    private void finishConnection(SelectionKey key) {
+        SocketChannel socketChannel = (SocketChannel) key.channel();
+
+        try {
+            socketChannel.finishConnect(); //Finish connecting.
+            //negociar algo sobre la conexion?? donde ??
+        } catch (IOException e) {
+            System.out.println(e);
+            key.cancel();               // Cancel the channel's registration with our selector
+            return;
+        }
+
+        key.interestOps(SelectionKey.OP_READ);  // Register an interest in reading till send
     }
 
     private void read(SelectionKey key) throws IOException {
@@ -164,24 +217,11 @@ public abstract class NioSelectorThread implements Runnable{
         }
     }
 
-    public void send(SocketChannel socket, byte[] data) {
-        synchronized(mPendingChangeRequests) {
-            this.mPendingChangeRequests.add(new ChangeRequest(socket, ChangeRequest.CHANGEOPS, SelectionKey.OP_WRITE));
-            synchronized (mPendingData) {  // And queue the data we want written
-                List queue = (List) mPendingData.get(socket);
-                if (queue == null) {
-                    queue = new ArrayList();
-                    mPendingData.put(socket, queue);
-                }
-                queue.add(ByteBuffer.wrap(data));
-            }
+    public void addChangeRequest(ChangeRequest changeRequest) {
+        synchronized(this.mPendingChangeRequests) {         // Queue a channel registration
+            this.mPendingChangeRequests.add(changeRequest);
         }
-
-        // Finally, wake up our selecting thread so it can make the required changes
-        this.mSelector.wakeup();
     }
-
-    public abstract void send(byte[] data);
 
     private void processChangeRequests() throws Exception {
         // Process any pending changes
@@ -190,7 +230,7 @@ public abstract class NioSelectorThread implements Runnable{
             while (changes.hasNext()) {
                 ChangeRequest change = (ChangeRequest) changes.next();
                 switch (change.type) {
-                    case ChangeRequest.CHANGEOPS:
+                    case ChangeRequest.CHANGE_OPS:
                         SelectionKey key = change.socket.keyFor(mSelector);
                         key.interestOps(change.ops);
                         break;

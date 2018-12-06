@@ -9,9 +9,10 @@ import java.util.List;
 import d2d.testing.net.events.DataEvent;
 import d2d.testing.net.threads.selectors.NioSelectorThread;
 
-public class ServerWorker implements Runnable {
+public class ServerWorker implements WorkerInterface {
     private List queue = new LinkedList();
 
+    @Override
     public void addData(NioSelectorThread selector, SocketChannel socket, byte[] data, int count) {
         byte[] dataCopy = new byte[count];
         System.arraycopy(data, 0, dataCopy, 0, count);
@@ -21,6 +22,7 @@ public class ServerWorker implements Runnable {
         }
     }
 
+    @Override
     public void run() {
         DataEvent dataEvent;
 
@@ -39,8 +41,9 @@ public class ServerWorker implements Runnable {
             // Return to sender
             Log.d("ServerWorker","ServerWorker received: " +  new String(dataEvent.data));
             dataEvent.selector.getMainActivity().updateMsg(new String(dataEvent.data));
-            //echo
-            dataEvent.selector.send(dataEvent.socket, dataEvent.data);
+
+            //echo to everyone
+            dataEvent.selector.send(dataEvent.data);
         }
     }
 }

@@ -8,8 +8,6 @@ import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.widget.Toast;
 
-import d2d.testing.MainActivity;
-
 public class WiFiP2pBroadcastReceiver extends BroadcastReceiver {
 
     private WifiP2pHandler mWifiP2pHandler;

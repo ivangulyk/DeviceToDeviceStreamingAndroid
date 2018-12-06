@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import d2d.testing.MainActivity;
-import d2d.testing.net.threads.selectors.ClientSelectorThread;
+import d2d.testing.net.threads.selectors.ClientSelector;
 import d2d.testing.net.threads.selectors.ServerSelector;
 
 /*
@@ -47,7 +47,7 @@ public class WifiP2pController {
 
     private WiFiP2pBroadcastReceiver mReciever;
     private ServerSelector mServerSelectorThread;
-    private ClientSelectorThread mClientSelectorThread;
+    private ClientSelector mClientSelector;
     private boolean mWifiStatus;
     private boolean mWifiP2pAvailable = false;
 
@@ -103,8 +103,8 @@ public class WifiP2pController {
     }
 
     public void send(String data) throws IOException {
-        if(mClientSelectorThread != null) {
-            mClientSelectorThread.send(data.getBytes());
+        if(mClientSelector != null) {
+            mClientSelector.send(data.getBytes());
         }
         if(mServerSelectorThread != null) {
 
@@ -174,8 +174,8 @@ public class WifiP2pController {
                 // to the group owner.
 
                 try {
-                    mClientSelectorThread = new ClientSelectorThread(groupOwnerAddress,mContext);
-                    new Thread(mClientSelectorThread).start();
+                    mClientSelector = new ClientSelector(groupOwnerAddress,mContext);
+                    new Thread(mClientSelector).start();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
