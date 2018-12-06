@@ -109,11 +109,7 @@ public class MainActivity extends AppCompatActivity {
         btnSend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                try {
-                    mWifiP2pController.send(editTextMsg.getText().toString());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                mWifiP2pController.send(editTextMsg.getText().toString());
             }
         });
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener(){

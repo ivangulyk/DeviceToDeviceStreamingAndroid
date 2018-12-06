@@ -11,6 +11,7 @@ import d2d.testing.net.threads.selectors.NioSelectorThread;
 
 public class ServerWorker implements WorkerInterface {
     private List queue = new LinkedList();
+    private boolean mEnabled = true;
 
     @Override
     public void addData(NioSelectorThread selector, SocketChannel socket, byte[] data, int count) {
@@ -26,13 +27,13 @@ public class ServerWorker implements WorkerInterface {
     public void run() {
         DataEvent dataEvent;
 
-        while(true) {
+        while(mEnabled) {
             // Wait for data to become available
             synchronized(queue) {
                 while(queue.isEmpty()) {
                     try {
                         queue.wait();
-                    } catch (InterruptedException e) {
+                    } catch (InterruptedException ignored) {
                     }
                 }
                 dataEvent = (DataEvent) queue.remove(0);

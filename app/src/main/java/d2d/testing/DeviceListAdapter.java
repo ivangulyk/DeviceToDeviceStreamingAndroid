@@ -1,9 +1,7 @@
 package d2d.testing;
 
-import android.app.Activity;
 import android.content.Context;
 import android.net.wifi.p2p.WifiP2pDevice;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -39,15 +37,16 @@ public class DeviceListAdapter  extends BaseAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-       View v = convertView;
-        LayoutInflater vi = (LayoutInflater) this.activity.getSystemService(
+        View v = convertView;
+
+        LayoutInflater vi = (LayoutInflater) activity.getSystemService(
                 Context.LAYOUT_INFLATER_SERVICE);
 
         v = vi.inflate(R.layout.device_detail,null);
 
-        TextView name = (TextView)v.findViewById(R.id.device_name);
-        TextView address = (TextView)v.findViewById(R.id.device_adress);
-        TextView status = (TextView)v.findViewById(R.id.device_status);
+        TextView name = v.findViewById(R.id.device_name);
+        TextView address = v.findViewById(R.id.device_adress);
+        TextView status = v.findViewById(R.id.device_status);
 
         name.setText(deviceArray[position].deviceName);
         address.setText(deviceArray[position].deviceAddress);

@@ -47,12 +47,10 @@ public class WifiP2pController {
 
     private WiFiP2pBroadcastReceiver mReciever;
     private ServerSelector mServerSelectorThread;
-    private ClientSelector mClientSelector;
-    private boolean mWifiStatus;
+    private ClientSelector mClientSelectorThread;
     private boolean mWifiP2pAvailable = false;
 
-    protected List<WifiP2pDevice> peers = new ArrayList<WifiP2pDevice>();
-    protected String [] deviceNameArray;
+    protected List<WifiP2pDevice> peers = new ArrayList<>();
     protected WifiP2pDevice[] deviceArray;
 
     public WifiP2pController(MainActivity context)
@@ -64,8 +62,6 @@ public class WifiP2pController {
 
         this.mWifiP2pHandler = new WifiP2pHandler (this.mContext, this.mWifiP2pManager, this.mChannel, this);
         this.mReciever = new WiFiP2pBroadcastReceiver(this.mWifiP2pHandler);
-
-        this.mWifiStatus = false;
     }
 
     public boolean isWifiEnabled() {
@@ -82,7 +78,7 @@ public class WifiP2pController {
 
     public void setWifiEnabled(boolean enabled){
 
-        if(enabled==false)
+        if(!enabled)
         {
             //TODO
             //close connections, threads  etc...
@@ -102,18 +98,16 @@ public class WifiP2pController {
         this.mWifiP2pManager.connect(this.mChannel, config, actionListener);
     }
 
-    public void send(String data) throws IOException {
-        if(mClientSelector != null) {
-            mClientSelector.send(data.getBytes());
+    public void send(String data) {
+        if(mClientSelectorThread != null) {
+            mClientSelectorThread.send(data.getBytes());
         }
         if(mServerSelectorThread != null) {
-
-            //mServerThread.send(data.getBytes());
-            //TODO necesitamos tener en la GUI el socket o algo con lo que mapear los envios
+            mServerSelectorThread.send(data.getBytes());
         }
     }
 
-    public WifiP2pManager.PeerListListener peerListListener = new WifiP2pManager.PeerListListener() {
+    protected WifiP2pManager.PeerListListener peerListListener = new WifiP2pManager.PeerListListener() {
 
         @Override
         public void onPeersAvailable(WifiP2pDeviceList peerList) {
@@ -136,7 +130,7 @@ public class WifiP2pController {
         }
     };
 
-    public WifiP2pManager.ConnectionInfoListener connectionInfoListener = new WifiP2pManager.ConnectionInfoListener() {
+    protected WifiP2pManager.ConnectionInfoListener connectionInfoListener = new WifiP2pManager.ConnectionInfoListener() {
 
         @RequiresApi(api = Build.VERSION_CODES.N)
         @Override
@@ -163,22 +157,24 @@ public class WifiP2pController {
                 }
                 else
                 {
-                    //somos el owner y ya tenemos el thread comprobar el estado de bind, conexion y seguis si no hay error
+                    //somos el owner y ya tenemos el thread comprobar el estado de bind, conexion y seguir si no hay error
                 }
-
-                //
-                Toast.makeText(mContext,"You are Host", Toast.LENGTH_SHORT).show();
             } else if (info.groupFormed) {
                 // The other device acts as the peer (client). In this case,
                 // you'll want to create a peer thread that connects
                 // to the group owner.
-
-                try {
-                    mClientSelector = new ClientSelector(groupOwnerAddress,mContext);
-                    new Thread(mClientSelector).start();
-                } catch (IOException e) {
-                    e.printStackTrace();
+                if(mServerSelectorThread == null) {
+                    try {
+                        mClientSelectorThread = new ClientSelector(groupOwnerAddress, mContext);
+                        new Thread(mClientSelectorThread).start();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
+                else{
+                    //somos el cliente y ya tenemos el thread comprobar el estado de  conexion y seguir si no hay error
+                }
+
                 Toast.makeText(mContext,"You are Client", Toast.LENGTH_SHORT).show();
             }
         }
