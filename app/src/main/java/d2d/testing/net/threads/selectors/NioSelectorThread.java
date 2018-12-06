@@ -62,7 +62,7 @@ public abstract class NioSelectorThread implements Runnable{
         this.mInetAddress   = inetAddress;
         this.mMainActivity  = mainActivity;
         this.mSelector      = SelectorProvider.provider().openSelector();
-        this.initiateConnection();
+        //this.initiateConnection();
         //WORKER MOVIDO A CLIENT/SELECTOR THREAD.. MAS FLEXIBLE SE PUEDE DEVOLVER AQUI EN UN FUTURO ALOMEJOR
 
     }
@@ -77,14 +77,14 @@ public abstract class NioSelectorThread implements Runnable{
 
     public void run(){
         try {
+            this.initiateConnection();
+            while(mStatus == STATUS_DISCONNECTED)
+            {
+                this.initiateConnection();
+                sleep(5000);
+            }
             while(mEnabled)
             {
-                if(mStatus == STATUS_DISCONNECTED)
-                {
-                    this.initiateConnection();
-                    sleep(5000);
-                }
-
                 this.processChangeRequests();
 
                 mSelector.select();
