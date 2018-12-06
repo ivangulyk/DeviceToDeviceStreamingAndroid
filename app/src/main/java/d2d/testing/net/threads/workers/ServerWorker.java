@@ -10,7 +10,7 @@ import d2d.testing.net.events.DataEvent;
 import d2d.testing.net.threads.selectors.NioSelectorThread;
 
 public class ServerWorker implements WorkerInterface {
-    private List queue = new LinkedList();
+    private final List queue = new LinkedList();
     private boolean mEnabled = true;
 
     @Override
@@ -40,11 +40,11 @@ public class ServerWorker implements WorkerInterface {
             }
 
             // Return to sender
-            Log.d("ServerWorker","ServerWorker received: " +  new String(dataEvent.data));
-            dataEvent.selector.getMainActivity().updateMsg(new String(dataEvent.data));
+            Log.d("ServerWorker","ServerWorker received: " +  new String(dataEvent.getData()));
+            dataEvent.getSelector().getMainActivity().updateMsg(new String(dataEvent.getData()));
 
             //echo to everyone
-            dataEvent.selector.send(dataEvent.data);
+            dataEvent.getSelector().send(dataEvent.getData());
         }
     }
 }

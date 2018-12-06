@@ -6,16 +6,26 @@ import d2d.testing.net.threads.selectors.ClientSelector;
 import d2d.testing.net.threads.selectors.NioSelectorThread;
 
 public class DataEvent {
-    public ClientSelector client;
-    public NioSelectorThread selector;
-    public SocketChannel socket;
+    private final NioSelectorThread selector;
+    private final SocketChannel socket;
 
-    public byte[] data;
-    //TODO selector interfaz yt usamos lo mismos data events para server que para cliente?
+    private final byte[] data;
 
     public DataEvent(NioSelectorThread selector, SocketChannel socket, byte[] data) {
         this.selector = selector;
         this.socket = socket;
         this.data = data;
+    }
+
+    public NioSelectorThread getSelector() {
+        return selector;
+    }
+
+    public SocketChannel getSocket() {
+        return socket;
+    }
+
+    public byte[] getData() {
+        return data;
     }
 }

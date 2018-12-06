@@ -16,7 +16,9 @@ public class WiFiP2pBroadcastReceiver extends BroadcastReceiver {
         this.mWifiP2pHandler = wifiP2pHandler;
     }
     public void onReceive(Context context, Intent intent) {
-        String action = intent.getAction();
+        if(intent.getAction() == null) //some problem going on here?
+            return;
+
         switch (intent.getAction()) {
             case WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION:
                 // Determine if Wifi P2P mode is enabled or not, alert

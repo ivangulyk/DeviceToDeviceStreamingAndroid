@@ -13,11 +13,11 @@ import d2d.testing.net.threads.selectors.NioSelectorThread;
 public class ClientWorker implements Runnable, WorkerInterface {
     //TODO Externalizar constantes... SSL??
     //TODO COMPARTIR MISMOS WORKERS? Ya veremos
-    private byte[] PREFIX_CONST = {0x11,0x12,0x11,0x14};
+    private final byte[] PREFIX_CONST = {0x11,0x12,0x11,0x14};
     private byte[] TYPE_MSG = {0x15,0x00};
     private byte[] TYPE_MSG2 = {0x15,0x01};
     private byte[] TYPE_3 = {0x15,0x02};
-    private List queue = new LinkedList();
+    private final List queue = new LinkedList();
 
     private List openMessage = new LinkedList();
 
@@ -57,23 +57,23 @@ public class ClientWorker implements Runnable, WorkerInterface {
     {
         if(openMessage.isEmpty())
         {
-            Log.d("ClientWorker","ClientWorker received: " + new String(dataEvent.data));
+            Log.d("ClientWorker","ClientWorker received: " + new String(dataEvent.getData()));
 
-            dataEvent.client.getMainActivity().updateMsg(new String(dataEvent.data));
+            dataEvent.getSelector().getMainActivity().updateMsg(new String(dataEvent.getData()));
 
-            if(Arrays.equals(Arrays.copyOfRange(dataEvent.data, 0, 3),PREFIX_CONST))            //UN PREFIX DE BYTES PARA DAR COMIENZO AL MENSAJE - OPCIONAL?
+            if(Arrays.equals(Arrays.copyOfRange(dataEvent.getData(), 0, 3),PREFIX_CONST))            //UN PREFIX DE BYTES PARA DAR COMIENZO AL MENSAJE - OPCIONAL?
             {
                 //TODO mandar longitud de mensaje + hash?
 
-                if(Arrays.equals(Arrays.copyOfRange(dataEvent.data, 4, 5),TYPE_MSG))        //CADA TIPO DE MENSAJE QUE PODEMOS ENVIAR
+                if(Arrays.equals(Arrays.copyOfRange(dataEvent.getData(), 4, 5),TYPE_MSG))        //CADA TIPO DE MENSAJE QUE PODEMOS ENVIAR
                 {
                     Log.d("ClientWorker","ClientWorker received TYPE_MSG command");
                 }
-                else if(Arrays.equals(Arrays.copyOfRange(dataEvent.data, 4, 5),TYPE_MSG2))
+                else if(Arrays.equals(Arrays.copyOfRange(dataEvent.getData(), 4, 5),TYPE_MSG2))
                 {
                     Log.d("ClientWorker","ClientWorker received TYPE_MSG2 command");
                 }
-                else if(Arrays.equals(Arrays.copyOfRange(dataEvent.data, 4, 5),TYPE_3))
+                else if(Arrays.equals(Arrays.copyOfRange(dataEvent.getData(), 4, 5),TYPE_3))
                 {
                     Log.d("ClientWorker","ClientWorker received TYPE_3 command");
                 }

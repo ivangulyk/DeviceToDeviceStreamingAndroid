@@ -6,9 +6,9 @@ public class ChangeRequest {
     public static final int REGISTER = 1;
     public static final int CHANGE_OPS = 2;
 
-    public AbstractSelectableChannel socket;
-    public int type;
-    public int ops;
+    public final AbstractSelectableChannel socket;
+    public final int type;
+    public final int ops;
 
     public ChangeRequest(AbstractSelectableChannel socket, int type, int ops) {
         this.socket = socket;

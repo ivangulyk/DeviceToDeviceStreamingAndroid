@@ -130,7 +130,7 @@ public class WifiP2pController {
         }
     };
 
-    protected WifiP2pManager.ConnectionInfoListener connectionInfoListener = new WifiP2pManager.ConnectionInfoListener() {
+    protected final WifiP2pManager.ConnectionInfoListener connectionInfoListener = new WifiP2pManager.ConnectionInfoListener() {
 
         @RequiresApi(api = Build.VERSION_CODES.N)
         @Override

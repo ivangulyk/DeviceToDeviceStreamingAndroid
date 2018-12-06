@@ -16,8 +16,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.IOException;
-
 import d2d.testing.net.WifiP2pController;
 
 

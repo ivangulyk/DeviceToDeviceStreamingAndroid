@@ -35,7 +35,7 @@ public abstract class NioSelectorThread implements Runnable{
     protected static final int STATUS_CONNECTING = 2;
     protected static final int STATUS_CONNECTED = 4;
 
-    private MainActivity mMainActivity;
+    private final MainActivity mMainActivity;
     protected InetAddress mInetAddress;
 
     protected boolean mEnabled = true;
@@ -46,8 +46,8 @@ public abstract class NioSelectorThread implements Runnable{
 
     // A list of ChangeRequest instances and Data/socket map
     protected final List<SocketChannel> mConnections = new ArrayList<>();
-    protected final List mPendingChangeRequests = new LinkedList();
-    protected final Map mPendingData = new HashMap();
+    protected final List<ChangeRequest> mPendingChangeRequests = new LinkedList<>();
+    protected final Map<SocketChannel, List> mPendingData = new HashMap<>();
     private ByteBuffer mReadBuffer = ByteBuffer.allocate(8192);
 
     public abstract void send(byte[] data);
@@ -79,7 +79,7 @@ public abstract class NioSelectorThread implements Runnable{
         try {
             while(mEnabled)
             {
-                if(mStatus == this.STATUS_DISCONNECTED)
+                if(mStatus == STATUS_DISCONNECTED)
                 {
                     this.initiateConnection();
                     sleep(5000);
@@ -201,7 +201,7 @@ public abstract class NioSelectorThread implements Runnable{
         SocketChannel socketChannel = (SocketChannel) key.channel();
 
         synchronized (mPendingData) {
-            List queue = (List) mPendingData.get(socketChannel);
+            List queue = mPendingData.get(socketChannel);
 
             while (!queue.isEmpty()) {                  // Write until there's not more data ...
                 ByteBuffer buf = (ByteBuffer) queue.get(0);
@@ -227,16 +227,14 @@ public abstract class NioSelectorThread implements Runnable{
     private void processChangeRequests() throws Exception {
         // Process any pending changes
         synchronized (mPendingChangeRequests) {
-            Iterator changes = mPendingChangeRequests.iterator();
-            while (changes.hasNext()) {
-                ChangeRequest change = (ChangeRequest) changes.next();
-                switch (change.type) {
+            for (ChangeRequest changeRequest : mPendingChangeRequests) {
+                switch (changeRequest.type) {
                     case ChangeRequest.CHANGE_OPS:
-                        SelectionKey key = change.socket.keyFor(mSelector);
-                        key.interestOps(change.ops);
+                        SelectionKey key = changeRequest.socket.keyFor(mSelector);
+                        key.interestOps(changeRequest.ops);
                         break;
                     case ChangeRequest.REGISTER:
-                        change.socket.register(mSelector, change.ops);
+                        changeRequest.socket.register(mSelector, changeRequest.ops);
                         break;
                 }
             }

@@ -15,7 +15,7 @@ import d2d.testing.net.threads.workers.ServerWorker;
 
 public class ServerSelector extends NioSelectorThread  {
 
-    protected ServerSocketChannel mServerSocket;
+    private ServerSocketChannel mServerSocket;
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     public ServerSelector(MainActivity mainActivity) throws IOException {
@@ -31,7 +31,7 @@ public class ServerSelector extends NioSelectorThread  {
             this.mServerSocket = ServerSocketChannel.open();                        // Create a new non-blocking server socket channel
 
             this.mServerSocket.configureBlocking(false);
-            this.mServerSocket.socket().bind(new InetSocketAddress(this.PORT));     // Bind the server socket
+            this.mServerSocket.socket().bind(new InetSocketAddress(PORT));     // Bind the server socket
 
             this.mStatus = STATUS_LISTENING;
 
