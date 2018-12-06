@@ -36,7 +36,7 @@ public abstract class NioSelectorThread implements Runnable{
     protected static final int STATUS_CONNECTED = 4;
 
     private MainActivity mMainActivity;
-    private InetAddress mInetAddress;
+    protected InetAddress mInetAddress;
 
     protected boolean mEnabled = true;
     protected int mStatus = STATUS_DISCONNECTED;
@@ -59,6 +59,7 @@ public abstract class NioSelectorThread implements Runnable{
     }
 
     public NioSelectorThread(MainActivity mainActivity, InetAddress inetAddress) throws IOException {
+        this.mInetAddress   = inetAddress;
         this.mMainActivity  = mainActivity;
         this.mSelector      = SelectorProvider.provider().openSelector();
         this.initiateConnection();
@@ -151,7 +152,7 @@ public abstract class NioSelectorThread implements Runnable{
         // Register the SocketChannel with our Selector, indicating to be notified for READING
         socketChannel.register(this.mSelector, SelectionKey.OP_READ);
         mConnections.add(socketChannel);
-
+        this.mStatus = this.mStatus | STATUS_CONNECTED;
         Log.d("SERVER","Connection Accepted: " + socket.getLocalAddress() + "\n");
     }
 
@@ -166,7 +167,7 @@ public abstract class NioSelectorThread implements Runnable{
             key.cancel();               // Cancel the channel's registration with our selector
             return;
         }
-
+        this.mStatus = STATUS_CONNECTED;
         key.interestOps(SelectionKey.OP_READ);  // Register an interest in reading till send
     }
 

@@ -16,8 +16,6 @@ import d2d.testing.net.threads.workers.ClientWorker;
 public class ClientSelector extends NioSelectorThread{
     protected SocketChannel mSocket;
 
-    private InetAddress mInetAddress;
-
     @RequiresApi(api = Build.VERSION_CODES.N)
     public ClientSelector(InetAddress address, MainActivity mainActivity) throws IOException {
         super(mainActivity,address);
