@@ -19,14 +19,16 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import d2d.testing.MainActivity;
 import d2d.testing.net.events.ChangeRequest;
 import d2d.testing.net.threads.workers.ServerWorker;
 
 public abstract class NioSelectorThread implements Runnable{
     //TODO
     protected static final int PORT = 3462;
+    private MainActivity mMainActivity;
 
-    private boolean listening = true;
+    private boolean mEnabled = true;
 
     protected ServerSocketChannel mServerSocket;
     protected Selector mSelector;
@@ -43,20 +45,25 @@ public abstract class NioSelectorThread implements Runnable{
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    public NioSelectorThread() {
-        this.mWorker = new ServerWorker();
-        new Thread(mWorker).start();
-        mSelector = this.initSelector();
+    public NioSelectorThread(MainActivity mainActivity) {
+        this.mMainActivity  = mainActivity;
+        this.mSelector      = this.initSelector();
+
+        //WORKER MOVIDO A CLIENT/SELECTOR THREAD.. MAS FLEXIBLE SE PUEDE DEVOLVER AQUI EN UN FUTURO ALOMEJOR
+    }
+
+    public MainActivity getMainActivity(){
+        return this.mMainActivity;
     }
 
     public void stop(){
-        this.listening = false;
+        this.mEnabled = false;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     public void run(){
         try {
-            while(listening)
+            while(mEnabled)
             {
                 this.processChangeRequests();
 
@@ -174,8 +181,7 @@ public abstract class NioSelectorThread implements Runnable{
         this.mSelector.wakeup();
     }
 
-    public void send(byte[] data) {
-    }
+    public abstract void send(byte[] data);
 
     private void processChangeRequests() throws Exception {
         // Process any pending changes

@@ -21,24 +21,7 @@ public class DeviceListAdapter  extends BaseAdapter {
         this.activity = activity;
     }
 
-    private static String getDeviceStatus(int deviceStatus) {
-        //Log.d(MainActivity.TAG, "Peer status :" + deviceStatus);
-        switch (deviceStatus) {
-            case WifiP2pDevice.AVAILABLE:
-                return "Available";
-            case WifiP2pDevice.INVITED:
-                return "Invited";
-            case WifiP2pDevice.CONNECTED:
-                return "Connected";
-            case WifiP2pDevice.FAILED:
-                return "Failed";
-            case WifiP2pDevice.UNAVAILABLE:
-                return "Unavailable";
-            default:
-                return "Unknown";
 
-        }
-    }
     @Override
     public int getCount() {
         return deviceArray.length;
@@ -68,7 +51,7 @@ public class DeviceListAdapter  extends BaseAdapter {
 
         name.setText(deviceArray[position].deviceName);
         address.setText(deviceArray[position].deviceAddress);
-        status.setText(getDeviceStatus(deviceArray[position].status));
+        status.setText(activity.getDeviceStatus(deviceArray[position].status));
         return v;
     }
 }

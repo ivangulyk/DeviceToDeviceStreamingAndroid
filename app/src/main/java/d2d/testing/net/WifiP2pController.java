@@ -107,6 +107,7 @@ public class WifiP2pController {
             mClientSelectorThread.send(data.getBytes());
         }
         if(mServerSelectorThread != null) {
+
             //mServerThread.send(data.getBytes());
             //TODO necesitamos tener en la GUI el socket o algo con lo que mapear los envios
         }
@@ -154,7 +155,7 @@ public class WifiP2pController {
                 if(mServerSelectorThread == null)
                 {
                     try {
-                        mServerSelectorThread = new ServerSelector();
+                        mServerSelectorThread = new ServerSelector(mContext);
                         new Thread(mServerSelectorThread).start();
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -173,7 +174,7 @@ public class WifiP2pController {
                 // to the group owner.
 
                 try {
-                    mClientSelectorThread = new ClientSelectorThread(groupOwnerAddress);
+                    mClientSelectorThread = new ClientSelectorThread(groupOwnerAddress,mContext);
                     new Thread(mClientSelectorThread).start();
                 } catch (IOException e) {
                     e.printStackTrace();

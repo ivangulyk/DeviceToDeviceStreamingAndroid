@@ -57,6 +57,8 @@ public class ClientWorker implements Runnable {
         {
             Log.d("ClientWorker","ClientWorker received: " + new String(dataEvent.data));
 
+            dataEvent.client.getMainActivity().updateMsg(new String(dataEvent.data));
+
             if(Arrays.equals(Arrays.copyOfRange(dataEvent.data, 0, 3),PREFIX_CONST))            //UN PREFIX DE BYTES PARA DAR COMIENZO AL MENSAJE - OPCIONAL?
             {
                 //TODO mandar longitud de mensaje + hash?

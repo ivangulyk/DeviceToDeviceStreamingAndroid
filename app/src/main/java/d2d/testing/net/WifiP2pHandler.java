@@ -9,12 +9,14 @@ import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Looper;
 import android.widget.Toast;
 
+import d2d.testing.MainActivity;
+
 /**
  * Created by Koerfer on 16.02.2016.
  */
 public class WifiP2pHandler {
 
-    public Activity mActivity;
+    public MainActivity mActivity;
     public WifiP2pManager mWifiP2pManager;
     public WifiP2pManager.Channel mChannel;
     public WifiP2pController mController;
@@ -35,12 +37,12 @@ public class WifiP2pHandler {
         this.mChannel = channel;
     }
 
-    public Activity getActivity() {
+    public MainActivity getActivity() {
 
         return this.mActivity;
     }
 
-    public void setActivity(Activity activity) {
+    public void setActivity(MainActivity activity) {
         this.mActivity = activity;
     }
 
@@ -52,7 +54,7 @@ public class WifiP2pHandler {
         return this.mController.connectionInfoListener;
     }
 
-    public WifiP2pHandler(Activity activity, WifiP2pManager manager, WifiP2pManager.Channel channel, WifiP2pController controller) {
+    public WifiP2pHandler(MainActivity activity, WifiP2pManager manager, WifiP2pManager.Channel channel, WifiP2pController controller) {
         this.mActivity = activity;
         this.mWifiP2pManager = manager;
         this.mChannel = channel;

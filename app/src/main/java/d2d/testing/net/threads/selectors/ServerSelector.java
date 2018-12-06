@@ -1,5 +1,8 @@
 package d2d.testing.net.threads.selectors;
 
+import android.os.Build;
+import android.support.annotation.RequiresApi;
+
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
@@ -10,9 +13,19 @@ import java.nio.channels.spi.SelectorProvider;
 import java.util.ArrayList;
 import java.util.List;
 
+import d2d.testing.MainActivity;
 import d2d.testing.net.events.ChangeRequest;
+import d2d.testing.net.threads.workers.ServerWorker;
 
 public class ServerSelector extends NioSelectorThread  {
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    public ServerSelector(MainActivity mainActivity) {
+        super(mainActivity);
+
+        this.mWorker        = new ServerWorker();
+        new Thread(mWorker).start();
+    }
     protected Selector initSelector() {
         try {
             Selector socketSelector = SelectorProvider.provider().openSelector();   // Create a new selector

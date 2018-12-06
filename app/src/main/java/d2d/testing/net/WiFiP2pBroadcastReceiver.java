@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.net.NetworkInfo;
+import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.widget.Toast;
 
@@ -51,11 +52,8 @@ public class WiFiP2pBroadcastReceiver extends BroadcastReceiver {
                 break;
 
             case WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION:
-                /*  DeviceListFragment fragment = (DeviceListFragment) activity.getFragmentManager()
-                        .findFragmentById(R.id.frag_list);
-                fragment.updateThisDevice((WifiP2pDevice) intent.getParcelableExtra(
-                        WifiP2pManager.EXTRA_WIFI_P2P_DEVICE));
-                */
+                mWifiP2pHandler.mActivity.updateThisDevice((WifiP2pDevice) intent.getParcelableExtra(WifiP2pManager.EXTRA_WIFI_P2P_DEVICE));
+
                 break;
         }
     }

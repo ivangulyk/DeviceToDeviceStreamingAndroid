@@ -18,6 +18,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import d2d.testing.MainActivity;
 import d2d.testing.net.events.ChangeRequest;
 import d2d.testing.net.threads.workers.ClientWorker;
 
@@ -26,6 +27,8 @@ public class ClientSelectorThread implements Runnable{
     private static final int PORT = 3462;
     private static final int BUFF_SIZE = 8192;
     private boolean enabled = true;
+
+    private MainActivity mainActivity;
 
     private SocketChannel mSocket;
     private InetAddress mInetAddress;
@@ -42,7 +45,8 @@ public class ClientSelectorThread implements Runnable{
     private final List mPendingChangeRequests = new LinkedList();
     private final Map mPendingData = new HashMap();
 
-    public ClientSelectorThread(InetAddress address) throws IOException {
+    public ClientSelectorThread(InetAddress address, MainActivity mainActivity) throws IOException {
+        this.mainActivity = mainActivity;
         mInetAddress = address;
         mInetSocketAddress = new InetSocketAddress(mInetAddress.getHostAddress(),PORT);
         //mSocket = new Socket(mInetAddress, PORT);
@@ -54,6 +58,10 @@ public class ClientSelectorThread implements Runnable{
     private Selector initSelector() throws IOException {
         // Create a new selector
         return SelectorProvider.provider().openSelector();
+    }
+
+    public MainActivity getMainActivity(){
+        return this.mainActivity;
     }
 
     @Override
