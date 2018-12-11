@@ -9,7 +9,7 @@ public class DataFormat {
     public static final byte[] START_PACKET_CONST = {0x11,0x17,0x16,0x15};
     public static final byte[] END_PREFIX_CONST = {0x11,0x15,0x16,0x17};
 
-    public static final int LENGTH_HEADER = 4;
+    public static final int LENGTH_HEADER = 5;
 
     public static final int TYPE_POSITION = 4;
 

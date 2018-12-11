@@ -1,5 +1,13 @@
 package d2d.testing.net.threads.workers;
 
+import android.os.Environment;
+import android.provider.ContactsContract;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.channels.SocketChannel;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -18,7 +26,7 @@ public class ClientWorker implements Runnable, WorkerInterface {
     private byte[] TYPE_3 = {0x15,0x02};
     private final List queue = new LinkedList();
 
-    private List openMessage = new LinkedList();
+    private List openPackets = new LinkedList();
 
     private boolean mEnabled = true;
 
@@ -54,30 +62,79 @@ public class ClientWorker implements Runnable, WorkerInterface {
 
     private void processData(DataEvent dataEvent)
     {
-        if(openMessage.isEmpty())
+        if(openPackets.isEmpty())
         {
             Logger.d("ClientWorker received: " + new String(dataEvent.getData()));
 
             //TODO mandar longitud de mensaje + hash?
 
-
-            /*if(Arrays.equals(,DataFormat.TYPE_MSG))        //CADA TIPO DE MENSAJE QUE PODEMOS ENVIAR
-            {
-                dataEvent.getSelector().getMainActivity().updateMsg(new String(dataEvent.getData()));
-                Logger.d("ClientWorker received TYPE_MSG command");
-            }
-            else if(Arrays.equals(Arrays.copyOfRange(dataEvent.getData(), 4, 5),DataFormat.TYPE_FILE))
-            {
-                Logger.d("ClientWorker received TYPE_MSG2 command");
-            }
-            else if(Arrays.equals(Arrays.copyOfRange(dataEvent.getData(), 4, 5),DataFormat.TYPE_IMAGE))
-            {
-                Logger.d("ClientWorker received TYPE_3 command");
-            }*/
+            openPackets.add(DataFormat.getPackets(dataEvent.getData()));
         }
         else
         {
+            Packet p = openPackets.remove(0);
+            openPackets.add(DataFormat.resumePacket(p));
             //TODO implementar cola ha llegado un mensaje pero no esta completo
         }
+
+        for (DataPacket packet : openPackets) {
+            if(!packet.isComplete())
+                break;
+            switch (DataPacket.getType())
+            {
+                case DataFormat.TYPE_MSG:
+                    dataEvent.getSelector().getMainActivity().updateMsg(new String(dataEvent.getData()));
+                    Logger.d("ClientWorker received TYPE_MSG command");
+                    break;
+                case DataFormat.TYPE_IMAGE:
+
+                    Logger.d("ClientWorker received TYPE_IMAGE command");
+                    break;
+                case DataFormat.TYPE_FILE:
+                    handleFile(packet);
+
+                    Logger.d("ClientWorker received TYPE_FILE command");
+                    break;
+                default:
+                    //ERROR NO HAY TIPO DE MENSAJE!!
+            }
+        }
+    }
+
+    private void handleFile(Packet packet){
+        final File f = new File(Environment.getExternalStorageDirectory() + "/"
+                + "/wifip2pshared-" + System.currentTimeMillis()
+                + ".jpg");
+        File dirs = new File(f.getParent());
+        if (!dirs.exists())
+            dirs.mkdirs();
+        try {
+            f.createNewFile();
+        } catch (IOException e) {
+            Logger.e(e.getMessage());
+        }
+        Logger.d("copying files " + f.toString());
+        try {
+            copyFile(packet.getData(), new FileOutputStream(f));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private boolean copyFile(byte[] file, OutputStream out) {
+        byte buf[] = new byte[1024];
+        int len;
+        try {
+            int i = 0;
+            while (i < file.length) {
+                out.write(buf, 0, file[i]);
+                i++;
+            }
+            out.close();
+        } catch (IOException e) {
+            Logger.d(e.toString());
+            return false;
+        }
+        return true;
     }
 }
