@@ -60,26 +60,19 @@ public class ClientWorker implements Runnable, WorkerInterface {
 
             dataEvent.getSelector().getMainActivity().updateMsg(new String(dataEvent.getData()));
 
-            if(Arrays.equals(Arrays.copyOfRange(dataEvent.getData(), 0, 3),PREFIX_CONST))            //UN PREFIX DE BYTES PARA DAR COMIENZO AL MENSAJE - OPCIONAL?
-            {
-                //TODO mandar longitud de mensaje + hash?
+            //TODO mandar longitud de mensaje + hash?
 
-                if(Arrays.equals(Arrays.copyOfRange(dataEvent.getData(), 4, 5),TYPE_MSG))        //CADA TIPO DE MENSAJE QUE PODEMOS ENVIAR
-                {
-                    Logger.d("ClientWorker received TYPE_MSG command");
-                }
-                else if(Arrays.equals(Arrays.copyOfRange(dataEvent.getData(), 4, 5),TYPE_MSG2))
-                {
-                    Logger.d("ClientWorker received TYPE_MSG2 command");
-                }
-                else if(Arrays.equals(Arrays.copyOfRange(dataEvent.getData(), 4, 5),TYPE_3))
-                {
-                    Logger.d("ClientWorker received TYPE_3 command");
-                }
-            }
-            else
+            if(Arrays.equals(Arrays.copyOfRange(dataEvent.getData(), 4, 5),DataFormat.TYPE_MSG))        //CADA TIPO DE MENSAJE QUE PODEMOS ENVIAR
             {
-                //TODO err?? no hay colas y no hay prefijo ver que se ha enviado y buscar prefijo mas adelante?
+                Logger.d("ClientWorker received TYPE_MSG command");
+            }
+            else if(Arrays.equals(Arrays.copyOfRange(dataEvent.getData(), 4, 5),DataFormat.TYPE_FILE))
+            {
+                Logger.d("ClientWorker received TYPE_MSG2 command");
+            }
+            else if(Arrays.equals(Arrays.copyOfRange(dataEvent.getData(), 4, 5),DataFormat.TYPE_IMAGE))
+            {
+                Logger.d("ClientWorker received TYPE_3 command");
             }
         }
         else

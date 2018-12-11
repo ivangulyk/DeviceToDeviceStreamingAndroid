@@ -29,15 +29,13 @@ public class FileWorker implements Runnable{
 
             ByteArrayOutputStream output = new ByteArrayOutputStream();
             ContentResolver cr = mHandler.getActivity().getContentResolver();
-            InputStream is = null;
-
-            is = cr.openInputStream(Uri.parse(mFileUri.toString()));
+            InputStream is = cr.openInputStream(Uri.parse(mFileUri.toString()));
 
             Logger.d("File worker: Streams opened we are going to construct the msg...");
-
-
             copyFile(is, output);
-            Logger.d("File worker: Data written");
+            mHandler.mController.send(DataFormat.createFilePacket(output.toByteArray()));
+
+            Logger.d("File worker: Data passed to controller...");
         } catch (FileNotFoundException e) {
             Logger.e("File worker: FileNotFoundException... something wrong");
             Logger.e(e.getMessage());
@@ -50,7 +48,6 @@ public class FileWorker implements Runnable{
         try {
             while ((len = inputStream.read(buf)) != -1) {
                 out.write(buf, 0, len);
-
             }
             out.close();
             inputStream.close();

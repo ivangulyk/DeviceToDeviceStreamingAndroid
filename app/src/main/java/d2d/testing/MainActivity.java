@@ -21,6 +21,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import d2d.testing.net.WifiP2pController;
+import d2d.testing.net.threads.workers.DataFormat;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -114,7 +115,7 @@ public class MainActivity extends AppCompatActivity {
         btnSend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mWifiP2pController.send(editTextMsg.getText().toString());
+                mWifiP2pController.send(DataFormat.createMessagePacket(editTextMsg.getText().toString()));
             }
         });
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener(){

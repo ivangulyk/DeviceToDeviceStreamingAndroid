@@ -93,12 +93,12 @@ public class WifiP2pController {
         this.mWifiP2pManager.connect(this.mChannel, config, actionListener);
     }
 
-    public void send(String data) {
+    public void send(byte[] data) {
         if(mClientSelectorThread != null) {
-            mClientSelectorThread.send(data.getBytes());
+            mClientSelectorThread.send(data);
         }
         if(mServerSelectorThread != null) {
-            mServerSelectorThread.send(data.getBytes());
+            mServerSelectorThread.send(data);
         }
     }
 
