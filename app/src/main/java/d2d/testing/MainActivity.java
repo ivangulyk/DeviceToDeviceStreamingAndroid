@@ -1,8 +1,10 @@
 package d2d.testing;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
@@ -23,6 +25,7 @@ import d2d.testing.net.WifiP2pController;
 public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_COARSE_LOCATION_CODE = 101;
     private static final int MY_CAMERA_REQUEST_CODE = 100;
+    private static final int CHOOSE_FILE_CODE = 102;
     private boolean camera_has_perm = false;
     private boolean location_has_perm = false;
 
@@ -62,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void execListener() {
-        btnCamera.setOnClickListener(new View.OnClickListener() {
+        /*btnCamera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if(checkCameraHardware()) {
@@ -71,8 +74,10 @@ public class MainActivity extends AppCompatActivity {
                        //TODO here goes all the functionality
                     }
                 }
+                onBrowse(v);
             }
-        });
+        });*/
+
         btnOnOff.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -200,6 +205,25 @@ public class MainActivity extends AppCompatActivity {
             listView.setAdapter(deviceListAdapter);
         }
 
+    }
+
+    public void onBrowse(View view) {
+        Intent chooseFile;
+        Intent intent;
+        chooseFile = new Intent(Intent.ACTION_GET_CONTENT);
+        chooseFile.addCategory(Intent.CATEGORY_OPENABLE);
+        chooseFile.setType("image/*");
+        intent = Intent.createChooser(chooseFile, "Choose a file");
+        startActivityForResult(intent, CHOOSE_FILE_CODE);
+    }
+
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (resultCode != RESULT_OK) return;
+        if(requestCode == CHOOSE_FILE_CODE)
+        {
+            Uri uri = data.getData();
+            System.out.print("Path  = " + uri);
+        }
     }
 
     @Override
