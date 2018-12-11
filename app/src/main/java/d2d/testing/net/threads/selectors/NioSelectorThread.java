@@ -77,37 +77,37 @@ public abstract class NioSelectorThread implements Runnable{
 
     public void run(){
         try {
-            this.initiateConnection();
-            while(mStatus == STATUS_DISCONNECTED)
-            {
+            while(mEnabled) {
                 this.initiateConnection();
-                sleep(5000);
-            }
-            while(mEnabled)
-            {
-                this.processChangeRequests();
 
-                mSelector.select();
+                while (mStatus != STATUS_DISCONNECTED) {
+                    this.processChangeRequests();
 
-                Iterator<SelectionKey> itKeys = mSelector.selectedKeys().iterator();
-                while (itKeys.hasNext()) {
-                    SelectionKey myKey = itKeys.next();
-                    itKeys.remove();
+                    mSelector.select();
 
-                    if (!myKey.isValid()) {
-                        continue;
-                    }
+                    Iterator<SelectionKey> itKeys = mSelector.selectedKeys().iterator();
+                    while (itKeys.hasNext()) {
+                        SelectionKey myKey = itKeys.next();
+                        itKeys.remove();
 
-                    if (myKey.isAcceptable()) {
-                        this.accept(myKey);
-                    } else if (myKey.isConnectable()) {
-                        this.finishConnection(myKey);
-                    } else if (myKey.isReadable()) {
-                        this.read(myKey);
-                    } else if (myKey.isWritable()) {
-                        this.write(myKey);
+                        if (!myKey.isValid()) {
+                            continue;
+                        }
+
+                        if (myKey.isAcceptable()) {
+                            this.accept(myKey);
+                        } else if (myKey.isConnectable()) {
+                            this.finishConnection(myKey);
+                        } else if (myKey.isReadable()) {
+                            this.read(myKey);
+                        } else if (myKey.isWritable()) {
+                            this.write(myKey);
+                        }
                     }
                 }
+
+                if(mEnabled)
+                    sleep(5000); //nos hemos desconectado esperamos y volvemos a intentarlo
             }
         } catch (Exception e) {
             e.printStackTrace();

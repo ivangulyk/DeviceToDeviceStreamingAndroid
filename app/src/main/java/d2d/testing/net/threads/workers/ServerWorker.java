@@ -1,7 +1,5 @@
 package d2d.testing.net.threads.workers;
 
-import android.util.Log;
-
 import java.nio.channels.SocketChannel;
 import java.util.LinkedList;
 import java.util.List;

@@ -1,6 +1,7 @@
 package d2d.testing;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
@@ -182,13 +183,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void updateThisDevice(WifiP2pDevice device) {
-     myName.setText(device.deviceName);
-     myStatus.setText(getDeviceStatus(device.status));
-     myAdd.setText(device.deviceAddress);
+         myName.setText(device.deviceName);
+         myStatus.setText(getDeviceStatus(device.status));
+         myAdd.setText(device.deviceAddress);
     }
 
-    public void updateMsg(String str){
-        redMsg.setText(str);
+    public void updateMsg(final String str){
+        runOnUiThread(new Runnable() {
+            public void run() {
+                redMsg.setText(str);
+            }
+        });
     }
 
     public void updatePeers(WifiP2pDevice[] deviceArray)
