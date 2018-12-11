@@ -58,12 +58,11 @@ public class ClientWorker implements Runnable, WorkerInterface {
         {
             Logger.d("ClientWorker received: " + new String(dataEvent.getData()));
 
-            dataEvent.getSelector().getMainActivity().updateMsg(new String(dataEvent.getData()));
-
             //TODO mandar longitud de mensaje + hash?
 
-            if(Arrays.equals(Arrays.copyOfRange(dataEvent.getData(), 4, 5),DataFormat.TYPE_MSG))        //CADA TIPO DE MENSAJE QUE PODEMOS ENVIAR
+            if(Arrays.equals(Arrays.copyOfRange(dataEvent.getData(), 0, 1),DataFormat.TYPE_MSG))        //CADA TIPO DE MENSAJE QUE PODEMOS ENVIAR
             {
+                dataEvent.getSelector().getMainActivity().updateMsg(new String(dataEvent.getData()));
                 Logger.d("ClientWorker received TYPE_MSG command");
             }
             else if(Arrays.equals(Arrays.copyOfRange(dataEvent.getData(), 4, 5),DataFormat.TYPE_FILE))
