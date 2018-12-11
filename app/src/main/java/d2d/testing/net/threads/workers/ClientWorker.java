@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
+import d2d.testing.helpers.Logger;
 import d2d.testing.net.events.DataEvent;
 import d2d.testing.net.threads.selectors.NioSelectorThread;
 
@@ -57,7 +58,7 @@ public class ClientWorker implements Runnable, WorkerInterface {
     {
         if(openMessage.isEmpty())
         {
-            Log.d("ClientWorker","ClientWorker received: " + new String(dataEvent.getData()));
+            Logger.d("ClientWorker received: " + new String(dataEvent.getData()));
 
             dataEvent.getSelector().getMainActivity().updateMsg(new String(dataEvent.getData()));
 
@@ -67,15 +68,15 @@ public class ClientWorker implements Runnable, WorkerInterface {
 
                 if(Arrays.equals(Arrays.copyOfRange(dataEvent.getData(), 4, 5),TYPE_MSG))        //CADA TIPO DE MENSAJE QUE PODEMOS ENVIAR
                 {
-                    Log.d("ClientWorker","ClientWorker received TYPE_MSG command");
+                    Logger.d("ClientWorker received TYPE_MSG command");
                 }
                 else if(Arrays.equals(Arrays.copyOfRange(dataEvent.getData(), 4, 5),TYPE_MSG2))
                 {
-                    Log.d("ClientWorker","ClientWorker received TYPE_MSG2 command");
+                    Logger.d("ClientWorker received TYPE_MSG2 command");
                 }
                 else if(Arrays.equals(Arrays.copyOfRange(dataEvent.getData(), 4, 5),TYPE_3))
                 {
-                    Log.d("ClientWorker","ClientWorker received TYPE_3 command");
+                    Logger.d("ClientWorker received TYPE_3 command");
                 }
             }
             else

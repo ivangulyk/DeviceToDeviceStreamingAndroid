@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import d2d.testing.MainActivity;
+import d2d.testing.helpers.Logger;
 import d2d.testing.net.events.ChangeRequest;
 import d2d.testing.net.threads.workers.WorkerInterface;
 
@@ -29,7 +30,6 @@ import static java.lang.Thread.sleep;
 public abstract class NioSelectorThread implements Runnable{
     //TODO
     protected static final int PORT = 3462;
-    public static final String TAG = "WIFI-P2P-NETWORK";
 
     protected static final int STATUS_DISCONNECTED = 0;
     protected static final int STATUS_LISTENING = 1;
@@ -158,7 +158,7 @@ public abstract class NioSelectorThread implements Runnable{
         socketChannel.register(this.mSelector, SelectionKey.OP_READ);
         mConnections.add(socketChannel);
         this.mStatus = this.mStatus | STATUS_CONNECTED;
-        Log.d(TAG,"NioSelectorThread: Connection Accepted from IP: " + socket.getLocalAddress() + "\n");
+        Logger.d("NioSelectorThread: Connection Accepted from IP: " + socket.getLocalAddress() + "\n");
     }
 
     private void finishConnection(SelectionKey key) {
@@ -167,7 +167,7 @@ public abstract class NioSelectorThread implements Runnable{
         try {
             socketChannel.finishConnect(); //Finish connecting.
             //negociar algo sobre la conexion?? donde ??
-            Log.d(TAG,"NioSelectorThread: finish connecting as client.... " + socketChannel.socket().getLocalAddress());
+            Logger.d("NioSelectorThread: finish connecting as client.... " + socketChannel.socket().getLocalAddress());
         } catch (IOException e) {
             System.out.println(e);
             key.cancel();               // Cancel the channel's registration with our selector
@@ -195,7 +195,7 @@ public abstract class NioSelectorThread implements Runnable{
             key.cancel();       // Remote entity shut the socket down cleanly. Do the same
             socketChannel.close();
             mConnections.remove(socketChannel);
-            Log.d(TAG,"NioSelectorThread: client closed connection... IP: " + socketChannel.socket().getLocalAddress());
+            Logger.d("NioSelectorThread: client closed connection... IP: " + socketChannel.socket().getLocalAddress());
             return;
         }
 

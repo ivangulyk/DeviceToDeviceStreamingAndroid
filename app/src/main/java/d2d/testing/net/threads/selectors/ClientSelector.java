@@ -11,6 +11,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 
 import d2d.testing.MainActivity;
+import d2d.testing.helpers.Logger;
 import d2d.testing.net.events.ChangeRequest;
 import d2d.testing.net.threads.workers.ClientWorker;
 
@@ -35,7 +36,7 @@ public class ClientSelector extends NioSelectorThread{
 
             this.mStatus = STATUS_CONNECTING;
             this.addChangeRequest(new ChangeRequest(mSocket, ChangeRequest.REGISTER, SelectionKey.OP_CONNECT));
-            Log.d(TAG,"ClientSelector: initiateConnection as client trying to connect to " + mInetAddress.getHostAddress());
+            Logger.d("ClientSelector: initiateConnection as client trying to connect to " + mInetAddress.getHostAddress());
         } catch (IOException e) {
             e.printStackTrace();
         }

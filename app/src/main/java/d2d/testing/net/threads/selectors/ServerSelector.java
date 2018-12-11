@@ -11,6 +11,7 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 
 import d2d.testing.MainActivity;
+import d2d.testing.helpers.Logger;
 import d2d.testing.net.events.ChangeRequest;
 import d2d.testing.net.threads.workers.ServerWorker;
 
@@ -36,7 +37,7 @@ public class ServerSelector extends NioSelectorThread  {
 
             this.mStatus = STATUS_LISTENING;
             this.addChangeRequest(new ChangeRequest(mServerSocket, ChangeRequest.REGISTER, SelectionKey.OP_ACCEPT));
-            Log.d(TAG,"ServerSelector: initiateConnection as server listening on port " + PORT);
+            Logger.d("ServerSelector: initiateConnection as server listening on port " + PORT);
         } catch (IOException e) {
             e.printStackTrace();
         }

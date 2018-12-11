@@ -6,6 +6,7 @@ import java.nio.channels.SocketChannel;
 import java.util.LinkedList;
 import java.util.List;
 
+import d2d.testing.helpers.Logger;
 import d2d.testing.net.events.DataEvent;
 import d2d.testing.net.threads.selectors.NioSelectorThread;
 
@@ -40,7 +41,7 @@ public class ServerWorker implements WorkerInterface {
             }
 
             // Return to sender
-            Log.d("ServerWorker","ServerWorker received: " +  new String(dataEvent.getData()));
+            Logger.d("ServerWorker received: " +  new String(dataEvent.getData()));
             dataEvent.getSelector().getMainActivity().updateMsg(new String(dataEvent.getData()));
 
             //echo to everyone
