@@ -2,6 +2,7 @@ package d2d.testing.net.threads.selectors;
 
 import android.os.Build;
 import android.support.annotation.RequiresApi;
+import android.util.Log;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -34,8 +35,8 @@ public class ServerSelector extends NioSelectorThread  {
             this.mServerSocket.socket().bind(new InetSocketAddress(PORT));     // Bind the server socket
 
             this.mStatus = STATUS_LISTENING;
-
             this.addChangeRequest(new ChangeRequest(mServerSocket, ChangeRequest.REGISTER, SelectionKey.OP_ACCEPT));
+            Log.d(TAG,"ServerSelector: initiateConnection as server listening on port " + PORT);
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -48,7 +48,6 @@ public class WifiP2pController {
     private WiFiP2pBroadcastReceiver mReciever;
     private ServerSelector mServerSelectorThread;
     private ClientSelector mClientSelectorThread;
-    private boolean mWifiP2pAvailable = false;
 
     protected List<WifiP2pDevice> peers = new ArrayList<>();
     protected WifiP2pDevice[] deviceArray;
@@ -66,10 +65,6 @@ public class WifiP2pController {
 
     public boolean isWifiEnabled() {
         return mWifiManager.isWifiEnabled();
-    }
-
-    public boolean isWifiP2pAvailable() {
-        return mWifiP2pAvailable;
     }
 
     public BroadcastReceiver getWiFiP2pBroadcastReceiver() {
@@ -135,7 +130,6 @@ public class WifiP2pController {
         @RequiresApi(api = Build.VERSION_CODES.N)
         @Override
         public void onConnectionInfoAvailable(final WifiP2pInfo info) {
-
             // InetAddress from WifiP2pInfo struct.
             final InetAddress groupOwnerAddress = info.groupOwnerAddress;
 

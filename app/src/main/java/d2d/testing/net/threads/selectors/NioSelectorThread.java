@@ -29,6 +29,7 @@ import static java.lang.Thread.sleep;
 public abstract class NioSelectorThread implements Runnable{
     //TODO
     protected static final int PORT = 3462;
+    public static final String TAG = "WIFI-P2P-NETWORK";
 
     protected static final int STATUS_DISCONNECTED = 0;
     protected static final int STATUS_LISTENING = 1;
@@ -64,7 +65,6 @@ public abstract class NioSelectorThread implements Runnable{
         this.mSelector      = SelectorProvider.provider().openSelector();
         //this.initiateConnection();
         //WORKER MOVIDO A CLIENT/SELECTOR THREAD.. MAS FLEXIBLE SE PUEDE DEVOLVER AQUI EN UN FUTURO ALOMEJOR
-
     }
 
     public MainActivity getMainActivity(){
@@ -111,15 +111,20 @@ public abstract class NioSelectorThread implements Runnable{
             }
         } catch (Exception e) {
             e.printStackTrace();
-        }
-
-        for (SelectionKey key : mSelector.keys()) {
+        } finally {
+            for (SelectionKey key : mSelector.keys()) {
+                try {
+                    key.channel().close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                key.cancel();
+            }
             try {
-                key.channel().close();
+                mSelector.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            key.cancel();
         }
     }
 
@@ -153,7 +158,7 @@ public abstract class NioSelectorThread implements Runnable{
         socketChannel.register(this.mSelector, SelectionKey.OP_READ);
         mConnections.add(socketChannel);
         this.mStatus = this.mStatus | STATUS_CONNECTED;
-        Log.d("SERVER","Connection Accepted: " + socket.getLocalAddress() + "\n");
+        Log.d(TAG,"NioSelectorThread: Connection Accepted from IP: " + socket.getLocalAddress() + "\n");
     }
 
     private void finishConnection(SelectionKey key) {
@@ -162,6 +167,7 @@ public abstract class NioSelectorThread implements Runnable{
         try {
             socketChannel.finishConnect(); //Finish connecting.
             //negociar algo sobre la conexion?? donde ??
+            Log.d(TAG,"NioSelectorThread: finish connecting as client.... " + socketChannel.socket().getLocalAddress());
         } catch (IOException e) {
             System.out.println(e);
             key.cancel();               // Cancel the channel's registration with our selector
@@ -189,7 +195,7 @@ public abstract class NioSelectorThread implements Runnable{
             key.cancel();       // Remote entity shut the socket down cleanly. Do the same
             socketChannel.close();
             mConnections.remove(socketChannel);
-            Log.d("ServerSelector","ServerSelector: client closed connection...");
+            Log.d(TAG,"NioSelectorThread: client closed connection... IP: " + socketChannel.socket().getLocalAddress());
             return;
         }
 

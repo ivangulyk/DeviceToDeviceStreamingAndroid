@@ -8,6 +8,8 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
+import static d2d.testing.R.id.device_name;
+
 public class DeviceListAdapter  extends BaseAdapter {
     Context context;
     WifiP2pDevice[] deviceArray;
@@ -40,7 +42,7 @@ public class DeviceListAdapter  extends BaseAdapter {
         LayoutInflater vi = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View v = vi.inflate(R.layout.device_detail,null);
 
-        TextView name = v.findViewById(R.id.device_name);
+        TextView name = v.findViewById(device_name);
         TextView address = v.findViewById(R.id.device_adress);
         TextView status = v.findViewById(R.id.device_status);
 

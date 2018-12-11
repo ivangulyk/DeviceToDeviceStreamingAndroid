@@ -2,6 +2,7 @@ package d2d.testing.net.threads.selectors;
 
 import android.os.Build;
 import android.support.annotation.RequiresApi;
+import android.util.Log;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -34,6 +35,7 @@ public class ClientSelector extends NioSelectorThread{
 
             this.mStatus = STATUS_CONNECTING;
             this.addChangeRequest(new ChangeRequest(mSocket, ChangeRequest.REGISTER, SelectionKey.OP_CONNECT));
+            Log.d(TAG,"ClientSelector: initiateConnection as client trying to connect to " + mInetAddress.getHostAddress());
         } catch (IOException e) {
             e.printStackTrace();
         }
