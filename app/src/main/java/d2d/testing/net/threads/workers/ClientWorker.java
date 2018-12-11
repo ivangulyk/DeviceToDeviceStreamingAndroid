@@ -60,7 +60,8 @@ public class ClientWorker implements Runnable, WorkerInterface {
 
             //TODO mandar longitud de mensaje + hash?
 
-            if(Arrays.equals(Arrays.copyOfRange(dataEvent.getData(), 0, 1),DataFormat.TYPE_MSG))        //CADA TIPO DE MENSAJE QUE PODEMOS ENVIAR
+
+            /*if(Arrays.equals(,DataFormat.TYPE_MSG))        //CADA TIPO DE MENSAJE QUE PODEMOS ENVIAR
             {
                 dataEvent.getSelector().getMainActivity().updateMsg(new String(dataEvent.getData()));
                 Logger.d("ClientWorker received TYPE_MSG command");
@@ -72,7 +73,7 @@ public class ClientWorker implements Runnable, WorkerInterface {
             else if(Arrays.equals(Arrays.copyOfRange(dataEvent.getData(), 4, 5),DataFormat.TYPE_IMAGE))
             {
                 Logger.d("ClientWorker received TYPE_3 command");
-            }
+            }*/
         }
         else
         {

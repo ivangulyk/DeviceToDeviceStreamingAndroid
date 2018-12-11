@@ -8,7 +8,11 @@ import java.util.Arrays;
 public class DataFormat {
     public static final byte[] START_PACKET_CONST = {0x11,0x17,0x16,0x15};
     public static final byte[] END_PREFIX_CONST = {0x11,0x15,0x16,0x17};
-    public static final int TYPE_POSITION = 0;
+
+    public static final int LENGTH_HEADER = 4;
+
+    public static final int TYPE_POSITION = 4;
+
     public static final byte TYPE_MSG = 0x15;
     public static final byte TYPE_IMAGE = 0x16;
     public static final byte TYPE_FILE = 0x17;
@@ -51,21 +55,38 @@ public class DataFormat {
         if (data.length < 4)
             return; //!error
 
-        int len = byteToInt
-        if(Arrays.copyOfRange(data, 0, 3).)        //CADA TIPO DE MENSAJE QUE PODEMOS ENVIAR
-        {
+        int length = byteToInt(Arrays.copyOfRange(data, 0, 3));
 
-        }
+        if(data.length < 5)        //CADA TIPO DE MENSAJE QUE PODEMOS ENVIAR
+            return; //!error
+
+        byte type;
         switch (data[TYPE_POSITION]){
             case TYPE_MSG:
+                type = TYPE_MSG;
                 break;
             case TYPE_IMAGE:
+                type = TYPE_IMAGE;
                 break;
             case TYPE_FILE:
+                type = TYPE_FILE;
                 break;
             default:
                 //ERROR NO HAY TIPO DE MENSAJE!!
         }
+
+        if(data.length - LENGTH_HEADER < length)
+        {
+            //EL MENSAJE NO ESTA COMPLETO HAY QUE ALMACENAR EL TIPO DE MENSAJE Y LA LONGITUD JUNTO CON LOS DATOS QUE YA TENEMOS
+            //DEVOLVEMOS UN PAQUETE CON ALGUN FLAG DE INCOMPLETO
+            //todo futuro: archivos muy grandes se nos peta la memoria o como va la cosa?
+        }
+        else
+        {
+            //TENEMOS EL MENSAJE COMPLETO
+            //JUNTAMOS LOS DATOS Y DEVOLVEMOS PAQUETE CON FLAG DE COMPLETO, EL WORKER LO PUEDE PROCESAR
+        }
+
     }
 
     public static byte[] intToByte(int num)
