@@ -4,6 +4,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
 public class DataFormat {
     public static final byte[] START_PACKET_CONST = {0x11,0x17,0x16,0x15};
@@ -38,7 +40,7 @@ public class DataFormat {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         try {
             //output.write(START_PACKET_CONST);     //ALWAYS PREFIX
-            output.write(TYPE_FILE);              //SET TYPE
+            output.write(TYPE_FILE);                //SET TYPE
 
             //TODO: HASH Y CHECKING AL RECIBIR, TIMESTAMP, QUIEN LO HA ENVIADO, NETWORK JUMPTRACE PARA SABER POR QUIEN HA PASADO?
             output.write(intToByte(file.length));
@@ -50,26 +52,28 @@ public class DataFormat {
         return output.toByteArray();
     }
 
-    public static void checkPacket(byte[] data)
+    public static List<DataPacket> checkPacket(byte[] data)
     {
+        List<DataPacket> out = new LinkedList<>();
+        DataPacket packet = new DataPacket(data);
+        out.add(packet);
         if (data.length < 4)
-            return; //!error
+            return out; //!error
 
-        int length = byteToInt(Arrays.copyOfRange(data, 0, 3));
+        packet.setLength(byteToInt(Arrays.copyOfRange(data, 0, 3)));
 
         if(data.length < 5)        //CADA TIPO DE MENSAJE QUE PODEMOS ENVIAR
-            return; //!error
+            return out; //!error
 
-        byte type;
-        switch (data[TYPE_POSITION]){
+        switch (data[TYPE_POSITION]){ //cambiar porque NO ESTE EN EL RANGO DE NUESTROS TIPOS DE MENSAJES.. O VAMOS A TENER QUE HACER ALGO MAS AHI SEPARADO? CABECERAS PROPIAS... ETC
             case TYPE_MSG:
-                type = TYPE_MSG;
+                packet.setType(TYPE_MSG);
                 break;
             case TYPE_IMAGE:
-                type = TYPE_IMAGE;
+                packet.setType(TYPE_MSG);
                 break;
             case TYPE_FILE:
-                type = TYPE_FILE;
+                packet.setType(TYPE_FILE);
                 break;
             default:
                 //ERROR NO HAY TIPO DE MENSAJE!!
@@ -79,14 +83,26 @@ public class DataFormat {
         {
             //EL MENSAJE NO ESTA COMPLETO HAY QUE ALMACENAR EL TIPO DE MENSAJE Y LA LONGITUD JUNTO CON LOS DATOS QUE YA TENEMOS
             //DEVOLVEMOS UN PAQUETE CON ALGUN FLAG DE INCOMPLETO
+            packet.setCompleted(false);
+            return out;
             //todo futuro: archivos muy grandes se nos peta la memoria o como va la cosa?
         }
         else
         {
             //TENEMOS EL MENSAJE COMPLETO
             //JUNTAMOS LOS DATOS Y DEVOLVEMOS PAQUETE CON FLAG DE COMPLETO, EL WORKER LO PUEDE PROCESAR
+            packet.addData(Arrays.copyOfRange)
+            packet.setCompleted(true);
         }
+    }
 
+    public static List<DataPacket> resumePacket(DataPacket packet)
+    {
+        List<DataPacket> out = new LinkedList<>();
+        out.add(packet);
+        //TENEMOS UN MENSAJE INCOMPLETO Y SEGUIMOS RELLENANDOLO
+
+        return out;
     }
 
     public static byte[] intToByte(int num)

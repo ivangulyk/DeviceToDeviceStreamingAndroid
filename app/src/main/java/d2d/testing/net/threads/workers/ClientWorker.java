@@ -72,7 +72,7 @@ public class ClientWorker implements Runnable, WorkerInterface {
         }
         else
         {
-            Packet p = openPackets.remove(0);
+            DataPacket p = openPackets.remove(0);
             openPackets.add(DataFormat.resumePacket(p));
             //TODO implementar cola ha llegado un mensaje pero no esta completo
         }
@@ -80,7 +80,7 @@ public class ClientWorker implements Runnable, WorkerInterface {
         for (DataPacket packet : openPackets) {
             if(!packet.isComplete())
                 break;
-            switch (DataPacket.getType())
+            switch (packet.getType())
             {
                 case DataFormat.TYPE_MSG:
                     dataEvent.getSelector().getMainActivity().updateMsg(new String(dataEvent.getData()));
@@ -101,7 +101,7 @@ public class ClientWorker implements Runnable, WorkerInterface {
         }
     }
 
-    private void handleFile(Packet packet){
+    private void handleFile(DataPacket packet){
         final File f = new File(Environment.getExternalStorageDirectory() + "/"
                 + "/wifip2pshared-" + System.currentTimeMillis()
                 + ".jpg");
@@ -115,7 +115,7 @@ public class ClientWorker implements Runnable, WorkerInterface {
         }
         Logger.d("copying files " + f.toString());
         try {
-            copyFile(packet.getData(), new FileOutputStream(f));
+            copyFile(packet.getPacketData(), new FileOutputStream(f));
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
