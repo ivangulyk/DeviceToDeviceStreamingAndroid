@@ -13,9 +13,10 @@ public class DataFormat {
     public static final byte[] START_PACKET_CONST = {0x11,0x17,0x16,0x15};
     public static final byte[] END_PREFIX_CONST = {0x11,0x15,0x16,0x17};
 
-    public static final int LENGTH_HEADER = 5;
-
-    public static final int TYPE_POSITION = 4;
+    public static final int TYPE_POSITION       = 0;
+    public static final int LEN_POSITION_START  = 1;
+    public static final int LEN_POSITION_END    = 5;
+    public static final int LENGTH_HEADER       = 5;
 
     public static final byte[] TYPE_LIST = {0x15,0x16,0x17};
     public static final byte TYPE_MSG = 0x15;
@@ -75,36 +76,38 @@ public class DataFormat {
                 //todo VAMOS A TENER QUE HACER ALGO MAS AHI SEPARADO? CABECERAS PROPIAS... ETC
 
                 //Tenemos la cabecera establecemos los parametros del paquete y hacemos comprobaciones..
-                if(!Arrays.asList(TYPE_LIST).contains(data[TYPE_POSITION])){
+                if(!contains(TYPE_LIST,data[TYPE_POSITION])){
                     Logger.d("DataFormatter: Error no hay tipo de mensaje");
                     return out; //retronamos vacios
                 }
 
-                openPacket.setBodyLength(byteToInt(Arrays.copyOfRange(data, 0, 3)));
+                openPacket.setBodyLength(byteToInt(Arrays.copyOfRange(data, LEN_POSITION_START, LEN_POSITION_END)));
                 openPacket.setType(data[TYPE_POSITION]);
                 openPacket.setStatus(DataPacket.STATUS_UNCOMPLETED_BODY);
 
             case DataPacket.STATUS_UNCOMPLETED_BODY:
-                if(data.length < openPacket.getFullLength())
+                if(data.length < openPacket.getFullRemainingLength())
                 {
                     //DEVOLVEMOS UN PAQUETE CON ALGUN FLAG DE INCOMPLETO
                     //todo futuro: archivos muy grandes se nos peta la memoria o como va la cosa?
                     openPacket.addData(data);
                     out.add(openPacket);
                     return out;
-                } else if(data.length > openPacket.getFullLength()) {
+                } else if(data.length > openPacket.getFullRemainingLength()) {
                     //TENEMOS EL MENSAJE COMPLETO
-                    openPacket.addData(Arrays.copyOfRange(data,0,openPacket.getFullLength()));
+                    int lenRead = openPacket.getFullRemainingLength();
+                    openPacket.addData(Arrays.copyOfRange(data,0,lenRead));
                     openPacket.setStatus(DataPacket.STATUS_COMPLETED);
                     out.add(openPacket);
                     //Y TODAVIA MAS DATOS
-                    data = Arrays.copyOfRange(data,openPacket.getFullLength(),data.length);
+                    data = Arrays.copyOfRange(data,lenRead,data.length);
                     out.addAll(getPackets(null,data));
                     //DEVOLVEMOS TOD
                     return out;
                 } else {// ASUMED (bodyLength == packet.getRemainingLength())
                     openPacket.addData(data);
                     openPacket.setStatus(DataPacket.STATUS_COMPLETED);
+                    out.add(openPacket);
 
                     return out;
                 }
@@ -119,5 +122,19 @@ public class DataFormat {
 
     public static int byteToInt(byte[] num){
         return ByteBuffer.wrap(num).getInt();
+    }
+
+    public static boolean contains(final byte[] array, final byte search) {
+
+        boolean result = false;
+
+        for(byte b : array){
+            if(b == search){
+                result = true;
+                break;
+            }
+        }
+
+        return result;
     }
 }

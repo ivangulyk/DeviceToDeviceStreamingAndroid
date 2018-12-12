@@ -5,11 +5,6 @@ import java.io.IOException;
 import java.util.Arrays;
 
 public class DataPacket {
-    public static final int LENGTH_HEADER = 4;
-    public static final int TYPE_POSITION = 4;
-    public static final byte TYPE_MSG = 0x15;
-    public static final byte TYPE_IMAGE = 0x16;
-    public static final byte TYPE_FILE = 0x17;
 
     public static final int STATUS_UNCOMPLETED_HEADER = 0;
     public static final int STATUS_UNCOMPLETED_BODY = 1;
@@ -44,13 +39,13 @@ public class DataPacket {
         return mBodyLength;
     }
     public int getBodyRemainingLength() {
-        return mBodyLength + LENGTH_HEADER - mData.size();
+        return mBodyLength + DataFormat.LENGTH_HEADER - mData.size();
     }
     public int getFullLength() {
-        return mBodyLength + LENGTH_HEADER;
+        return mBodyLength + DataFormat.LENGTH_HEADER;
     }
     public int getFullRemainingLength() {
-        return mBodyLength + LENGTH_HEADER;
+        return mBodyLength + DataFormat.LENGTH_HEADER - mData.size();
     }
 
     public int getStatus(){return mStatus;}
@@ -59,9 +54,9 @@ public class DataPacket {
     }
 
 
-    public void addData(byte[] mDdata){
+    public void addData(byte[] data){
         try {
-            this.mData.write(mDdata);
+            mData.write(data);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -74,6 +69,6 @@ public class DataPacket {
     //TODO DEVOLVER SOLO LOS DATOS DEL PAQUETE SIN LAS CABECERAS Y ESO
     public byte[] getPacketData() {
 
-        return Arrays.copyOfRange(mData.toByteArray(),LENGTH_HEADER,mData.size());
+        return Arrays.copyOfRange(mData.toByteArray(),DataFormat.LENGTH_HEADER,mData.size());
     }
 }

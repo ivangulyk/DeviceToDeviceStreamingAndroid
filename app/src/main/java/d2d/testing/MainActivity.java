@@ -20,6 +20,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import d2d.testing.gui.DeviceListAdapter;
+import d2d.testing.helpers.Logger;
 import d2d.testing.net.WifiP2pController;
 import d2d.testing.net.packets.DataFormat;
 
@@ -226,7 +227,8 @@ public class MainActivity extends AppCompatActivity {
         if(requestCode == CHOOSE_FILE_CODE)
         {
             Uri uri = data.getData();
-            System.out.print("Path  = " + uri);
+            Logger.d("Path selected " + uri);
+            this.mWifiP2pController.sendFile(uri);
         }
     }
 

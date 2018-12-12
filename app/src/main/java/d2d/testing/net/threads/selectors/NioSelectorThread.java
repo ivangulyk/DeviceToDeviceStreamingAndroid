@@ -156,23 +156,23 @@ public abstract class NioSelectorThread implements Runnable{
         socketChannel.register(this.mSelector, SelectionKey.OP_READ);
         mConnections.add(socketChannel);
         this.mStatus = this.mStatus | STATUS_CONNECTED;
-        Logger.d("NioSelectorThread: Connection Accepted from IP: " + socket.getLocalAddress() + "\n");
+        Logger.d("NioSelectorThread: Connection Accepted from IP " + socket.getRemoteSocketAddress());
     }
 
     private void finishConnection(SelectionKey key) {
         SocketChannel socketChannel = (SocketChannel) key.channel();
-
         try {
-            socketChannel.finishConnect(); //Finish connecting.
-            //negociar algo sobre la conexion?? donde ??
-            Logger.d("NioSelectorThread: finish connecting as client.... " + socketChannel.socket().getLocalAddress());
+            if(socketChannel.finishConnect()) { //Finish connecting.
+                //todo negociar algo sobre la conexion?? donde ??
+                this.mStatus = STATUS_CONNECTED;
+                key.interestOps(SelectionKey.OP_READ);  // Register an interest in reading till send
+                Logger.d("NioSelectorThread: client (" + socketChannel.socket().getLocalAddress() + ") finished connecting...");
+            }
         } catch (IOException e) {
-            System.out.println(e);
+            this.mStatus = STATUS_DISCONNECTED;
             key.cancel();               // Cancel the channel's registration with our selector
-            return;
+            Logger.d("NioSelectorThread finishConnection: " + e.toString());
         }
-        this.mStatus = STATUS_CONNECTED;
-        key.interestOps(SelectionKey.OP_READ);  // Register an interest in reading till send
     }
 
     private void read(SelectionKey key) throws IOException {

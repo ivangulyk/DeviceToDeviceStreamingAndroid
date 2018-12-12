@@ -2,6 +2,7 @@ package d2d.testing.net;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.net.wifi.WpsInfo;
 import android.net.wifi.p2p.WifiP2pConfig;
@@ -22,6 +23,7 @@ import java.util.List;
 import d2d.testing.MainActivity;
 import d2d.testing.net.threads.selectors.ClientSelector;
 import d2d.testing.net.threads.selectors.ServerSelector;
+import d2d.testing.net.threads.workers.SendFileWorker;
 
 /*
 TODO IMPORTANTE LEGACY USERS... HE LEIDO EN ALGUN SITIO QUE ERA MAS RAPIDO PARA SALTAR ENTRE REDES SI LO TENEMOS QUE USAR
@@ -100,6 +102,11 @@ public class WifiP2pController {
         if(mServerSelectorThread != null) {
             mServerSelectorThread.send(data);
         }
+    }
+
+    public void sendFile(Uri uri) {
+        SendFileWorker worker = new SendFileWorker(uri,mWifiP2pHandler);
+        new Thread(worker).start();
     }
 
     protected void serverSelectorFinished(){

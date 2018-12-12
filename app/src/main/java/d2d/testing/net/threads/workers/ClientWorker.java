@@ -75,7 +75,7 @@ public class ClientWorker implements Runnable, WorkerInterface {
             switch (packet.getType())
             {
                 case DataFormat.TYPE_MSG:
-                    dataReceived.getSelector().getMainActivity().updateMsg(new String(dataReceived.getData()));
+                    dataReceived.getSelector().getMainActivity().updateMsg(new String(packet.getPacketData()));
                     Logger.d("ClientWorker received TYPE_MSG command");
                     break;
 
