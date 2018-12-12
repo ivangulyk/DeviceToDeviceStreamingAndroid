@@ -61,7 +61,7 @@ public class ClientWorker implements Runnable, WorkerInterface {
     {
         List<DataPacket> openPackets = new LinkedList();
 
-        Logger.d("ClientWorker received: " + new String(dataReceived.getData()));
+        Logger.d("ClientWorker received: " +  dataReceived.getData().length + " bytes");//new String(dataReceived.getData()));
         openPackets.addAll(DataFormat.getPackets(openPacket, dataReceived.getData()));
         if(openPacket != null)
             openPacket = null;

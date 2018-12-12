@@ -65,7 +65,7 @@ public class ServerWorker implements WorkerInterface {
     {
         List<DataPacket> openPackets = new LinkedList();
 
-        Logger.d("ServerWorker received: " + new String(dataReceived.getData()));
+        Logger.d("ServerWorker received: " + dataReceived.getData().length + " bytes");//new String(dataReceived.getData()));
         openPackets.addAll(DataFormat.getPackets(openPacket, dataReceived.getData()));
         if(openPacket != null)
             openPacket = null;
@@ -90,9 +90,8 @@ public class ServerWorker implements WorkerInterface {
                     break;
 
                 case DataFormat.TYPE_FILE:
-                    Logger.d("ServerWorker received TYPE_FILE command");
-                    Logger.d("ServerWorker echoing the MSG");
                     handleFile(packet);
+                    Logger.d("ServerWorker received TYPE_FILE command");
                     break;
                 default:
                     //ERROR NO HAY TIPO DE MENSAJE!!
