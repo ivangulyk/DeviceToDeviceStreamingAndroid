@@ -1,7 +1,6 @@
 package d2d.testing.net.threads.workers;
 
 import android.os.Environment;
-import android.provider.ContactsContract;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -9,24 +8,22 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.channels.SocketChannel;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
 import d2d.testing.helpers.Logger;
-import d2d.testing.net.events.DataEvent;
+import d2d.testing.net.packets.DataReceived;
+import d2d.testing.net.packets.DataFormat;
+import d2d.testing.net.packets.DataPacket;
 import d2d.testing.net.threads.selectors.NioSelectorThread;
 
 public class ClientWorker implements Runnable, WorkerInterface {
     //TODO Externalizar constantes... SSL??
     //TODO COMPARTIR MISMOS WORKERS? Ya veremos
-    private final byte[] PREFIX_CONST = {0x11,0x12,0x11,0x14};
-    private byte[] TYPE_MSG = {0x15,0x00};
-    private byte[] TYPE_MSG2 = {0x15,0x01};
-    private byte[] TYPE_3 = {0x15,0x02};
+
     private final List queue = new LinkedList();
 
-    private List<DataPacket> openPackets = new LinkedList();
+    private DataPacket openPacket;
 
     private boolean mEnabled = true;
 
@@ -35,14 +32,14 @@ public class ClientWorker implements Runnable, WorkerInterface {
         byte[] dataCopy = new byte[count];
         System.arraycopy(data, 0, dataCopy, 0, count);
         synchronized(queue) {
-            queue.add(new DataEvent(selectorThread, socket, dataCopy));
+            queue.add(new DataReceived(selectorThread, socket, dataCopy));
             queue.notify();
         }
     }
 
     @Override
     public void run() {
-        DataEvent dataEvent;
+        DataReceived dataReceived;
 
         while(mEnabled) {
             // Wait for data to become available
@@ -53,46 +50,41 @@ public class ClientWorker implements Runnable, WorkerInterface {
                     } catch (InterruptedException ignored) {
                     }
                 }
-                dataEvent = (DataEvent) queue.remove(0);
+                dataReceived = (DataReceived) queue.remove(0);
             }
 
-            this.processData(dataEvent);
+            this.processData(dataReceived);
         }
     }
 
-    private void processData(DataEvent dataEvent)
+    private void processData(DataReceived dataReceived)
     {
-        if(openPackets.isEmpty())
-        {
-            Logger.d("ClientWorker received: " + new String(dataEvent.getData()));
+        List<DataPacket> openPackets = new LinkedList();
 
-            //TODO mandar longitud de mensaje + hash?
-
-            openPackets.addAll(DataFormat.getPackets(dataEvent.getData()));
-        }
-        else
-        {
-            DataPacket p = openPackets.remove(0);
-            openPackets.addAll(DataFormat.resumePacket(p));
-            //TODO implementar cola ha llegado un mensaje pero no esta completo
-        }
+        Logger.d("ClientWorker received: " + new String(dataReceived.getData()));
+        openPackets.addAll(DataFormat.getPackets(openPacket, dataReceived.getData()));
+        if(openPacket != null)
+            openPacket = null;
 
         for (DataPacket packet : openPackets) {
-            if(!packet.isCompleted())
+            if(!packet.isCompleted()){
+                openPacket = packet;
                 break;
+            }
+
             switch (packet.getType())
             {
                 case DataFormat.TYPE_MSG:
-                    dataEvent.getSelector().getMainActivity().updateMsg(new String(dataEvent.getData()));
+                    dataReceived.getSelector().getMainActivity().updateMsg(new String(dataReceived.getData()));
                     Logger.d("ClientWorker received TYPE_MSG command");
                     break;
-                case DataFormat.TYPE_IMAGE:
 
+                case DataFormat.TYPE_IMAGE:
                     Logger.d("ClientWorker received TYPE_IMAGE command");
                     break;
+
                 case DataFormat.TYPE_FILE:
                     handleFile(packet);
-
                     Logger.d("ClientWorker received TYPE_FILE command");
                     break;
                 default:

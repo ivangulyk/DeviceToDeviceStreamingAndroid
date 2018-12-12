@@ -1,4 +1,4 @@
-package d2d.testing;
+package d2d.testing.gui;
 
 import android.content.Context;
 import android.net.wifi.p2p.WifiP2pDevice;
@@ -7,6 +7,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
+
+import d2d.testing.MainActivity;
+import d2d.testing.R;
 
 import static d2d.testing.R.id.device_name;
 

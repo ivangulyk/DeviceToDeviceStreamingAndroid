@@ -1,7 +1,6 @@
 package d2d.testing;
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
@@ -20,8 +19,9 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import d2d.testing.gui.DeviceListAdapter;
 import d2d.testing.net.WifiP2pController;
-import d2d.testing.net.threads.workers.DataFormat;
+import d2d.testing.net.packets.DataFormat;
 
 
 public class MainActivity extends AppCompatActivity {

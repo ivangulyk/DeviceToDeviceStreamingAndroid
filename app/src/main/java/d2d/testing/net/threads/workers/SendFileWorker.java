@@ -11,13 +11,14 @@ import java.io.OutputStream;
 
 import d2d.testing.helpers.Logger;
 import d2d.testing.net.WifiP2pHandler;
+import d2d.testing.net.packets.DataFormat;
 
-public class FileWorker implements Runnable{
+public class SendFileWorker implements Runnable{
 
     private Uri mFileUri;
     private WifiP2pHandler mHandler;
 
-    public FileWorker(Uri uri, WifiP2pHandler handler) {
+    public SendFileWorker(Uri uri, WifiP2pHandler handler) {
         this.mFileUri = uri;
         this.mHandler = handler;
     }

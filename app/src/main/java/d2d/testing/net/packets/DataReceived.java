@@ -1,16 +1,16 @@
-package d2d.testing.net.events;
+package d2d.testing.net.packets;
 
 import java.nio.channels.SocketChannel;
 
 import d2d.testing.net.threads.selectors.NioSelectorThread;
 
-public class DataEvent {
+public class DataReceived {
     private final NioSelectorThread selector;
     private final SocketChannel socket;
 
     private final byte[] data;
 
-    public DataEvent(NioSelectorThread selector, SocketChannel socket, byte[] data) {
+    public DataReceived(NioSelectorThread selector, SocketChannel socket, byte[] data) {
         this.selector = selector;
         this.socket = socket;
         this.data = data;

@@ -1,7 +1,8 @@
-package d2d.testing.net.threads.workers;
+package d2d.testing.net.packets;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 
 public class DataPacket {
     public static final int LENGTH_HEADER = 4;
@@ -10,47 +11,51 @@ public class DataPacket {
     public static final byte TYPE_IMAGE = 0x16;
     public static final byte TYPE_FILE = 0x17;
 
-    public static final int STATUS_NOTHING = 0;
-    public static final int STATUS_HEADER = 1;
-    public static final int STATUS_BODY = 2;
+    public static final int STATUS_HEADER = 0;
+    public static final int STATUS_BODY = 1;
+    public static final int STATUS_POST_BODY = 2;
+    public static final int STATUS_COMPLETED = 3;
+
 
     //private byte[] data;
     private ByteArrayOutputStream mData;
-    private boolean isCompleted;
     private byte mType;
-    private int mLength;
+    private int mBodyLength;
     private int mStatus;
 
     DataPacket(){
         mData = new ByteArrayOutputStream();
-        isCompleted = false;
-        mStatus = STATUS_NOTHING;
+        mStatus = STATUS_HEADER;
     }
 
     public void setType(byte type){
         mType = type;
     }
-    public void setLength(int length) {
-        mLength = length;
+    public void setBodyLength(int length) {
+        mBodyLength = length;
     }
     public void setStatus(int status){mStatus=status;}
-    public void setCompleted(boolean completed) {
-        isCompleted = completed;
-    }
 
 
     public byte getType(){
         return mType;
     }
-    public int getLength() {
-        return mLength;
+    public int getBodyLength() {
+        return mBodyLength;
     }
-    public int getRemainingLength() {
-        return mLength - mData.size() + LENGTH_HEADER;
+    public int getBodyRemainingLength() {
+        return mBodyLength + LENGTH_HEADER - mData.size();
     }
+    public int getFullLength() {
+        return mBodyLength + LENGTH_HEADER;
+    }
+    public int getFullRemainingLength() {
+        return mBodyLength + LENGTH_HEADER;
+    }
+
     public int getStatus(){return mStatus;}
     public boolean isCompleted(){
-        return this.isCompleted;
+        return mStatus == STATUS_COMPLETED;
     }
 
 
@@ -68,6 +73,7 @@ public class DataPacket {
 
     //TODO DEVOLVER SOLO LOS DATOS DEL PAQUETE SIN LAS CABECERAS Y ESO
     public byte[] getPacketData() {
-        return mData.toByteArray();
+
+        return Arrays.copyOfRange(mData.toByteArray(),LENGTH_HEADER,mData.size());
     }
 }
