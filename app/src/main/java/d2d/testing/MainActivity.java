@@ -201,9 +201,7 @@ public class MainActivity extends AppCompatActivity {
     {
         this.mDeviceArray = deviceArray;
         if (deviceArray.length == 0) {
-            //Log.d(WiFiDirectActivity.TAG, "No devices found");
             Toast.makeText(getApplicationContext(), "No Devices Found", Toast.LENGTH_SHORT).show();
-            return;
         }
         else
         {
@@ -264,7 +262,7 @@ public class MainActivity extends AppCompatActivity {
                         Toast.makeText(getApplicationContext(), "LOCATION PERMISSION NOT GRANTED, YOU WONT BE ABLE TO USE THIS", Toast.LENGTH_SHORT).show();
                     }
                 }
-                return;
+                break;
             }
             case MY_CAMERA_REQUEST_CODE: {
                 // If request is cancelled, the result arrays are empty.
@@ -283,10 +281,11 @@ public class MainActivity extends AppCompatActivity {
                         Toast.makeText(getApplicationContext(), "CAMERA PERMISSION NOT GRANTED, YOU WONT BE ABLE TO USE THIS", Toast.LENGTH_SHORT).show();
                     }
                 }
-                return;
+                break;
             }
         }
     }
+
     private boolean checkCameraHardware() {
         if (this.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)){
             // this device has a camera

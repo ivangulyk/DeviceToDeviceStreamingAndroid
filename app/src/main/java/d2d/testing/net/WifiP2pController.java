@@ -102,6 +102,10 @@ public class WifiP2pController {
         }
     }
 
+    protected void serverSelectorFinished(){
+
+    }
+
     protected WifiP2pManager.PeerListListener peerListListener = new WifiP2pManager.PeerListListener() {
 
         @Override

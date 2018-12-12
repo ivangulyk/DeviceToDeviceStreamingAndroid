@@ -2,7 +2,6 @@ package d2d.testing.net.threads.selectors;
 
 import android.os.Build;
 import android.support.annotation.RequiresApi;
-import android.util.Log;
 
 import java.io.IOException;
 import java.net.InetAddress;

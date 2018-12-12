@@ -11,9 +11,9 @@ public class DataPacket {
     public static final byte TYPE_IMAGE = 0x16;
     public static final byte TYPE_FILE = 0x17;
 
-    public static final int STATUS_HEADER = 0;
-    public static final int STATUS_BODY = 1;
-    public static final int STATUS_POST_BODY = 2;
+    public static final int STATUS_UNCOMPLETED_HEADER = 0;
+    public static final int STATUS_UNCOMPLETED_BODY = 1;
+    public static final int STATUS_UNCOMPLETED_POST_BODY = 2;
     public static final int STATUS_COMPLETED = 3;
 
 
@@ -25,7 +25,7 @@ public class DataPacket {
 
     DataPacket(){
         mData = new ByteArrayOutputStream();
-        mStatus = STATUS_HEADER;
+        mStatus = STATUS_UNCOMPLETED_HEADER;
     }
 
     public void setType(byte type){

@@ -95,27 +95,36 @@ public class ClientWorker implements Runnable, WorkerInterface {
 
     private void handleFile(DataPacket packet){
         final File f = new File(Environment.getExternalStorageDirectory() + "/"
-                + "/wifip2pshared-" + System.currentTimeMillis()
-                + ".jpg");
+                + "/wifip2pshared-" + System.currentTimeMillis() + ".jpg");
         File dirs = new File(f.getParent());
-        if (!dirs.exists())
-            dirs.mkdirs();
-        try {
-            f.createNewFile();
-        } catch (IOException e) {
-            Logger.e(e.getMessage());
+
+        if (!dirs.exists() && !dirs.mkdirs()) {
+            Logger.e("FileHandler: No se encuentran ni han podido crear lo directorios");
+            return;
         }
-        Logger.d("copying files " + f.toString());
+
         try {
+            if(!f.createNewFile())
+            {
+                Logger.e("FileHandler: No se ha podido crear el archivo");
+                return;
+            }
+
+            Logger.d("FileHandler: copying files " + f.toString());
             copyFile(packet.getPacketData(), new FileOutputStream(f));
-        } catch (FileNotFoundException e) {
+            Logger.d("FileHandler: file creadted succesfully");
+        }
+        catch (FileNotFoundException e) {
+            Logger.d(e.toString());
+            e.printStackTrace();
+        } catch (IOException e) {
+            Logger.d(e.toString());
             e.printStackTrace();
         }
     }
 
     private boolean copyFile(byte[] file, OutputStream out) {
         byte buf[] = new byte[1024];
-        int len;
         try {
             int i = 0;
             while (i < file.length) {

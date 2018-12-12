@@ -2,7 +2,6 @@ package d2d.testing.net.threads.selectors;
 
 import android.os.Build;
 import android.support.annotation.RequiresApi;
-import android.util.Log;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -28,7 +27,6 @@ import d2d.testing.net.threads.workers.WorkerInterface;
 import static java.lang.Thread.sleep;
 
 public abstract class NioSelectorThread implements Runnable{
-    //TODO
     protected static final int PORT = 3462;
 
     protected static final int STATUS_DISCONNECTED = 0;
