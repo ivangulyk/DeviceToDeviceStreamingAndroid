@@ -52,13 +52,19 @@ public class DataFormat {
         return output.toByteArray();
     }
 
-    public static List<DataPacket> checkPacket(byte[] data)
+    public static List<DataPacket> getPackets(byte[] data)
     {
+        DataPacket packet = new DataPacket();
         List<DataPacket> out = new LinkedList<>();
-        DataPacket packet = new DataPacket(data);
+
         out.add(packet);
+
         if (data.length < 4)
-            return out; //!error
+        {
+            packet.addData(data);
+            //TODO AÑADIR ALGO EN PACKET PARA SABER EN QUE ESTADO DE RELLENAR ESTA, HEADER, BODY, ETC
+            return out; //!error no tenemos ni la longitud
+        }
 
         packet.setLength(byteToInt(Arrays.copyOfRange(data, 0, 3)));
 
@@ -79,7 +85,7 @@ public class DataFormat {
                 //ERROR NO HAY TIPO DE MENSAJE!!
         }
 
-        if(data.length - LENGTH_HEADER < length)
+        if(data.length - LENGTH_HEADER < packet.getRemainingLength())
         {
             //EL MENSAJE NO ESTA COMPLETO HAY QUE ALMACENAR EL TIPO DE MENSAJE Y LA LONGITUD JUNTO CON LOS DATOS QUE YA TENEMOS
             //DEVOLVEMOS UN PAQUETE CON ALGUN FLAG DE INCOMPLETO
@@ -91,9 +97,11 @@ public class DataFormat {
         {
             //TENEMOS EL MENSAJE COMPLETO
             //JUNTAMOS LOS DATOS Y DEVOLVEMOS PAQUETE CON FLAG DE COMPLETO, EL WORKER LO PUEDE PROCESAR
-            packet.addData(Arrays.copyOfRange)
+            //packet.addData(Arrays.copyOfRange)
             packet.setCompleted(true);
         }
+
+        return out;
     }
 
     public static List<DataPacket> resumePacket(DataPacket packet)
@@ -101,7 +109,16 @@ public class DataFormat {
         List<DataPacket> out = new LinkedList<>();
         out.add(packet);
         //TENEMOS UN MENSAJE INCOMPLETO Y SEGUIMOS RELLENANDOLO
+        switch (packet.getStatus())
+        {
+            case DataPacket.STATUS_NOTHING:
+                //aun no hemos encontrado ni centinelas ni tenemos la longitud añadimos los bytes que faltes y sacamos longitud
 
+                //SUBTIPO DE STATUS PARA DIFERENTES PARTES DE LA CABECERA? LONGITUD, TIPO, ...
+
+            case DataPacket.STATUS_HEADER:
+                break;
+        }
         return out;
     }
 

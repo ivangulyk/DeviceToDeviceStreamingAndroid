@@ -26,7 +26,7 @@ public class ClientWorker implements Runnable, WorkerInterface {
     private byte[] TYPE_3 = {0x15,0x02};
     private final List queue = new LinkedList();
 
-    private List openPackets = new LinkedList();
+    private List<DataPacket> openPackets = new LinkedList();
 
     private boolean mEnabled = true;
 
@@ -68,17 +68,17 @@ public class ClientWorker implements Runnable, WorkerInterface {
 
             //TODO mandar longitud de mensaje + hash?
 
-            openPackets.add(DataFormat.getPackets(dataEvent.getData()));
+            openPackets.addAll(DataFormat.getPackets(dataEvent.getData()));
         }
         else
         {
             DataPacket p = openPackets.remove(0);
-            openPackets.add(DataFormat.resumePacket(p));
+            openPackets.addAll(DataFormat.resumePacket(p));
             //TODO implementar cola ha llegado un mensaje pero no esta completo
         }
 
         for (DataPacket packet : openPackets) {
-            if(!packet.isComplete())
+            if(!packet.isCompleted())
                 break;
             switch (packet.getType())
             {
