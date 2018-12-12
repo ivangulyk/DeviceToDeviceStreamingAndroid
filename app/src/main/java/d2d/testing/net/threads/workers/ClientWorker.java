@@ -124,13 +124,8 @@ public class ClientWorker implements Runnable, WorkerInterface {
     }
 
     private boolean copyFile(byte[] file, OutputStream out) {
-        byte buf[] = new byte[1024];
         try {
-            int i = 0;
-            while (i < file.length) {
-                out.write(buf, 0, file[i]);
-                i++;
-            }
+            out.write(file, 0, file.length);
             out.close();
         } catch (IOException e) {
             Logger.d(e.toString());
