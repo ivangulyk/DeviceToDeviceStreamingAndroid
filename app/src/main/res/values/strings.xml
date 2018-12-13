@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">testing</string>
+    <string name="string_on_off">\On/Off WIFI</string>
+    <string name="string_discover_peers">\Discover peers</string>
+    <string name="string_transfer_file">\Transfer File</string>
+    <string name="string_camera">Camera</string>
+
 </resources>

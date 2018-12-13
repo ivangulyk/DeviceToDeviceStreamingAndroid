@@ -8,9 +8,14 @@ import android.net.Uri;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
@@ -68,51 +73,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void execListener() {
-        /*btnCamera.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(checkCameraHardware()) {
-                    wiFiP2pPermissions.camera();
-                    if(camera_has_perm) {
-                       //TODO here goes all the functionality
-                    }
-                }
-                onBrowse(v);
-            }
-        });*/
-
-        btnOnOff.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(mWifiP2pController.isWifiEnabled()) {
-                    mWifiP2pController.setWifiEnabled(false);
-                    btnOnOff.setText("Wifi is OFF");
-                }
-                else{
-                    mWifiP2pController.setWifiEnabled(true);
-                    btnOnOff.setText("Wifi is ON");
-                }
-            }
-        });
-        btnSearch.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                wiFiP2pPermissions.location();
-                if(location_has_perm) {
-                    mWifiP2pController.discoverPeers(new WifiP2pManager.ActionListener() {
-                        @Override
-                        public void onSuccess() {
-                            textView.setText("Discovery Started");
-                        }
-
-                        @Override
-                        public void onFailure(int reason) {
-                            textView.setText("Discovery Starting Failed");
-                        }
-                    });
-                }
-            }
-        });
         btnSend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -139,9 +99,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initialWork() {
-        btnOnOff = findViewById(R.id.onOff);
-        btnCamera = findViewById(R.id.camara);
-        btnSearch = findViewById(R.id.discover);
         btnSend = findViewById(R.id.sendButton);
         listView = findViewById(R.id.peerListView);
         textView = findViewById(R.id.connectionStatus);
@@ -163,6 +120,59 @@ public class MainActivity extends AppCompatActivity {
         // Indicates this device's details have changed.
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
 
+    }
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.action_items, menu);
+        return true;
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see android.app.Activity#onOptionsItemSelected(android.view.MenuItem)
+     */
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.atn_direct_enable:
+                if(mWifiP2pController.isWifiEnabled()) {
+                    mWifiP2pController.setWifiEnabled(false);
+                }
+                else{
+                    mWifiP2pController.setWifiEnabled(true);
+                }
+                return true;
+
+            case R.id.atn_direct_discover:
+                wiFiP2pPermissions.location();
+                if(location_has_perm) {
+                    mWifiP2pController.discoverPeers(new WifiP2pManager.ActionListener() {
+                        @Override
+                        public void onSuccess() {
+                            textView.setText("Discovery Started");
+                        }
+
+                        @Override
+                        public void onFailure(int reason) {
+                            textView.setText("Discovery Starting Failed");
+                        }
+                    });
+                }
+                return true;
+            case R.id.atn_direct_camera:
+                if(checkCameraHardware()) {
+                    wiFiP2pPermissions.camera();
+                    if(camera_has_perm) {
+                        //TODO here goes all the functionality
+                    }
+                }
+                return true;
+            case R.id.atn_direct_file_transfer:
+                    onBrowse();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     public static String getDeviceStatus(int deviceStatus) {
@@ -212,7 +222,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public void onBrowse(View view) {
+    public void onBrowse() {
         Intent chooseFile;
         Intent intent;
         chooseFile = new Intent(Intent.ACTION_GET_CONTENT);
