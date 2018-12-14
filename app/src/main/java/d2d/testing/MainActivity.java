@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.hardware.Camera;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
@@ -38,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean camera_has_perm = false;
     private boolean location_has_perm = false;
     private boolean storage_has_perm = false;
+    private Camera mCamera;
 
     Button btnSend;
     ListView listView;
@@ -70,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
         this.location_has_perm = location;
     }
     public void set_storage_has_perm(boolean storage){
-        this.location_has_perm = storage;
+        this.storage_has_perm = storage;
     }
 
     public WiFiP2pPermissions getWiFiP2pPermissions() {
@@ -129,6 +131,25 @@ public class MainActivity extends AppCompatActivity {
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
 
     }
+
+    private void DiscoverPeers(){
+        mWifiP2pController.discoverPeers(new WifiP2pManager.ActionListener() {
+            @Override
+            public void onSuccess() {
+                textView.setText("Discovery Started");
+            }
+
+            @Override
+            public void onFailure(int reason) {
+                textView.setText("Discovery Starting Failed");
+            }
+        });
+    }
+
+    private void handleCamera(){
+        this.mCamera = getCameraInstance();
+        openCameraActivity();
+    }
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.action_items, menu);
@@ -149,17 +170,7 @@ public class MainActivity extends AppCompatActivity {
             case R.id.atn_direct_discover:
                 wiFiP2pPermissions.location();
                 if(location_has_perm) {
-                    mWifiP2pController.discoverPeers(new WifiP2pManager.ActionListener() {
-                        @Override
-                        public void onSuccess() {
-                            textView.setText("Discovery Started");
-                        }
-
-                        @Override
-                        public void onFailure(int reason) {
-                            textView.setText("Discovery Starting Failed");
-                        }
-                    });
+                    DiscoverPeers();
                 }
                 return true;
             case R.id.atn_direct_camera:
@@ -167,6 +178,7 @@ public class MainActivity extends AppCompatActivity {
                     wiFiP2pPermissions.camera();
                     if(camera_has_perm) {
                         //TODO here goes all the functionality
+                        handleCamera();
                     }
                 }
                 return true;
@@ -265,6 +277,7 @@ public class MainActivity extends AppCompatActivity {
                     this.location_has_perm = true;
                     // permission was granted,
                     Toast.makeText(getApplicationContext(), "LOCATION PERMISSION GRANTED", Toast.LENGTH_SHORT).show();
+                    DiscoverPeers();
                 } else {
 
                     // permission denied, wifi direct wont work under version ??? maybe we dont need it....
@@ -285,6 +298,7 @@ public class MainActivity extends AppCompatActivity {
                     this.camera_has_perm = true;
                     // permission was granted,
                     Toast.makeText(getApplicationContext(), "CAMERA PERMISSION GRANTED", Toast.LENGTH_SHORT).show();
+                    handleCamera();
                 } else {
 
                     // permission denied, wifi direct wont work under version ??? maybe we dont need it...
@@ -330,5 +344,20 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(getApplicationContext(), "YOUR DEVICE HAS NO CAMERA", Toast.LENGTH_SHORT).show();
             return false;
         }
+    }
+
+    public static Camera getCameraInstance(){
+        Camera c = null;
+        try {
+            c = Camera.open(); // attempt to get a Camera instance
+        }
+        catch (Exception e){
+            // Camera is not available (in use or does not exist)
+        }
+        return c; // returns null if camera is unavailable
+    }
+    private void openCameraActivity() {
+        Intent CameraActivityIntent = new Intent(this, CameraActivity.class);
+        this.startActivity(CameraActivityIntent);
     }
 }
