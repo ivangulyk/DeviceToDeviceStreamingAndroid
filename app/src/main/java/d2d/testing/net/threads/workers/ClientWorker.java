@@ -84,8 +84,11 @@ public class ClientWorker implements Runnable, WorkerInterface {
                     break;
 
                 case DataFormat.TYPE_FILE:
-                    handleFile(packet);
-                    Logger.d("ClientWorker received TYPE_FILE command");
+                    dataReceived.getSelector().getMainActivity().getWiFiP2pPermissions().memory();
+                    if(dataReceived.getSelector().getMainActivity().get_storage_has_perm()) {
+                        handleFile(packet);
+                        Logger.d("ClientWorker received TYPE_FILE command");
+                    }
                     break;
                 default:
                     //ERROR NO HAY TIPO DE MENSAJE!!

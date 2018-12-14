@@ -33,16 +33,14 @@ import d2d.testing.net.packets.DataFormat;
 public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_COARSE_LOCATION_CODE = 101;
     private static final int MY_CAMERA_REQUEST_CODE = 100;
+    private static final int MY_WRITE_EXTERNAL_STORAGE_CODE = 103;
     private static final int CHOOSE_FILE_CODE = 102;
     private boolean camera_has_perm = false;
     private boolean location_has_perm = false;
+    private boolean storage_has_perm = false;
 
-    Button btnOnOff;
-    Button btnSearch;
     Button btnSend;
-    Button btnCamera;
     ListView listView;
-    ListView listMsg;
     TextView textView;
     EditText editTextMsg;
     TextView redMsg;
@@ -70,6 +68,16 @@ public class MainActivity extends AppCompatActivity {
     }
     public void set_location_has_perm(boolean location){
         this.location_has_perm = location;
+    }
+    public void set_storage_has_perm(boolean storage){
+        this.location_has_perm = storage;
+    }
+
+    public WiFiP2pPermissions getWiFiP2pPermissions() {
+        return wiFiP2pPermissions;
+    }
+    public boolean get_storage_has_perm(){
+        return storage_has_perm;
     }
 
     private void execListener() {
@@ -126,11 +134,6 @@ public class MainActivity extends AppCompatActivity {
         inflater.inflate(R.menu.action_items, menu);
         return true;
     }
-
-    /*
-     * (non-Javadoc)
-     * @see android.app.Activity#onOptionsItemSelected(android.view.MenuItem)
-     */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -287,10 +290,29 @@ public class MainActivity extends AppCompatActivity {
                     // permission denied, wifi direct wont work under version ??? maybe we dont need it...
                     if (!ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA)) {
                         //Show permission explanation dialog...
-                        Toast.makeText(getApplicationContext(), "YOU DENIED PERMISSION AND CHECKED TO NEVER ASK AGAIN, GO SETTING AND ADD CAMERA PERMISSION MANUALLY YO USE THIS", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), "YOU DENIED PERMISSION AND CHECKED TO NEVER ASK AGAIN, GO SETTING AND ADD CAMERA PERMISSION MANUALLY TO USE THIS", Toast.LENGTH_SHORT).show();
                     }
                     else{
                         Toast.makeText(getApplicationContext(), "CAMERA PERMISSION NOT GRANTED, YOU WONT BE ABLE TO USE THIS", Toast.LENGTH_SHORT).show();
+                    }
+                }
+                break;
+            }
+            case MY_WRITE_EXTERNAL_STORAGE_CODE: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    this.storage_has_perm = true;
+                    // permission was granted,
+                    Toast.makeText(getApplicationContext(), "STORAGE PERMISSION GRANTED", Toast.LENGTH_SHORT).show();
+                } else {
+
+                    // permission denied, wifi direct wont work under version ??? maybe we dont need it...
+                    if (!ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                        //Show permission explanation dialog...
+                        Toast.makeText(getApplicationContext(), "YOU DENIED PERMISSION AND CHECKED TO NEVER ASK AGAIN, GO SETTING AND ADD STORAGE PERMISSION MANUALLY TO USE THIS", Toast.LENGTH_SHORT).show();
+                    }
+                    else{
+                        Toast.makeText(getApplicationContext(), "STORAGE PERMISSION NOT GRANTED, YOU WONT BE ABLE TO USE THIS,TRY AGAIN", Toast.LENGTH_SHORT).show();
                     }
                 }
                 break;
