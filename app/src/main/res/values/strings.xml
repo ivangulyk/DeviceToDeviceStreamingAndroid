@@ -4,5 +4,11 @@
     <string name="string_discover_peers">\Discover peers</string>
     <string name="string_transfer_file">\Transfer File</string>
     <string name="string_camera">Camera</string>
+    <string name="mi_dispositivo">MI DISPOSITIVO</string>
+    <string name="dispositivos_encontrados">DISPOSITIVOS ENCONTRADOS</string>
+    <string name="connection_status">Connection Status</string>
+    <string name="send">Send</string>
+    <string name="message">Message</string>
+    <string name="todo">TODO</string>
 
 </resources>

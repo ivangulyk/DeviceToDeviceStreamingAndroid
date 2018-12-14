@@ -8,11 +8,11 @@
 
     <TextView
         android:id="@+id/textView"
-        android:layout_width="fill_parent"
-        android:layout_height="19dp"
+        android:layout_width="575dp"
+        android:layout_height="17dp"
         android:layout_marginStart="8dp"
         android:layout_marginLeft="8dp"
-        android:layout_marginTop="40dp"
+        android:layout_marginTop="28dp"
         android:layout_marginEnd="8dp"
         android:layout_marginRight="8dp"
         android:gravity="center_vertical"
@@ -24,28 +24,28 @@
 
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/linearLayout2"
-        android:layout_width="368dp"
-        android:layout_height="70dp"
+        android:layout_width="578dp"
+        android:layout_height="65dp"
         android:layout_marginStart="8dp"
         android:layout_marginLeft="8dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="48dp"
         android:layout_marginEnd="8dp"
         android:layout_marginRight="8dp"
         android:background="?android:attr/activatedBackgroundIndicator"
         android:padding="3dip"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView">
+        app:layout_constraintTop_toTopOf="@+id/connectionStatus">
 
         <ImageView
             android:id="@+id/icon"
             android:layout_width="wrap_content"
             android:layout_height="55dp"
+            android:layout_marginEnd="2dp"
             android:layout_marginRight="2dp"
-            android:src="@drawable/machine"
             android:contentDescription="@string/todo"
-            android:layout_marginEnd="2dp" />
+            android:src="@drawable/machine" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -81,9 +81,11 @@
 
     <TextView
         android:id="@+id/peer_list"
-        android:layout_width="fill_parent"
-        android:layout_height="28dp"
-        android:layout_marginTop="152dp"
+        android:layout_width="588dp"
+        android:layout_height="18dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginLeft="4dp"
+        android:layout_marginTop="112dp"
         android:gravity="center_vertical"
         android:text="@string/dispositivos_encontrados"
         app:layout_constraintStart_toStartOf="parent"
@@ -91,13 +93,13 @@
 
     <ListView
         android:id="@+id/peerListView"
-        android:layout_width="350dp"
-        android:layout_height="137dp"
+        android:layout_width="586dp"
+        android:layout_height="84dp"
         android:layout_alignParentStart="true"
-        android:layout_marginTop="196dp"
+        android:layout_marginTop="136dp"
         android:background="@android:color/holo_orange_light"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.529"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -119,12 +121,12 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="1.0" />
+        app:layout_constraintVertical_bias="0.333" />
 
     <LinearLayout
         android:id="@+id/linearLayout"
-        android:layout_width="238dp"
-        android:layout_height="40dp"
+        android:layout_width="436dp"
+        android:layout_height="41dp"
         android:layout_marginStart="16dp"
         android:layout_marginLeft="16dp"
         android:layout_marginTop="8dp"
@@ -138,20 +140,20 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/connectionStatus"
-        app:layout_constraintVertical_bias="0.982">
+        app:layout_constraintVertical_bias="0.968">
 
         <EditText
             android:id="@+id/writeMsg"
-            android:layout_width="231dp"
+            android:layout_width="432dp"
             android:layout_height="45dp"
 
+            android:autofillHints=""
             android:ems="10"
             android:inputType="textPersonName"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/sendButton"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/readMsg"
-            android:autofillHints="" />
+            app:layout_constraintTop_toBottomOf="@+id/readMsg" />
     </LinearLayout>
 
     <Button
@@ -169,30 +171,30 @@
         android:text="@string/send"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.953"
+        app:layout_constraintHorizontal_bias="0.983"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/connectionStatus"
-        app:layout_constraintVertical_bias="1.0" />
+        app:layout_constraintVertical_bias="0.995" />
 
     <TextView
         android:id="@+id/readMsg"
-        android:layout_width="347dp"
-        android:layout_height="36dp"
+        android:layout_width="439dp"
+        android:layout_height="26dp"
         android:layout_below="@+id/peerListView"
         android:layout_alignParentStart="true"
         android:layout_alignParentEnd="true"
-        android:layout_marginStart="16dp"
-        android:layout_marginLeft="16dp"
-        android:layout_marginTop="348dp"
-        android:layout_marginEnd="21dp"
-        android:layout_marginRight="21dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginTop="224dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginRight="8dp"
         android:text="@string/message"
         android:textAlignment="center"
         android:textSize="20sp"
         android:textStyle="italic"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintHorizontal_bias="0.182"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="@+id/connectionStatus" />
 
 </android.support.constraint.ConstraintLayout>
