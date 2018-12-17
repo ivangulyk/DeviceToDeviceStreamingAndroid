@@ -1,18 +1,12 @@
 package d2d.testing.net.threads.workers;
 
-import android.os.Environment;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.channels.SocketChannel;
 import java.util.LinkedList;
 import java.util.List;
 
 import d2d.testing.helpers.Logger;
-import d2d.testing.net.packets.DataFormat;
+import d2d.testing.net.handlers.FileHandler;
+import d2d.testing.net.packets.DataFormatter;
 import d2d.testing.net.packets.DataPacket;
 import d2d.testing.net.packets.DataReceived;
 import d2d.testing.net.threads.selectors.NioSelectorThread;
@@ -50,15 +44,6 @@ public class ServerWorker implements WorkerInterface {
 
             this.processData(dataReceived);
         }
-            /*
-            // Return to sender
-            Logger.d("ServerWorker received: " +  new String(dataReceived.getData()));
-            dataReceived.getSelector().getMainActivity().updateMsg(new String(dataReceived.getData()));
-
-            //echo to everyone
-
-            */
-
     }
 
     private void processData(DataReceived dataReceived)
@@ -66,7 +51,7 @@ public class ServerWorker implements WorkerInterface {
         List<DataPacket> openPackets = new LinkedList();
 
         Logger.d("ServerWorker received: " + dataReceived.getData().length + " bytes");//new String(dataReceived.getData()));
-        openPackets.addAll(DataFormat.getPackets(openPacket, dataReceived.getData()));
+        openPackets.addAll(DataFormatter.getPackets(openPacket, dataReceived.getData()));
         if(openPacket != null)
             openPacket = null;
 
@@ -78,21 +63,17 @@ public class ServerWorker implements WorkerInterface {
 
             switch (packet.getType())
             {
-                case DataFormat.TYPE_MSG:
+                case DataFormatter.TYPE_MSG:
                     Logger.d("ServerWorker received TYPE_MSG command");
-                    dataReceived.getSelector().getMainActivity().updateMsg(new String(packet.getPacketData()));
+                    dataReceived.getSelector().getMainActivity().updateMsg(new String(packet.getBodyData()));
                     Logger.d("ServerWorker echoing the MSG");
-                    dataReceived.getSelector().send(packet.getPacketData());
+                    dataReceived.getSelector().send(packet.getBodyData());
                     break;
 
-                case DataFormat.TYPE_IMAGE:
-                    Logger.d("ServerWorker received TYPE_IMAGE command");
-                    break;
-
-                case DataFormat.TYPE_FILE:
+                case DataFormatter.TYPE_FILE:
                     dataReceived.getSelector().getMainActivity().getWiFiP2pPermissions().memory();
                     if(dataReceived.getSelector().getMainActivity().get_storage_has_perm()) {
-                        handleFile(packet);
+                        new FileHandler().handle(packet);
                         Logger.d("ServerWorker received TYPE_FILE command");
                     }
                     break;
@@ -100,37 +81,5 @@ public class ServerWorker implements WorkerInterface {
                     //ERROR NO HAY TIPO DE MENSAJE!!
             }
         }
-    }
-
-    private void handleFile(DataPacket packet){
-        final File f = new File(Environment.getExternalStorageDirectory() + "/"
-                + "/wifip2pshared-" + System.currentTimeMillis()
-                + ".jpg");
-        File dirs = new File(f.getParent());
-        if (!dirs.exists())
-            dirs.mkdirs();
-        try {
-            f.createNewFile();
-        } catch (IOException e) {
-            Logger.e(e.getMessage());
-        }
-        Logger.d("copying files " + f.toString());
-        try {
-            copyFile(packet.getPacketData(), new FileOutputStream(f));
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private boolean copyFile(byte[] file, OutputStream out) {
-        try {
-                out.write(file, 0, file.length);
-
-            out.close();
-        } catch (IOException e) {
-            Logger.d(e.toString());
-            return false;
-        }
-        return true;
     }
 }

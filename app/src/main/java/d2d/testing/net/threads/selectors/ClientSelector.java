@@ -11,11 +11,11 @@ import java.nio.channels.SocketChannel;
 
 import d2d.testing.MainActivity;
 import d2d.testing.helpers.Logger;
-import d2d.testing.net.events.ChangeRequest;
 import d2d.testing.net.threads.workers.ClientWorker;
 
 public class ClientSelector extends NioSelectorThread{
-    private SocketChannel mSocket;
+    private SocketChannel mSocketChannel;
+
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     public ClientSelector(InetAddress address, MainActivity mainActivity) throws IOException {
@@ -28,13 +28,11 @@ public class ClientSelector extends NioSelectorThread{
 
     protected void initiateConnection() {
         try {
-            this.mSocket = SocketChannel.open();
-
-            this.mSocket.configureBlocking(false);             // Create a non-blocking socket channel
-            this.mSocket.connect(new InetSocketAddress(mInetAddress.getHostAddress(),PORT));  // Connection establishment
-
-            this.mStatus = STATUS_CONNECTING;
-            this.addChangeRequest(new ChangeRequest(mSocket, ChangeRequest.REGISTER, SelectionKey.OP_CONNECT));
+            mSocketChannel = (SocketChannel) SocketChannel.open().configureBlocking(false);
+            mSocketChannel.connect(new InetSocketAddress(mInetAddress.getHostAddress(), PORT_TCP));
+            // Create a non-blocking socket channel and connect to GroupOwner
+            mStatusTCP = STATUS_CONNECTING;
+            this.addChangeRequest(new ChangeRequest(mSocketChannel, ChangeRequest.REGISTER, SelectionKey.OP_CONNECT));
             Logger.d("ClientSelector: initiateConnection as client trying to connect to " + mInetAddress.getHostAddress());
         } catch (IOException e) {
             e.printStackTrace();
@@ -43,7 +41,7 @@ public class ClientSelector extends NioSelectorThread{
 
     @Override
     public void send(byte[] data) {
-        this.send(mSocket, data);
+        this.send(mSocketChannel, data);
     }
 }
 

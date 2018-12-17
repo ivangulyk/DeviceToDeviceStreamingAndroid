@@ -1,16 +1,18 @@
 package d2d.testing.net.threads.selectors;
 
-import android.os.Build;
-import android.support.annotation.RequiresApi;
-
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.ByteBuffer;
+import java.nio.channels.ByteChannel;
+import java.nio.channels.DatagramChannel;
+import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.nio.channels.spi.AbstractSelectableChannel;
 import java.nio.channels.spi.SelectorProvider;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,13 +23,13 @@ import java.util.Map;
 
 import d2d.testing.MainActivity;
 import d2d.testing.helpers.Logger;
-import d2d.testing.net.events.ChangeRequest;
 import d2d.testing.net.threads.workers.WorkerInterface;
 
 import static java.lang.Thread.sleep;
 
 public abstract class NioSelectorThread implements Runnable{
-    protected static final int PORT = 3462;
+    protected static final int PORT_TCP = 3462;
+    protected static final int PORT_UDP = 3463;
 
     protected static final int STATUS_DISCONNECTED = 0;
     protected static final int STATUS_LISTENING = 1;
@@ -35,24 +37,27 @@ public abstract class NioSelectorThread implements Runnable{
     protected static final int STATUS_CONNECTED = 4;
 
     private final MainActivity mMainActivity;
-    protected InetAddress mInetAddress;
-
-    protected boolean mEnabled = true;
-    protected int mStatus = STATUS_DISCONNECTED;
-
-    protected Selector mSelector;
-    protected WorkerInterface mWorker; //TODO convert to array??
+    private final Selector mSelector;
 
     // A list of ChangeRequest instances and Data/socket map
     protected final List<SocketChannel> mConnections = new ArrayList<>();
-    protected final List<ChangeRequest> mPendingChangeRequests = new LinkedList<>();
-    protected final Map<SocketChannel, List> mPendingData = new HashMap<>();
-    private ByteBuffer mReadBuffer = ByteBuffer.allocate(8192);
+    private final List<ChangeRequest> mPendingChangeRequests = new LinkedList<>();
+    private final Map<SocketChannel, List> mPendingData = new HashMap<>();
+    private final ByteBuffer mReadBuffer = ByteBuffer.allocate(8192);
+
+    private DatagramChannel mDatagramChannel;
+    protected InetAddress mInetAddress;
+
+    private boolean mEnabled = true;
+    protected int mStatusTCP = STATUS_DISCONNECTED;
+    private int mStatusUDP = STATUS_DISCONNECTED;
+
+
+    protected WorkerInterface mWorker; //TODO convert to array??
 
     public abstract void send(byte[] data);
     protected abstract void initiateConnection();
 
-    @RequiresApi(api = Build.VERSION_CODES.N)
     public NioSelectorThread(MainActivity mainActivity) throws IOException {
         this(mainActivity,null);
     }
@@ -61,8 +66,7 @@ public abstract class NioSelectorThread implements Runnable{
         this.mInetAddress   = inetAddress;
         this.mMainActivity  = mainActivity;
         this.mSelector      = SelectorProvider.provider().openSelector();
-        //this.initiateConnection();
-        //WORKER MOVIDO A CLIENT/SELECTOR THREAD.. MAS FLEXIBLE SE PUEDE DEVOLVER AQUI EN UN FUTURO ALOMEJOR
+        //this.initiateConnectionUDP();
     }
 
     public MainActivity getMainActivity(){
@@ -78,7 +82,7 @@ public abstract class NioSelectorThread implements Runnable{
             while(mEnabled) {
                 this.initiateConnection();
 
-                while (mStatus != STATUS_DISCONNECTED) {
+                while (mStatusTCP != STATUS_DISCONNECTED) {
                     this.processChangeRequests();
 
                     mSelector.select();
@@ -126,6 +130,19 @@ public abstract class NioSelectorThread implements Runnable{
         }
     }
 
+    private void initiateConnectionUDP(){
+        try {
+            mDatagramChannel = (DatagramChannel) DatagramChannel.open().configureBlocking(false);
+            mDatagramChannel.socket().bind(new InetSocketAddress(PORT_UDP));
+
+            mStatusUDP = STATUS_LISTENING;
+            this.addChangeRequest(new ChangeRequest(mDatagramChannel, ChangeRequest.REGISTER, SelectionKey.OP_READ));
+            Logger.d("ClientSelector: initiateConnection as server listening UDP on port " + mInetAddress.getLocalHost().getHostAddress() + ":" + PORT_UDP);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     protected void send(SocketChannel socket, byte[] data) {
         synchronized(mPendingChangeRequests) {
             this.mPendingChangeRequests.add(new ChangeRequest(socket, ChangeRequest.CHANGE_OPS, SelectionKey.OP_WRITE));
@@ -145,18 +162,13 @@ public abstract class NioSelectorThread implements Runnable{
     }
 
     private void accept(SelectionKey key) throws IOException {
-        ServerSocketChannel serverSocketChannel = (ServerSocketChannel) key.channel();
-
-        // Accept the connection and make it non-blocking
-        SocketChannel socketChannel = serverSocketChannel.accept();
-        Socket socket = socketChannel.socket();
-        socketChannel.configureBlocking(false);
+        SocketChannel socketChannel = ((ServerSocketChannel) key.channel()).accept();//serverSocketChannel.accept();
+        socketChannel.configureBlocking(false);// Accept the connection and make it non-blocking
 
         // Register the SocketChannel with our Selector, indicating to be notified for READING
-        socketChannel.register(this.mSelector, SelectionKey.OP_READ);
+        socketChannel.register(mSelector, SelectionKey.OP_READ);
         mConnections.add(socketChannel);
-        this.mStatus = this.mStatus | STATUS_CONNECTED;
-        Logger.d("NioSelectorThread: Connection Accepted from IP " + socket.getRemoteSocketAddress());
+        Logger.d("NioSelectorThread: Connection Accepted from IP " + socketChannel.socket().getRemoteSocketAddress());
     }
 
     private void finishConnection(SelectionKey key) {
@@ -164,12 +176,12 @@ public abstract class NioSelectorThread implements Runnable{
         try {
             if(socketChannel.finishConnect()) { //Finish connecting.
                 //todo negociar algo sobre la conexion?? donde ??
-                this.mStatus = STATUS_CONNECTED;
+                this.mStatusTCP = STATUS_CONNECTED;
                 key.interestOps(SelectionKey.OP_READ);  // Register an interest in reading till send
                 Logger.d("NioSelectorThread: client (" + socketChannel.socket().getLocalAddress() + ") finished connecting...");
             }
         } catch (IOException e) {
-            this.mStatus = STATUS_DISCONNECTED;
+            this.mStatusTCP = STATUS_DISCONNECTED;
             key.cancel();               // Cancel the channel's registration with our selector
             Logger.d("NioSelectorThread finishConnection: " + e.toString());
         }
@@ -235,17 +247,23 @@ public abstract class NioSelectorThread implements Runnable{
         }
     }
 
+    /**
+     * Process any pending key changes on our selector
+     *
+     * It processes mPendingChangeRequests list in a synchronized way
+     *
+     * @throws Exception
+     */
+
     private void processChangeRequests() throws Exception {
-        // Process any pending changes
         synchronized (mPendingChangeRequests) {
             for (ChangeRequest changeRequest : mPendingChangeRequests) {
-                switch (changeRequest.type) {
+                switch (changeRequest.getType()) {
                     case ChangeRequest.CHANGE_OPS:
-                        SelectionKey key = changeRequest.socket.keyFor(mSelector);
-                        key.interestOps(changeRequest.ops);
+                        changeRequest.getChannel().keyFor(mSelector).interestOps(changeRequest.getOps());
                         break;
                     case ChangeRequest.REGISTER:
-                        changeRequest.socket.register(mSelector, changeRequest.ops);
+                        changeRequest.getChannel().register(mSelector, changeRequest.getOps());
                         break;
                 }
             }

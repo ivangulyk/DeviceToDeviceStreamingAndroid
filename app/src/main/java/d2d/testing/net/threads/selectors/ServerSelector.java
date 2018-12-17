@@ -1,24 +1,19 @@
 package d2d.testing.net.threads.selectors;
 
-import android.os.Build;
-import android.support.annotation.RequiresApi;
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 
 import d2d.testing.MainActivity;
 import d2d.testing.helpers.Logger;
-import d2d.testing.net.events.ChangeRequest;
 import d2d.testing.net.threads.workers.ServerWorker;
 
 public class ServerSelector extends NioSelectorThread  {
+    private ServerSocketChannel mServerSocketChannel;
 
-    private ServerSocketChannel mServerSocket;
-
-    @RequiresApi(api = Build.VERSION_CODES.N)
     public ServerSelector(MainActivity mainActivity) throws IOException {
         super(mainActivity);
 
@@ -29,14 +24,12 @@ public class ServerSelector extends NioSelectorThread  {
     @Override
     protected void initiateConnection() {
         try {
-            this.mServerSocket = ServerSocketChannel.open();                        // Create a new non-blocking server socket channel
-
-            this.mServerSocket.configureBlocking(false);
-            this.mServerSocket.socket().bind(new InetSocketAddress(PORT));     // Bind the server socket
-
-            this.mStatus = STATUS_LISTENING;
-            this.addChangeRequest(new ChangeRequest(mServerSocket, ChangeRequest.REGISTER, SelectionKey.OP_ACCEPT));
-            Logger.d("ServerSelector: initiateConnection as server listening on port " + PORT);
+            mServerSocketChannel = (ServerSocketChannel) ServerSocketChannel.open().configureBlocking(false);
+            mServerSocketChannel.socket().bind(new InetSocketAddress(PORT_TCP));
+            // Create a new non-blocking server socket channel  and start listening
+            mStatusTCP = STATUS_LISTENING;
+            addChangeRequest(new ChangeRequest(mServerSocketChannel, ChangeRequest.REGISTER, SelectionKey.OP_ACCEPT));
+            Logger.d("ServerSelector: initiateConnection as server listening TCP on port " + PORT_TCP);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -44,7 +37,7 @@ public class ServerSelector extends NioSelectorThread  {
 
     @Override
     public void send(byte[] data) {
-        for (SocketChannel socket : this.mConnections) {
+        for (SocketChannel socket : mConnections) {
             this.send(socket,data);
         }
     }

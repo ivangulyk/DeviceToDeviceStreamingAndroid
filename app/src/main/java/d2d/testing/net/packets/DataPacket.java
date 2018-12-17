@@ -29,8 +29,7 @@ public class DataPacket {
     public void setBodyLength(int length) {
         mBodyLength = length;
     }
-    public void setStatus(int status){mStatus=status;}
-
+    public void setStatus(int status){mStatus = status;}
 
     public byte getType(){
         return mType;
@@ -39,13 +38,14 @@ public class DataPacket {
         return mBodyLength;
     }
     public int getBodyRemainingLength() {
-        return mBodyLength + DataFormat.LENGTH_HEADER - mData.size();
+        return mBodyLength + DataFormatter.LENGTH_HEADER - mData.size();
     }
+
     public int getFullLength() {
-        return mBodyLength + DataFormat.LENGTH_HEADER;
+        return mBodyLength + DataFormatter.LENGTH_HEADER;
     }
     public int getFullRemainingLength() {
-        return mBodyLength + DataFormat.LENGTH_HEADER - mData.size();
+        return mBodyLength + DataFormatter.LENGTH_HEADER - mData.size();
     }
 
     public int getStatus(){return mStatus;}
@@ -67,8 +67,8 @@ public class DataPacket {
     }
 
     //TODO DEVOLVER SOLO LOS DATOS DEL PAQUETE SIN LAS CABECERAS Y ESO
-    public byte[] getPacketData() {
+    public byte[] getBodyData() {
 
-        return Arrays.copyOfRange(mData.toByteArray(),DataFormat.LENGTH_HEADER,mData.size());
+        return Arrays.copyOfRange(mData.toByteArray(),DataFormatter.LENGTH_HEADER,mData.size());
     }
 }

@@ -9,11 +9,9 @@ import android.hardware.Camera;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -28,7 +26,7 @@ import android.widget.Toast;
 import d2d.testing.gui.DeviceListAdapter;
 import d2d.testing.helpers.Logger;
 import d2d.testing.net.WifiP2pController;
-import d2d.testing.net.packets.DataFormat;
+import d2d.testing.net.packets.DataFormatter;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -86,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
         btnSend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mWifiP2pController.send(DataFormat.createMessagePacket(editTextMsg.getText().toString()));
+                mWifiP2pController.send(DataFormatter.createMessagePacket(editTextMsg.getText().toString()));
             }
         });
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener(){

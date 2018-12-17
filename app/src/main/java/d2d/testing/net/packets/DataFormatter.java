@@ -9,7 +9,7 @@ import java.util.List;
 
 import d2d.testing.helpers.Logger;
 
-public class DataFormat {
+public class DataFormatter {
     public static final byte[] START_PACKET_CONST = {0x11,0x17,0x16,0x15};
     public static final byte[] END_PREFIX_CONST = {0x11,0x15,0x16,0x17};
 
@@ -20,19 +20,18 @@ public class DataFormat {
 
     public static final byte[] TYPE_LIST = {0x15,0x16,0x17};
     public static final byte TYPE_MSG = 0x15;
-    public static final byte TYPE_IMAGE = 0x16;
     public static final byte TYPE_FILE = 0x17;
 
     public static byte[] createMessagePacket(String message){
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         byte[] data = message.getBytes();
         try {
-            //output.write(START_PACKET_CONST);     //ALWAYS PREFIX
-            output.write(TYPE_MSG);         //SET TYPE
-
+            output.write(START_PACKET_CONST);   //ALWAYS PREFIX
+            output.write(TYPE_MSG);             //SET TYPE
+            output.write(intToByte(data.length));
             //TODO mandar longitud de mensaje + hash?
             //TODO: HASH Y CHECKING AL RECIBIR, TIMESTAMP, QUIEN LO HA ENVIADO, NETWORK JUMPTRACE PARA SABER POR QUIEN HA PASADO?
-            output.write(intToByte(data.length));
+
             output.write(data);
         } catch (IOException e) {
             e.printStackTrace();
@@ -44,12 +43,17 @@ public class DataFormat {
     public static byte[] createFilePacket(byte[] file){
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         try {
-            //output.write(START_PACKET_CONST);     //ALWAYS PREFIX
-            output.write(TYPE_FILE);                //SET TYPE
+            output.write(START_PACKET_CONST);     //ALWAYS PREFIX
+            output.write(TYPE_FILE);              //SET TYPE
+            output.write(intToByte(0));     //SET FILENAME
+            output.write(intToByte(file.length));
+
+
+            output.write(file.length);            //SET TYPE
 
             //TODO mandar longitud de mensaje + hash?
             //TODO: HASH Y CHECKING AL RECIBIR, TIMESTAMP, QUIEN LO HA ENVIADO, NETWORK JUMPTRACE PARA SABER POR QUIEN HA PASADO?
-            output.write(intToByte(file.length));
+
             output.write(file);
         } catch (IOException e) {
             e.printStackTrace();
@@ -86,20 +90,17 @@ public class DataFormat {
                 openPacket.setStatus(DataPacket.STATUS_UNCOMPLETED_BODY);
 
             case DataPacket.STATUS_UNCOMPLETED_BODY:
-                if(data.length < openPacket.getFullRemainingLength())
-                {
-                    //DEVOLVEMOS UN PAQUETE CON ALGUN FLAG DE INCOMPLETO
+                if(data.length < openPacket.getFullRemainingLength()) {
                     //todo futuro: archivos muy grandes se nos peta la memoria o como va la cosa?
                     openPacket.addData(data);
                     out.add(openPacket);
                     return out;
                 } else if(data.length > openPacket.getFullRemainingLength()) {
-                    //TENEMOS EL MENSAJE COMPLETO
                     int lenRead = openPacket.getFullRemainingLength();
                     openPacket.addData(Arrays.copyOfRange(data,0,lenRead));
                     openPacket.setStatus(DataPacket.STATUS_COMPLETED);
                     out.add(openPacket);
-                    //Y TODAVIA MAS DATOS
+                    //TENEMOS EL MENSAJE COMPLETO Y TODAVIA MAS DATOS
                     data = Arrays.copyOfRange(data,lenRead,data.length);
                     out.addAll(getPackets(null,data));
                     //DEVOLVEMOS TOD
