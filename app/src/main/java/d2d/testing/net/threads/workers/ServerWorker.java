@@ -56,7 +56,7 @@ public class ServerWorker implements WorkerInterface {
             openPacket = null;
 
         for (DataPacket packet : openPackets) {
-            if(!packet.isCompleted()){
+            if(packet.notCompleted()){
                 openPacket = packet;
                 break;
             }

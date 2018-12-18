@@ -26,7 +26,7 @@ public class DataFormatter {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         byte[] data = message.getBytes();
         try {
-            output.write(START_PACKET_CONST);   //ALWAYS PREFIX
+            //output.write(START_PACKET_CONST);   //ALWAYS PREFIX
             output.write(TYPE_MSG);             //SET TYPE
             output.write(intToByte(data.length));
             //TODO mandar longitud de mensaje + hash?
@@ -43,9 +43,9 @@ public class DataFormatter {
     public static byte[] createFilePacket(byte[] file){
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         try {
-            output.write(START_PACKET_CONST);     //ALWAYS PREFIX
+            //output.write(START_PACKET_CONST);     //ALWAYS PREFIX
             output.write(TYPE_FILE);              //SET TYPE
-            output.write(intToByte(0));     //SET FILENAME
+            //output.write(intToByte(0));     //SET FILENAME
             output.write(intToByte(file.length));
 
 

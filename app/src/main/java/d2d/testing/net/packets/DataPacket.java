@@ -49,7 +49,7 @@ public class DataPacket {
     }
 
     public int getStatus(){return mStatus;}
-    public boolean isCompleted(){
+    public boolean notCompleted(){
         return mStatus == STATUS_COMPLETED;
     }
 
