@@ -50,7 +50,7 @@ public class DataPacket {
 
     public int getStatus(){return mStatus;}
     public boolean notCompleted(){
-        return mStatus == STATUS_COMPLETED;
+        return mStatus != STATUS_COMPLETED;
     }
 
 

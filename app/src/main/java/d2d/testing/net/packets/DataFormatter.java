@@ -49,7 +49,7 @@ public class DataFormatter {
             output.write(intToByte(file.length));
 
 
-            output.write(file.length);            //SET TYPE
+           // output.write(file.length);            //SET TYPE
 
             //TODO mandar longitud de mensaje + hash?
             //TODO: HASH Y CHECKING AL RECIBIR, TIMESTAMP, QUIEN LO HA ENVIADO, NETWORK JUMPTRACE PARA SABER POR QUIEN HA PASADO?

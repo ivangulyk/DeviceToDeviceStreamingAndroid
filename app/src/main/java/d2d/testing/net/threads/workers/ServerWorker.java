@@ -67,7 +67,7 @@ public class ServerWorker implements WorkerInterface {
                     Logger.d("ServerWorker received TYPE_MSG command");
                     dataReceived.getSelector().getMainActivity().updateMsg(new String(packet.getBodyData()));
                     Logger.d("ServerWorker echoing the MSG");
-                    dataReceived.getSelector().send(packet.getBodyData());
+                    dataReceived.getSelector().send(packet.getData());
                     break;
 
                 case DataFormatter.TYPE_FILE:

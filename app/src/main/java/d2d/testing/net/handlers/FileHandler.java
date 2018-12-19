@@ -16,7 +16,7 @@ public class FileHandler {
             //final DataPacketFile packetFile = (DataPacketFile) packet;
             //TODO SECURITY CHECK FILENAME?
             //final File f = new File(Environment.getExternalStorageDirectory() + "/" + packetFile.getFileName());
-            final File f = new File(Environment.getExternalStorageDirectory() + "/d2d-network-" + System.currentTimeMillis() + ".jpg");
+            final File f = new File(Environment.getExternalStorageDirectory() + "/"+"/d2d-network-" + System.currentTimeMillis() + ".jpg");
             final File dirs = new File(f.getParent());
 
 
