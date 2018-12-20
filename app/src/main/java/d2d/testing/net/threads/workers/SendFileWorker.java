@@ -15,7 +15,7 @@ import d2d.testing.net.packets.DataFormatter;
 
 public class SendFileWorker implements Runnable{
 
-    private Uri mFileUri;
+    private final Uri mFileUri;
     private WifiP2pHandler mHandler;
 
     public SendFileWorker(Uri uri, WifiP2pHandler handler) {

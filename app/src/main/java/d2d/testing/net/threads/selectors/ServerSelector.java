@@ -29,8 +29,9 @@ public class ServerSelector extends NioSelectorThread  {
             // Create a new non-blocking server socket channel  and start listening
             mStatusTCP = STATUS_LISTENING;
             addChangeRequest(new ChangeRequest(mServerSocketChannel, ChangeRequest.REGISTER, SelectionKey.OP_ACCEPT));
-            Logger.d("ServerSelector: initiateConnection as server listening TCP on port " + PORT_TCP);
+            Logger.d("ServerSelector: initiateConnection(): server listening TCP connections on port " + PORT_TCP);
         } catch (IOException e) {
+            Logger.d("ServerSelector: initiateConnection(): failed to listen at port " + PORT_TCP);
             e.printStackTrace();
         }
     }

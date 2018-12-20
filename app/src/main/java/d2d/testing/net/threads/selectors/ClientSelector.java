@@ -16,8 +16,6 @@ import d2d.testing.net.threads.workers.ClientWorker;
 public class ClientSelector extends NioSelectorThread{
     private SocketChannel mSocketChannel;
 
-
-    @RequiresApi(api = Build.VERSION_CODES.N)
     public ClientSelector(InetAddress address, MainActivity mainActivity) throws IOException {
         super(mainActivity,address);
 
@@ -25,7 +23,7 @@ public class ClientSelector extends NioSelectorThread{
         new Thread(mWorker).start();
     }
 
-
+    @Override
     protected void initiateConnection() {
         try {
             mSocketChannel = (SocketChannel) SocketChannel.open().configureBlocking(false);
@@ -33,8 +31,9 @@ public class ClientSelector extends NioSelectorThread{
             // Create a non-blocking socket channel and connect to GroupOwner
             mStatusTCP = STATUS_CONNECTING;
             this.addChangeRequest(new ChangeRequest(mSocketChannel, ChangeRequest.REGISTER, SelectionKey.OP_CONNECT));
-            Logger.d("ClientSelector: initiateConnection as client trying to connect to " + mInetAddress.getHostAddress());
+            Logger.d("ClientSelector: initiateConnection() connecting to " + mInetAddress.getHostAddress() + ":" + PORT_TCP);
         } catch (IOException e) {
+            Logger.d("ClientSelector: initiateConnection(): failed to connect to " + mInetAddress.getHostAddress() + ":" + PORT_TCP);
             e.printStackTrace();
         }
     }
