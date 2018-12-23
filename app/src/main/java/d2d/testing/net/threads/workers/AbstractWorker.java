@@ -7,16 +7,19 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import d2d.testing.helpers.Logger;
+import d2d.testing.net.helpers.IOUtils;
+import d2d.testing.net.packets.DataPacket;
 import d2d.testing.net.packets.DataReceived;
 import d2d.testing.net.threads.selectors.NioSelectorThread;
 
 public abstract class AbstractWorker implements Runnable {
-    protected final List<DataReceived> mDataReceivedQueue;
-    protected final Map<SelectableChannel, List> mOpenPacketsMap;
+    private final List<DataReceived> mDataReceivedQueue;
+    private final Map<SelectableChannel, DataPacket> mOpenPacketsMap;
 
-    protected boolean mEnabled;
+    private boolean mEnabled;
 
-    protected abstract void processData(DataReceived dataReceived);
+    protected abstract void processData(DataPacket dataPacket, NioSelectorThread selector, SelectableChannel channel);
 
     protected AbstractWorker() {
         mDataReceivedQueue = new LinkedList<>();
@@ -37,7 +40,7 @@ public abstract class AbstractWorker implements Runnable {
                 }
                 dataReceived = mDataReceivedQueue.remove(0);
             }
-            this.processData(dataReceived);     //Process data on child classes
+            this.parsePackets(dataReceived);
         }
     }
 
@@ -48,5 +51,35 @@ public abstract class AbstractWorker implements Runnable {
             mDataReceivedQueue.add(new DataReceived(selectorThread, socket, dataCopy));
             mDataReceivedQueue.notify();
         }
+    }
+
+    private void parsePackets(DataReceived dataReceived) {
+        DataPacket openPacket = mOpenPacketsMap.get(dataReceived.getSocket());
+        int cont = 0;
+
+        if(openPacket == null)
+            openPacket = new DataPacket();
+
+        while(cont < dataReceived.getData().length)
+        {
+            byte[] packetData = IOUtils.copyMax(dataReceived.getData(),cont, openPacket.getRemainingLength());
+            Logger.d("AbstractWorker written " + packetData.length + " into open packet");
+            cont += packetData.length;
+            openPacket.addData(packetData);
+
+            openPacket.parsePacket();
+
+            if(openPacket.isCompleted())
+            {
+                Logger.d("AbstractWorker packet completed");
+                this.processData(openPacket, dataReceived.getSelector(), dataReceived.getSocket());     //Process data on child classes
+                openPacket = new DataPacket();
+            } else if (openPacket.isInvalid()) {
+                Logger.d("AbstractWorker packet invalid");
+                openPacket = new DataPacket();
+            }
+        }
+
+        mOpenPacketsMap.put(dataReceived.getSocket(), openPacket);
     }
 }

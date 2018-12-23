@@ -1,6 +1,6 @@
 package d2d.testing.net.helpers;
 
-import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 public class IOUtils {
 
@@ -26,5 +26,10 @@ public class IOUtils {
         }
 
         return result;
+    }
+
+    public static byte[] copyMax(byte[] byteArr, int offset, int max)
+    {
+        return Arrays.copyOfRange(byteArr, offset, ((byteArr.length > max) ? max : byteArr.length));
     }
 }

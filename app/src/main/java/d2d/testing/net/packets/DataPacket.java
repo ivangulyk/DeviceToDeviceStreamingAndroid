@@ -4,16 +4,17 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 
+import d2d.testing.helpers.Logger;
 import d2d.testing.net.helpers.IOUtils;
 
-public abstract class DataPacket {
-    public static final byte[] START_PACKET = {0x11,0x17,0x16,0x15};
-    public static final byte[] END_PACKET   = {0x11,0x15,0x16,0x17};
+public class DataPacket {
+    private static final byte[] START_PACKET = {0x11,0x17,0x16,0x15};
+    private static final byte[] END_PACKET   = {0x11,0x15,0x16,0x17};
 
-    public static final int TYPE_POSITION       = 0;
-    public static final int BODY_LEN_POSITION   = 1;
-    public static final int BODY_LEN_LENGTH     = 4;
-    public static final int HEADER_LENGTH       = 5;
+    private static final int TYPE_POSITION       = 0;
+    private static final int BODY_LEN_POSITION   = 1;
+    private static final int BODY_LEN_LENGTH     = 4;
+    private static final int HEADER_LENGTH       = 5;
 
 
     public static final byte    TYPE_OPEN = -1;
@@ -21,24 +22,105 @@ public abstract class DataPacket {
     public static final byte    TYPE_FILE = 0x17;
     public static final byte[]  TYPE_LIST = {0x15,0x17};
 
-    public static final int STATUS_NOTHING   = 0;
+    public static final int STATUS_INVALID  = -1;
+    public static final int STATUS_OPEN     = 0;
     public static final int STATUS_HEADER    = 1;
     public static final int STATUS_BODY      = 2; //POST BODY DATA?
     public static final int STATUS_COMPLETED = 3;
 
-    //private byte[] data;
-
     private byte mType;
     private int mStatus;
     private int mBodyLength;
-    protected byte[] mData;
+    private byte[] mData;
+    private ByteArrayOutputStream mDataStream;
 
-
-    DataPacket(){
+    public DataPacket(){
         mType = TYPE_OPEN;
-        mStatus = STATUS_NOTHING;
-        mData = null;
+        mStatus = STATUS_OPEN;
         mBodyLength = 0;
+        mData = null;
+        mDataStream = new ByteArrayOutputStream();
+    }
+
+    public void setType(byte type){
+        mType = type;
+    }
+
+    public void setBodyLength(int length) {
+        mBodyLength = length;
+    }
+    private void setBodyLength(byte[] length) {
+        mBodyLength = IOUtils.fromByteArray(length);
+    }
+
+    public byte getType(){
+        return mType;
+    }
+    public int getStatus(){return mStatus;}
+    public boolean isCompleted(){
+        return mStatus == STATUS_COMPLETED;
+    }
+    public boolean isInvalid(){
+        return mStatus == STATUS_INVALID;
+    }
+
+    public int getBodyLength() {
+        return mBodyLength;
+    }
+    public int getFullLength() {
+        return mBodyLength + HEADER_LENGTH;
+    }
+    public int getRemainingLength() { return mBodyLength + HEADER_LENGTH - mDataStream.size(); }
+
+    public byte[] getData() { return mData; }
+    public byte[] getBodyData() {
+        return Arrays.copyOfRange(mData,HEADER_LENGTH,mData.length);
+    }
+
+
+    public void addData(byte[] data){
+        try {
+            mDataStream.write(data);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void parsePacket()
+    {
+        mData = mDataStream.toByteArray();
+
+        if (getRemainingLength() > 0)
+            return;     //la cabecera no esta llena
+
+        if(mStatus == STATUS_OPEN) {
+            parseHeader();
+            return;
+        }
+
+        //ASUMIMOS QUE TENEMOS EL MENSAJE COMPLETO
+        //setStatus(STATUS_COMPLETED);
+        mStatus = STATUS_COMPLETED;
+    }
+
+    public void parseHeader() {
+        //TODO OJO COOMPROBAR..
+        //comprobamos el tipo de mensaje
+        if(!IOUtils.contains(TYPE_LIST,mData[TYPE_POSITION])){
+            mStatus = STATUS_INVALID;
+            Logger.d("DataFormatter: No packet type found!");
+            return;
+        }
+
+        setBodyLength(Arrays.copyOfRange(mData, BODY_LEN_POSITION, BODY_LEN_POSITION + BODY_LEN_LENGTH));
+        setType(mData[TYPE_POSITION]);
+
+        //todo mas cosas de cabecera hashes etc
+
+        //todo SUBTIPO DE STATUS PARA PARAMETROS ADICIONALES DE CABECERA
+        //todo VAMOS A TENER QUE HACER ALGO MAS AQUI SEPARADO? CABECERAS PROPIAS... ETC
+
+        mStatus = STATUS_HEADER;
     }
 
     protected void createPacket(byte[] data) throws IOException {
@@ -48,40 +130,10 @@ public abstract class DataPacket {
         output.write(START_PACKET);
         output.write(mType);
         output.write(IOUtils.intToByteArray(data.length));
+
         //ESCRIBIMOS LOS DATOS
         output.write(data);
+        //POST CABECERA?
         mData = output.toByteArray();
-    }
-
-    //protected void parsePacket();
-
-    public void setType(byte type){
-        mType = type;
-    }
-    public void setStatus(int status){mStatus = status;}
-    public void setBodyLength(int length) {
-        mBodyLength = length;
-    }
-    public void setBodyLength(byte[] length) {
-        mBodyLength = IOUtils.fromByteArray(length);
-    }
-
-    public byte getType(){
-        return mType;
-    }
-    public int getBodyLength() {
-        return mBodyLength;
-    }
-    public int getFullLength() {
-        return mBodyLength + HEADER_LENGTH;
-    }
-    public int getStatus(){return mStatus;}
-    public boolean isCompleted(){
-        return this.getStatus() == STATUS_COMPLETED;
-    }
-
-    public byte[] getData() { return mData; }
-    public byte[] getBodyData() {
-        return Arrays.copyOfRange(mData,HEADER_LENGTH,mData.length);
     }
 }

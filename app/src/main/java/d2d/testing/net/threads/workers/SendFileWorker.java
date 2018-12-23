@@ -11,7 +11,6 @@ import java.io.OutputStream;
 
 import d2d.testing.helpers.Logger;
 import d2d.testing.net.WifiP2pHandler;
-import d2d.testing.net.packets.DataFormatter;
 import d2d.testing.net.packets.FilePacket;
 
 public class SendFileWorker implements Runnable{
@@ -33,12 +32,11 @@ public class SendFileWorker implements Runnable{
             ContentResolver cr = mHandler.getActivity().getContentResolver();
             InputStream is = cr.openInputStream(Uri.parse(mFileUri.toString()));
 
-            Logger.d("File worker: Streams opened we are going to construct the msg...");
-            copyFile(is, output);
-            FilePacket packet = new FilePacket(output.toByteArray(), mFileUri.getLastPathSegment());
-            mHandler.mController.send(packet.getData());
+            copyFile(is, output); //todo ioUtils copy from stream to stream
 
-            Logger.d("File worker: Data passed to controller...");
+            mHandler.mController.send(new FilePacket(output.toByteArray(), mFileUri.getLastPathSegment()));
+
+            Logger.d("File worker: Data passed to controller to send...");
         } catch (FileNotFoundException e) {
             Logger.e("File worker: FileNotFoundException... something wrong");
             Logger.e(e.getMessage());

@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import d2d.testing.MainActivity;
+import d2d.testing.net.packets.DataPacket;
 import d2d.testing.net.threads.selectors.ClientSelector;
 import d2d.testing.net.threads.selectors.ServerSelector;
 import d2d.testing.net.threads.workers.SendFileWorker;
@@ -93,6 +94,10 @@ public class WifiP2pController {
         config.wps.setup = WpsInfo.PBC;
 
         this.mWifiP2pManager.connect(this.mChannel, config, actionListener);
+    }
+
+    public void send(DataPacket dataPacket) {
+        send(dataPacket.getData());
     }
 
     public void send(byte[] data) {
