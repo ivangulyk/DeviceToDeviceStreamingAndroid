@@ -5,14 +5,14 @@ import java.nio.channels.SelectableChannel;
 import d2d.testing.helpers.Logger;
 import d2d.testing.net.handlers.FileHandler;
 import d2d.testing.net.packets.DataPacket;
-import d2d.testing.net.threads.selectors.NioSelectorThread;
+import d2d.testing.net.threads.selectors.AbstractSelector;
 
 //TODO Externalizar constantes... SSL??
 //TODO COMPARTIR MISMOS WORKERS? Ya veremos
 public class ClientWorker extends AbstractWorker {
 
     @Override
-    protected void processData(DataPacket dataPacket, NioSelectorThread selector, SelectableChannel channel) {
+    protected void processData(DataPacket dataPacket, AbstractSelector selector, SelectableChannel channel) {
         switch (dataPacket.getType())
         {
             case DataPacket.TYPE_MSG:

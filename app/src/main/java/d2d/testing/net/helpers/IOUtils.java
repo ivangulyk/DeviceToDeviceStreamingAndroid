@@ -1,6 +1,12 @@
 package d2d.testing.net.helpers;
 
+import android.os.Environment;
+import android.util.Log;
+
+import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 
 public class IOUtils {
 
@@ -32,4 +38,27 @@ public class IOUtils {
     {
         return Arrays.copyOfRange(byteArr, offset, ((byteArr.length > max) ? max : byteArr.length));
     }
+
+    /** Create a File for saving an image or video */
+    public static File getOutputMediaFile(String fileName){
+        //TODO SECURITY CHECK FILENAME?
+
+        // To be safe, you should check that the SDCard is mounted
+        // using Environment.getExternalStorageState() before doing this.
+
+        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "D2DNetwork");
+        // This location works best if you want the created images to be shared
+        // between applications and persist after your app has been uninstalled.
+
+        if (! mediaStorageDir.exists() && ! mediaStorageDir.mkdirs()){
+            Log.d("D2DNetwork", "failed to create ... PERMISSIONS?");
+            return null;
+        }
+
+        // Create a media file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        return new File(mediaStorageDir.getPath() + File.separator + timeStamp + "_" + fileName);
+    }
+
+
 }

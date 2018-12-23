@@ -19,11 +19,12 @@ import java.util.Map;
 
 import d2d.testing.MainActivity;
 import d2d.testing.helpers.Logger;
+import d2d.testing.net.helpers.IOUtils;
 import d2d.testing.net.threads.workers.AbstractWorker;
 
 import static java.lang.Thread.sleep;
 
-public abstract class NioSelectorThread implements Runnable{
+public abstract class AbstractSelector implements Runnable{
     protected static final int PORT_TCP = 3462;
     protected static final int PORT_UDP = 3463;
 
@@ -54,11 +55,11 @@ public abstract class NioSelectorThread implements Runnable{
     public abstract void send(byte[] data);
     protected abstract void initiateConnection();
 
-    public NioSelectorThread(MainActivity mainActivity) throws IOException {
+    public AbstractSelector(MainActivity mainActivity) throws IOException {
         this(mainActivity,null);
     }
 
-    public NioSelectorThread(MainActivity mainActivity, InetAddress inetAddress) throws IOException {
+    public AbstractSelector(MainActivity mainActivity, InetAddress inetAddress) throws IOException {
         this.mInetAddress   = inetAddress;
         this.mMainActivity  = mainActivity;
         this.mSelector      = SelectorProvider.provider().openSelector();
@@ -118,6 +119,7 @@ public abstract class NioSelectorThread implements Runnable{
                 }
                 key.cancel();
             }
+            //IOUtils.
             try {
                 mSelector.close();
             } catch (IOException e) {
@@ -133,7 +135,7 @@ public abstract class NioSelectorThread implements Runnable{
 
             mStatusUDP = STATUS_LISTENING;
             this.addChangeRequest(new ChangeRequest(mDatagramChannel, ChangeRequest.REGISTER, SelectionKey.OP_READ));
-            Logger.d("ClientSelector: initiateConnection as server listening UDP on port " + mInetAddress.getLocalHost().getHostAddress() + ":" + PORT_UDP);
+            Logger.d("ClientSelector: initiateConnection as server listening UDP on port " + InetAddress.getLocalHost().getHostAddress() + ":" + PORT_UDP);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -164,7 +166,7 @@ public abstract class NioSelectorThread implements Runnable{
         // Register the SocketChannel with our Selector, indicating to be notified for READING
         socketChannel.register(mSelector, SelectionKey.OP_READ);
         mConnections.add(socketChannel);
-        Logger.d("NioSelectorThread: Connection Accepted from IP " + socketChannel.socket().getRemoteSocketAddress());
+        Logger.d("AbstractSelector: Connection Accepted from IP " + socketChannel.socket().getRemoteSocketAddress());
     }
 
     private void finishConnection(SelectionKey key) {
@@ -174,12 +176,12 @@ public abstract class NioSelectorThread implements Runnable{
                 //todo negociar algo sobre la conexion?? donde ??
                 this.mStatusTCP = STATUS_CONNECTED;
                 key.interestOps(SelectionKey.OP_READ);  // Register an interest in reading till send
-                Logger.d("NioSelectorThread: client (" + socketChannel.socket().getLocalAddress() + ") finished connecting...");
+                Logger.d("AbstractSelector: client (" + socketChannel.socket().getLocalAddress() + ") finished connecting...");
             }
         } catch (IOException e) {
             this.mStatusTCP = STATUS_DISCONNECTED;
             key.cancel();               // Cancel the channel's registration with our selector
-            Logger.d("NioSelectorThread finishConnection: " + e.toString());
+            Logger.d("AbstractSelector finishConnection: " + e.toString());
         }
     }
 
@@ -201,7 +203,7 @@ public abstract class NioSelectorThread implements Runnable{
             key.cancel();       // Remote entity shut the socket down cleanly. Do the same
             socketChannel.close();
             mConnections.remove(socketChannel);
-            Logger.d("NioSelectorThread: client closed connection... IP: " + socketChannel.socket().getLocalAddress());
+            Logger.d("AbstractSelector: client closed connection... IP: " + socketChannel.socket().getLocalAddress());
             return;
         }
 
@@ -218,14 +220,14 @@ public abstract class NioSelectorThread implements Runnable{
             {
                 queue = new ArrayList();
                 mPendingData.put(socketChannel, queue);
-                Logger.e("NioSelectorThread: Tried to write but socket queue was NULL... this should not happen!!");
+                Logger.e("AbstractSelector: Tried to write but socket queue was NULL... this should not happen!!");
                 return;
             }
 
             while (!queue.isEmpty()) {                  // Write until there's not more data ...
                 ByteBuffer buf = (ByteBuffer) queue.get(0);
                 int written = socketChannel.write(buf);
-                Logger.e("NioSelectorThread: Wrote " + written + " bytes in " + this.getClass());
+                Logger.e("AbstractSelector: Wrote " + written + " bytes in " + this.getClass());
                 if (buf.remaining() > 0) {              // ... or the socket's buffer fills up
                     break;
                 }

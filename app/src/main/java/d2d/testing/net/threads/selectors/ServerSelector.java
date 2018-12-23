@@ -2,7 +2,6 @@ package d2d.testing.net.threads.selectors;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
@@ -11,7 +10,7 @@ import d2d.testing.MainActivity;
 import d2d.testing.helpers.Logger;
 import d2d.testing.net.threads.workers.ServerWorker;
 
-public class ServerSelector extends NioSelectorThread  {
+public class ServerSelector extends AbstractSelector {
     private ServerSocketChannel mServerSocketChannel;
 
     public ServerSelector(MainActivity mainActivity) throws IOException {

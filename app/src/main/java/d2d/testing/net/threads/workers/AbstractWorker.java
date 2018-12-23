@@ -11,7 +11,7 @@ import d2d.testing.helpers.Logger;
 import d2d.testing.net.helpers.IOUtils;
 import d2d.testing.net.packets.DataPacket;
 import d2d.testing.net.packets.DataReceived;
-import d2d.testing.net.threads.selectors.NioSelectorThread;
+import d2d.testing.net.threads.selectors.AbstractSelector;
 
 public abstract class AbstractWorker implements Runnable {
     private final List<DataReceived> mDataReceivedQueue;
@@ -19,7 +19,7 @@ public abstract class AbstractWorker implements Runnable {
 
     private boolean mEnabled;
 
-    protected abstract void processData(DataPacket dataPacket, NioSelectorThread selector, SelectableChannel channel);
+    protected abstract void processData(DataPacket dataPacket, AbstractSelector selector, SelectableChannel channel);
 
     protected AbstractWorker() {
         mDataReceivedQueue = new LinkedList<>();
@@ -44,7 +44,7 @@ public abstract class AbstractWorker implements Runnable {
         }
     }
 
-    public void addData(NioSelectorThread selectorThread, SocketChannel socket, byte[] data, int count) {
+    public void addData(AbstractSelector selectorThread, SocketChannel socket, byte[] data, int count) {
         byte[] dataCopy = new byte[count];
         System.arraycopy(data, 0, dataCopy, 0, count);
         synchronized(mDataReceivedQueue) {

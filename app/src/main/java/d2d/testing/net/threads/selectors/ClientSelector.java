@@ -10,7 +10,7 @@ import d2d.testing.MainActivity;
 import d2d.testing.helpers.Logger;
 import d2d.testing.net.threads.workers.ClientWorker;
 
-public class ClientSelector extends NioSelectorThread{
+public class ClientSelector extends AbstractSelector {
     private SocketChannel mSocketChannel;
 
     public ClientSelector(InetAddress address, MainActivity mainActivity) throws IOException {

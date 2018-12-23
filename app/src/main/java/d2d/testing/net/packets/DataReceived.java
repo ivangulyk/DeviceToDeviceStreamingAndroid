@@ -1,23 +1,21 @@
 package d2d.testing.net.packets;
 
 import java.nio.channels.SelectableChannel;
-import java.nio.channels.SocketChannel;
-import java.nio.channels.spi.AbstractSelectableChannel;
 
-import d2d.testing.net.threads.selectors.NioSelectorThread;
+import d2d.testing.net.threads.selectors.AbstractSelector;
 
 public class DataReceived {
-    private final NioSelectorThread mSelector;
+    private final AbstractSelector mSelector;
     private final SelectableChannel mChannel;
     private final byte[] mData;
 
-    public DataReceived(NioSelectorThread selector, SelectableChannel socket, byte[] data) {
+    public DataReceived(AbstractSelector selector, SelectableChannel socket, byte[] data) {
         this.mSelector = selector;
         this.mChannel = socket;
         this.mData = data;
     }
 
-    public NioSelectorThread getSelector() {
+    public AbstractSelector getSelector() {
         return mSelector;
     }
 

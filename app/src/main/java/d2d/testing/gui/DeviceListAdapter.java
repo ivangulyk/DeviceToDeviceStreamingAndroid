@@ -51,7 +51,7 @@ public class DeviceListAdapter  extends BaseAdapter {
 
         name.setText(deviceArray[position].deviceName);
         address.setText(deviceArray[position].deviceAddress);
-        status.setText(activity.getDeviceStatus(deviceArray[position].status));
+        status.setText(MainActivity.getDeviceStatus(deviceArray[position].status));
 
         return v;
     }

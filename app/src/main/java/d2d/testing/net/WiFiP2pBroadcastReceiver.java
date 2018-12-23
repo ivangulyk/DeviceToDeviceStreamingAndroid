@@ -30,6 +30,19 @@ public class WiFiP2pBroadcastReceiver extends BroadcastReceiver {
                     Toast.makeText(context,"Wifi is OFF", Toast.LENGTH_SHORT).show();
                 }
                 break;
+            /*  todo
+            WIFI_P2P_DISCOVERY_CHANGED_ACTION
+            WIFI_P2P_DISCOVERY_STARTED
+            WIFI_P2P_DISCOVERY_STOPPED
+
+            added in API level 16
+            public static final String WIFI_P2P_DISCOVERY_CHANGED_ACTION
+            Broadcast intent action indicating that peer discovery has either started or stopped. One extra EXTRA_DISCOVERY_STATE indicates whether discovery has started or stopped.
+
+            Note that discovery will be stopped during a connection setup. If the application tries to re-initiate discovery during this time, it can fail.
+
+            Constant Value: 1 (0x00000001
+            */
 
             case WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION:
                 if(mWifiP2pHandler.getWifiP2pManager() != null) {
