@@ -3,16 +3,12 @@ package d2d.testing.net.threads.selectors;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.Socket;
 import java.nio.ByteBuffer;
-import java.nio.channels.ByteChannel;
 import java.nio.channels.DatagramChannel;
-import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.nio.channels.spi.AbstractSelectableChannel;
 import java.nio.channels.spi.SelectorProvider;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,7 +19,7 @@ import java.util.Map;
 
 import d2d.testing.MainActivity;
 import d2d.testing.helpers.Logger;
-import d2d.testing.net.threads.workers.WorkerInterface;
+import d2d.testing.net.threads.workers.AbstractWorker;
 
 import static java.lang.Thread.sleep;
 
@@ -53,7 +49,7 @@ public abstract class NioSelectorThread implements Runnable{
     private int mStatusUDP = STATUS_DISCONNECTED;
 
 
-    protected WorkerInterface mWorker; //TODO convert to array??
+    protected AbstractWorker mWorker; //TODO convert to array??
 
     public abstract void send(byte[] data);
     protected abstract void initiateConnection();
@@ -222,13 +218,14 @@ public abstract class NioSelectorThread implements Runnable{
             {
                 queue = new ArrayList();
                 mPendingData.put(socketChannel, queue);
-                //TODO error no deberia haber ocurrido lo metemos en logs o algo!
+                Logger.e("NioSelectorThread: Tried to write but socket queue was NULL... this should not happen!!");
                 return;
             }
 
             while (!queue.isEmpty()) {                  // Write until there's not more data ...
                 ByteBuffer buf = (ByteBuffer) queue.get(0);
-                socketChannel.write(buf);
+                int written = socketChannel.write(buf);
+                Logger.e("NioSelectorThread: Wrote " + written + " bytes in " + this.getClass());
                 if (buf.remaining() > 0) {              // ... or the socket's buffer fills up
                     break;
                 }

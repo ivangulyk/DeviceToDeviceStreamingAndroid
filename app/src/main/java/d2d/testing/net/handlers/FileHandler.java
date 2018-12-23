@@ -9,15 +9,14 @@ import java.io.IOException;
 
 import d2d.testing.helpers.Logger;
 import d2d.testing.net.packets.DataPacket;
-import d2d.testing.net.packets.DataPacketFile;
 
 public class FileHandler {
      public static void handle(DataPacket packet) {
-            //final DataPacketFile packetFile = (DataPacketFile) packet;
+            //final FilePacket packetFile = (FilePacket) packet;
             //TODO SECURITY CHECK FILENAME?
             //final File f = new File(Environment.getExternalStorageDirectory() + "/" + packetFile.getFileName());
-            final File f = new File(Environment.getExternalStorageDirectory() + "/"+"/d2d-network-" + System.currentTimeMillis() + ".jpg");
-            final File dirs = new File(f.getParent());
+        final File f = new File(Environment.getExternalStorageDirectory() + "/"+"/d2d-network-" + System.currentTimeMillis() + ".jpg");
+        final File dirs = new File(f.getParent());
 
 
          if (!dirs.exists() && !dirs.mkdirs()) {

@@ -8,26 +8,17 @@ import java.util.LinkedList;
 import java.util.List;
 
 import d2d.testing.helpers.Logger;
+import d2d.testing.net.helpers.IOUtils;
 
 public class DataFormatter {
-    public static final byte[] START_PACKET_CONST = {0x11,0x17,0x16,0x15};
-    public static final byte[] END_PREFIX_CONST = {0x11,0x15,0x16,0x17};
 
-    public static final int TYPE_POSITION       = 0;
-    public static final int LEN_POSITION_START  = 1;
-    public static final int LEN_POSITION_END    = 5;
-    public static final int LENGTH_HEADER       = 5;
 
-    public static final byte[] TYPE_LIST = {0x15,0x16,0x17};
-    public static final byte TYPE_MSG = 0x15;
-    public static final byte TYPE_FILE = 0x17;
-
-    public static byte[] createMessagePacket(String message){
+    /*public static byte[] createMessagePacket(String message){
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         byte[] data = message.getBytes();
         try {
-            //output.write(START_PACKET_CONST);   //ALWAYS PREFIX
-            output.write(TYPE_MSG);             //SET TYPE
+            //output.write(START_PACKET_CONST);     //ALWAYS PREFIX
+            output.write(TYPE_MSG);                 //SET TYPE
             output.write(intToByte(data.length));
             //TODO mandar longitud de mensaje + hash?
             //TODO: HASH Y CHECKING AL RECIBIR, TIMESTAMP, QUIEN LO HA ENVIADO, NETWORK JUMPTRACE PARA SABER POR QUIEN HA PASADO?
@@ -60,17 +51,17 @@ public class DataFormatter {
         }
 
         return output.toByteArray();
-    }
+    }*/
 
-    public static List<DataPacket> getPackets(DataPacket openPacket, byte[] data) {
+    public static List<DataPacket> getPackets(OpenPacket openPacket, byte[] data) {
         if(openPacket == null)
-            openPacket = new DataPacket();
+            openPacket = new OpenPacket();
 
         List<DataPacket> out = new LinkedList<>();
         switch (openPacket.getStatus())
         {
-            case DataPacket.STATUS_UNCOMPLETED_HEADER:
-                if (data.length < LENGTH_HEADER) {
+            case DataPacket.STATUS_NOTHING:
+                if (openPacket.getLength() + data.length < DataPacket.HEADER_LENGTH) {
                     openPacket.addData(data);
                     out.add(openPacket);
                     return out; //!error no tenemos ni toda la cabecera...
@@ -80,23 +71,19 @@ public class DataFormatter {
                 //todo VAMOS A TENER QUE HACER ALGO MAS AHI SEPARADO? CABECERAS PROPIAS... ETC
 
                 //Tenemos la cabecera establecemos los parametros del paquete y hacemos comprobaciones..
-                if(!contains(TYPE_LIST,data[TYPE_POSITION])){
+                if(!IOUtils.contains(DataPacket.TYPE_LIST,data[DataPacket.TYPE_POSITION])){
                     Logger.d("DataFormatter: Error no hay tipo de mensaje");
                     return out; //retronamos vacios
                 }
 
-                openPacket.setBodyLength(byteToInt(Arrays.copyOfRange(data, LEN_POSITION_START, LEN_POSITION_END)));
-                openPacket.setType(data[TYPE_POSITION]);
-                openPacket.setStatus(DataPacket.STATUS_UNCOMPLETED_BODY);
-
-            case DataPacket.STATUS_UNCOMPLETED_BODY:
-                if(data.length < openPacket.getFullRemainingLength()) {
+            case DataPacket.STATUS_HEADER:
+                if(data.length < openPacket.getRemainingLength()) {
                     //todo futuro: archivos muy grandes se nos peta la memoria o como va la cosa?
                     openPacket.addData(data);
                     out.add(openPacket);
                     return out;
-                } else if(data.length > openPacket.getFullRemainingLength()) {
-                    int lenRead = openPacket.getFullRemainingLength();
+                } else if(data.length > openPacket.getRemainingLength()) {
+                    int lenRead = openPacket.getRemainingLength();
                     openPacket.addData(Arrays.copyOfRange(data,0,lenRead));
                     openPacket.setStatus(DataPacket.STATUS_COMPLETED);
                     out.add(openPacket);
@@ -115,27 +102,5 @@ public class DataFormatter {
 
         }
         return out;
-    }
-
-    public static byte[] intToByte(int num){
-        return ByteBuffer.allocate(4).putInt(num).array();
-    }
-
-    public static int byteToInt(byte[] num){
-        return ByteBuffer.wrap(num).getInt();
-    }
-
-    public static boolean contains(final byte[] array, final byte search) {
-
-        boolean result = false;
-
-        for(byte b : array){
-            if(b == search){
-                result = true;
-                break;
-            }
-        }
-
-        return result;
     }
 }
