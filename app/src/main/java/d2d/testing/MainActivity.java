@@ -229,7 +229,7 @@ public class MainActivity extends AppCompatActivity {
         }
         else
         {
-            DeviceListAdapter deviceListAdapter = new DeviceListAdapter(this,deviceArray,this);
+            DeviceListAdapter deviceListAdapter = new DeviceListAdapter(this, deviceArray);
             listView.setAdapter(deviceListAdapter);
         }
 

@@ -5,6 +5,8 @@ import android.net.wifi.p2p.WifiP2pDevice;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Adapter;
+import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
@@ -13,46 +15,29 @@ import d2d.testing.R;
 
 import static d2d.testing.R.id.device_name;
 
-public class DeviceListAdapter  extends BaseAdapter {
-    Context context;
-    WifiP2pDevice[] deviceArray;
-    MainActivity activity;
+public class DeviceListAdapter  extends ArrayAdapter<WifiP2pDevice> {
+    Context mContext;
+    WifiP2pDevice[] mDeviceArray;
 
-    public DeviceListAdapter(Context context, WifiP2pDevice[] deviceArray, MainActivity activity){
-        this.context = context;
-        this.deviceArray = deviceArray;
-        this.activity = activity;
-    }
-
-
-    @Override
-    public int getCount() {
-        return deviceArray.length;
-    }
-
-    @Override
-    public Object getItem(int position) {
-        return null;
-    }
-
-    @Override
-    public long getItemId(int position) {
-        return 0;
+    public DeviceListAdapter(Context context, WifiP2pDevice[] deviceArray) {
+        super(context, -1, deviceArray);
+        this.mContext = context;
+        this.mDeviceArray = deviceArray;
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        LayoutInflater vi = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View v = vi.inflate(R.layout.device_detail,null);
+        LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View row = inflater.inflate(R.layout.device_detail,null);
 
-        TextView name = v.findViewById(device_name);
-        TextView address = v.findViewById(R.id.device_adress);
-        TextView status = v.findViewById(R.id.device_status);
+        TextView name = row.findViewById(device_name);
+        TextView address = row.findViewById(R.id.device_adress);
+        TextView status = row.findViewById(R.id.device_status);
 
-        name.setText(deviceArray[position].deviceName);
-        address.setText(deviceArray[position].deviceAddress);
-        status.setText(MainActivity.getDeviceStatus(deviceArray[position].status));
+        name.setText(mDeviceArray[position].deviceName);
+        address.setText(mDeviceArray[position].deviceAddress);
+        status.setText(MainActivity.getDeviceStatus(mDeviceArray[position].status));
 
-        return v;
+        return row;
     }
 }
