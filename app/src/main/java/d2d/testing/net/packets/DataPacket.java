@@ -11,10 +11,14 @@ public class DataPacket {
     private static final byte[] START_PACKET = {0x11,0x17,0x16,0x15};
     private static final byte[] END_PACKET   = {0x11,0x15,0x16,0x17};
 
-    private static final int TYPE_POSITION       = 0;
-    private static final int BODY_LEN_POSITION   = 1;
+
+    private static final int TYPE_POSITION       = 4;
+    private static final int BODY_LEN_POSITION   = 5;
+
+    private static final int START_PACKET_LENGTH = 4;
     private static final int BODY_LEN_LENGTH     = 4;
-    private static final int HEADER_LENGTH       = 5;
+    private static final int HEADER_LENGTH       = 9;
+
 
 
     public static final byte    TYPE_OPEN = -1;
@@ -22,8 +26,8 @@ public class DataPacket {
     public static final byte    TYPE_FILE = 0x17;
     public static final byte[]  TYPE_LIST = {0x15,0x17};
 
-    public static final int STATUS_INVALID  = -1;
-    public static final int STATUS_OPEN     = 0;
+    public static final int STATUS_INVALID   = -1;
+    public static final int STATUS_OPEN      = 0;
     public static final int STATUS_HEADER    = 1;
     public static final int STATUS_BODY      = 2; //POST BODY DATA?
     public static final int STATUS_COMPLETED = 3;
@@ -106,12 +110,20 @@ public class DataPacket {
     public void parseHeader() {
         //TODO OJO COOMPROBAR..
         //comprobamos el tipo de mensaje
+        if(!Arrays.equals(Arrays.copyOfRange(mData, 0, START_PACKET_LENGTH), START_PACKET)) {
+            mStatus = STATUS_INVALID;
+            Logger.d("DataFormatter: No start packet prefix found!");
+            return;
+        }
+
+
         if(!IOUtils.contains(TYPE_LIST,mData[TYPE_POSITION])){
             mStatus = STATUS_INVALID;
             Logger.d("DataFormatter: No packet type found!");
             return;
         }
 
+        //ASIGNAMOS
         setBodyLength(Arrays.copyOfRange(mData, BODY_LEN_POSITION, BODY_LEN_POSITION + BODY_LEN_LENGTH));
         setType(mData[TYPE_POSITION]);
 
@@ -123,17 +135,53 @@ public class DataPacket {
         mStatus = STATUS_HEADER;
     }
 
+    public static DataPacket createMsgPacket(String msg){
+        DataPacket packet = new DataPacket();
+        packet.setType(TYPE_MSG);
+
+        try {
+            //CREATE THE MSG WITH JUST THE MSG
+            packet.createPacket(msg.getBytes());
+        } catch (IOException e) {
+            e.printStackTrace();
+            packet = null;
+        }
+
+        return packet;
+    }
+
+    public static DataPacket createFilePacket(byte[] file, String fileName){
+        DataPacket packet = new DataPacket();
+        packet.setType(TYPE_FILE);
+
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        try {
+            //LENGTH + FILENAME
+            output.write(IOUtils.intToByteArray(fileName.length()));
+            output.write(fileName.getBytes());
+            //FILE
+            output.write(file);
+            packet.createPacket(output.toByteArray());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return packet;
+    }
+
     protected void createPacket(byte[] data) throws IOException {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
 
         //CABECERA
-        //output.write(START_PACKET);
+        output.write(START_PACKET);
         output.write(mType);
         output.write(IOUtils.intToByteArray(data.length));
 
         //ESCRIBIMOS LOS DATOS
         output.write(data);
+
         //POST CABECERA?
+        //output.write(END_PACKET);
         mData = output.toByteArray();
     }
 }

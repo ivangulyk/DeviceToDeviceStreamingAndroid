@@ -1,7 +1,5 @@
 package d2d.testing.net.handlers;
 
-import android.os.Environment;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -11,16 +9,15 @@ import java.util.Arrays;
 import d2d.testing.helpers.Logger;
 import d2d.testing.net.helpers.IOUtils;
 import d2d.testing.net.packets.DataPacket;
-import d2d.testing.net.packets.FilePacket;
 
 public class FileHandler {
-     public static void handle(DataPacket packet) {
 
+     public static void handle(DataPacket packet) {
          byte[] data = packet.getBodyData();
          int fileNameLength = IOUtils.fromByteArray(Arrays.copyOfRange(data,0,4));
+         String fileName = new String(Arrays.copyOfRange(data,4,4+fileNameLength));
 
-         //final File f = new File(Environment.getExternalStorageDirectory() + "/" + packetFile.getFileName());
-         final File f = IOUtils.getOutputMediaFile(new String(Arrays.copyOfRange(data,4,fileNameLength)));
+         final File f = IOUtils.getOutputMediaFile(fileName);
 
         try {
             if(f.createNewFile()) {

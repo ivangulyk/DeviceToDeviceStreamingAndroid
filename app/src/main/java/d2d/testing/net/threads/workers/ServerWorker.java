@@ -25,7 +25,7 @@ public class ServerWorker extends AbstractWorker {
             case DataPacket.TYPE_FILE:
                 selector.getMainActivity().getWiFiP2pPermissions().memory();
                 if(selector.getMainActivity().get_storage_has_perm()) {
-                    new FileHandler().handle(dataPacket);
+                    FileHandler.handle(dataPacket);
                 } else {
                     //todo perdemos el archivo si no tenemos permisos
                     //TODO colas en permisos

@@ -41,15 +41,16 @@
         android:theme="@style/AppTheme">
 
         <activity
-            android:name="d2d.testing.CameraActivity"
+            android:name=".CameraActivity"
             android:launchMode="singleTop"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.AppCompat.NoActionBar">
+            android:theme="@style/CameraFullScreenTheme">
         </activity>
 
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+                <action android:name="android.intent.action.VIEW" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
