@@ -42,7 +42,9 @@
 
         <activity
             android:name="d2d.testing.CameraActivity"
-            android:launchMode="singleTop" >
+            android:launchMode="singleTop"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.NoActionBar">
         </activity>
 
         <activity android:name=".MainActivity">
