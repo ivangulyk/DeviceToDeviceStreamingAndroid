@@ -6,7 +6,7 @@
     android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    tools:context=".CameraActivity">
 
     <FrameLayout
         android:id="@+id/camera_preview"
@@ -14,15 +14,8 @@
         android:layout_height="match_parent"
         android:layout_alignParentStart="true"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
-        android:layout_weight="1">
+        android:layout_alignParentTop="true">
 
-        <android.support.v7.widget.Toolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:minHeight="?attr/actionBarSize"
-            android:theme="?attr/actionBarTheme" />
     </FrameLayout>
 
     <LinearLayout
@@ -36,43 +29,59 @@
         android:layout_marginBottom="0dp"
         android:gravity="bottom|center"
         android:orientation="horizontal"
-        android:paddingTop="10px"
-        android:paddingBottom="10px"
         tools:layout_editor_absoluteX="8dp"
         tools:layout_editor_absoluteY="8dp">
 
         <android.support.design.widget.FloatingActionButton
-            android:id="@+id/floatingActionButton"
+            android:id="@+id/button_switch_camera"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="10px"
             android:layout_weight="1"
-            android:background="#ffffff"
             android:clickable="true"
-            app:backgroundTint="@android:color/darker_gray"
-            app:srcCompat="@drawable/outline_camera_alt_black_18dp" />
+            android:onClick="onSwitchCamera"
+            app:backgroundTint="@color/design_default_color_primary_dark"
+            app:srcCompat="@drawable/ic_switch_camera"
+            app:useCompatPadding="true" />
 
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/button_capture"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="10px"
             android:layout_weight="1"
             android:clickable="true"
-            app:backgroundTint="@android:color/darker_gray"
-            app:srcCompat="@drawable/outline_camera_alt_black_18dp" />
+            android:onClick="onCapture"
+            app:backgroundTint="@color/design_default_color_primary_dark"
+            app:srcCompat="@drawable/ic_camera"
+            app:useCompatPadding="true" />
 
         <android.support.design.widget.FloatingActionButton
-            android:id="@+id/button_switch"
+            android:id="@+id/button_switch_mode"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="10px"
             android:layout_weight="1"
             android:clickable="true"
-            app:backgroundTint="@android:color/darker_gray"
+            android:onClick="onSwitchMode"
+            app:backgroundTint="@color/design_default_color_primary_dark"
             app:srcCompat="@drawable/outline_camera_alt_black_18dp"
-            app:useCompatPadding="false" />
+            app:useCompatPadding="true" />
 
     </LinearLayout>
+
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/camera_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_margin="20px"
+        android:layout_marginStart="10px"
+        android:layout_marginLeft="10px"
+        android:layout_marginTop="10px"
+        android:layout_marginEnd="10px"
+        android:layout_marginRight="10px"
+        android:layout_marginBottom="10px"
+        android:minHeight="?attr/actionBarSize"
+        android:theme="?attr/actionBarTheme" />
 
 </RelativeLayout>

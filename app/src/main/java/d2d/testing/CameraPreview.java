@@ -31,13 +31,14 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         // The Surface has been created, now tell the camera where to draw the preview.
         try {
             mCamera.setPreviewDisplay(holder);
+            mCamera.setDisplayOrientation(90);
 
-            if (this.getResources().getConfiguration().orientation != Configuration.ORIENTATION_LANDSCAPE) {
-                mCamera.setDisplayOrientation(90);
+            /*if (this.getResources().getConfiguration().orientation != Configuration.ORIENTATION_LANDSCAPE) {
+
             }
             else {
                 mCamera.setDisplayOrientation(0);
-            }
+            }*/
             mCamera.startPreview();
         } catch (IOException e) {
             Logger.e("Error setting camera preview: " + e.getMessage());
@@ -59,7 +60,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
         // stop preview before making changes
         try {
-            mCamera.stopPreview();
+            //mCamera.stopPreview();
         } catch (Exception e){
             // ignore: tried to stop a non-existent preview
         }
@@ -70,7 +71,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         // start preview with new settings
         try {
             mCamera.setPreviewDisplay(mHolder);
-            mCamera.startPreview();
+            //mCamera.startPreview();
 
         } catch (Exception e){
             Logger.e( "Error starting camera preview: " + e.getMessage());
