@@ -24,16 +24,4 @@ public class FilePacket extends DataPacket {
             e.printStackTrace();
         }
     }
-
-    public String getFileName()
-    {
-        byte[] data = getBodyData();
-        int fileNameLen = data[0];
-        return new String(Arrays.copyOfRange(data,4,fileNameLen));
-    }
-
-    public byte[] getFile()
-    {
-        return Arrays.copyOfRange(getBodyData(),4 + getBodyData()[0], getBodyLength());
-    }
 }

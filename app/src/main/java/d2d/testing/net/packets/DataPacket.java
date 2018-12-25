@@ -127,7 +127,7 @@ public class DataPacket {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
 
         //CABECERA
-        output.write(START_PACKET);
+        //output.write(START_PACKET);
         output.write(mType);
         output.write(IOUtils.intToByteArray(data.length));
 

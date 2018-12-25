@@ -36,7 +36,12 @@ public class IOUtils {
 
     public static byte[] copyMax(byte[] byteArr, int offset, int max)
     {
-        return Arrays.copyOfRange(byteArr, offset, ((byteArr.length > max) ? max : byteArr.length));
+        if(byteArr.length > offset + max){
+            return  Arrays.copyOfRange(byteArr, offset, max );
+        }
+        else {
+            return Arrays.copyOfRange(byteArr, offset, byteArr.length);
+        }
     }
 
     /** Create a File for saving an image or video */
