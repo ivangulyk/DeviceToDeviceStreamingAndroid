@@ -16,8 +16,8 @@ public class ClientSelector extends AbstractSelector {
     public ClientSelector(InetAddress address, MainActivity mainActivity) throws IOException {
         super(mainActivity,address);
 
-        this.mWorker = new ClientWorker();
-        new Thread(mWorker).start();
+        mWorker = new ClientWorker();
+        mWorker.start();
     }
 
     @Override

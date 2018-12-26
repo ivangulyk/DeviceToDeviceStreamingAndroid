@@ -27,9 +27,16 @@ public class SendFileWorker implements Runnable{
     private final Uri mFileUri;
     private WifiP2pHandler mHandler;
 
+    private Thread mThread;
+
     public SendFileWorker(Uri uri, WifiP2pHandler handler) {
         this.mFileUri = uri;
         this.mHandler = handler;
+    }
+
+    public void start(){
+        mThread = new Thread(this);
+        mThread.start();
     }
 
     @Override

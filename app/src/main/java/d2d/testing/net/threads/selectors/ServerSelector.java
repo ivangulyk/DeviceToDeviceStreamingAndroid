@@ -16,8 +16,8 @@ public class ServerSelector extends AbstractSelector {
     public ServerSelector(MainActivity mainActivity) throws IOException {
         super(mainActivity);
 
-        this.mWorker = new ServerWorker();
-        new Thread(mWorker).start();
+        mWorker = new ServerWorker();
+        mWorker.start();
     }
 
     @Override

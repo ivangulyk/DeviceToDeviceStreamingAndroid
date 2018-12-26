@@ -17,6 +17,7 @@ public abstract class AbstractWorker implements Runnable {
     private final List<DataReceived> mDataReceivedQueue;
     private final Map<SelectableChannel, DataPacket> mOpenPacketsMap;
 
+    private Thread mThread;
     private boolean mEnabled;
 
     protected abstract void processData(DataPacket dataPacket, AbstractSelector selector, SelectableChannel channel);
@@ -25,6 +26,15 @@ public abstract class AbstractWorker implements Runnable {
         mDataReceivedQueue = new LinkedList<>();
         mOpenPacketsMap = new HashMap<>();
         mEnabled = true;
+    }
+
+    public void start(){
+        mThread = new Thread(this);
+        mThread.start();
+        mEnabled = true;
+    }
+
+    public void stop(){
     }
 
     @Override

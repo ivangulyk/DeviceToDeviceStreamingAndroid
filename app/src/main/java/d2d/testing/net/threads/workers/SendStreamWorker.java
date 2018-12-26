@@ -16,14 +16,25 @@ public class SendStreamWorker implements Runnable {
 
     private ParcelFileDescriptor mReadPipeFD;
     private WifiP2pHandler mHandler;
+
+    private Thread mThread;
     private boolean mEnabled;
+
+    public void start(){
+        mThread = new Thread(this);
+        mThread.start();
+        mEnabled = true;
+    }
+
+    public void stop(){
+        mEnabled = false;
+    }
 
     public SendStreamWorker(ParcelFileDescriptor fd, WifiP2pHandler handler) {
         mReadPipeFD = fd;
         mHandler = handler;
-        mEnabled = true;
+        mEnabled = false;
     }
-
 
     @Override
     public void run() {

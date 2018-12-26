@@ -62,6 +62,10 @@ public class CameraActivity extends AppCompatActivity {
     private MenuItem btnSwitchFlash;
     private Toolbar cameraToolbar;
 
+    private ParcelFileDescriptor[] fdPair;
+    private ParcelFileDescriptor readFD;
+    private ParcelFileDescriptor writeFD;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -301,8 +305,32 @@ public class CameraActivity extends AppCompatActivity {
             mVideoMode = true;
         }
     }
+    private void createPipe(){
+        fdPair = new ParcelFileDescriptor[0];
+        try {
+            fdPair = ParcelFileDescriptor.createPipe();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
+        //get a handle to your read and write fd objects.
+        readFD = fdPair[0];
+        writeFD = fdPair[1];
+    }
     private boolean prepareVideoRecorder(){
+        SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
+
+        int audio_bitrate;
+        int video_bitrate;
+        int video_framerate;
+        int video_size;
+        int video_width = 1920;
+        int video_height = 1080;
+
+        audio_bitrate =  Integer.parseInt(settings.getString("audio_bitrate", "128")) * 1024;
+        video_bitrate =  Integer.parseInt(settings.getString("video_bitrate", "4500")) * 1024;
+        video_framerate =  Integer.parseInt(settings.getString("video_framerate", "30"));
+        video_size = Integer.parseInt(settings.getString("video_size", "0"));
 
         mCamera = getCameraInstance();
         mMediaRecorder = new MediaRecorder();
@@ -315,12 +343,25 @@ public class CameraActivity extends AppCompatActivity {
         mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
         mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
 
+        // set TS
+        mMediaRecorder.setOutputFormat(8);
+        mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
+        mMediaRecorder.setAudioChannels(2);
+        mMediaRecorder.setAudioSamplingRate(44100);
+        mMediaRecorder.setAudioEncodingBitRate(audio_bitrate);
+
+        mMediaRecorder.setVideoSize(video_width, video_height);
+        mMediaRecorder.setVideoFrameRate(video_framerate);
+        mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
+        mMediaRecorder.setVideoEncodingBitRate(video_bitrate);
+
         // Step 3: Set a CamcorderProfile (requires API Level 8 or higher)
         mMediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH));
 
         // Step 4: Set output file
         //todo output a socket?
-        mMediaRecorder.setOutputFile(getOutputMediaFile("VIDEO_RECORD").toString());
+        createPipe();
+        mMediaRecorder.setOutputFile(writeFD.getFileDescriptor());
 
         // Step 5: Set the preview output
         mMediaRecorder.setPreviewDisplay(mPreview.getHolder().getSurface());
