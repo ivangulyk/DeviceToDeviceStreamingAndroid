@@ -45,8 +45,7 @@ public class SendFileWorker implements Runnable{
             InputStream is = cr.openInputStream(Uri.parse(mFileUri.toString()));
 
             copyFile(is, output); //todo ioUtils copy from stream to stream
-
-            mHandler.mController.send(DataPacket.createFilePacket(output.toByteArray(), mFileUri.getLastPathSegment()));
+            mHandler.mController.send(DataPacket.createFilePacket(output.toByteArray(), filename));
 
             Logger.d("File worker: Data passed to controller to send...");
         } catch (FileNotFoundException e) {
