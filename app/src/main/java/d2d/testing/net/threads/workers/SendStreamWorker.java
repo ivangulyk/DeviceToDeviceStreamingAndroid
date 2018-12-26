@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Arrays;
 
+import d2d.testing.net.WifiP2pController;
 import d2d.testing.net.WifiP2pHandler;
 import d2d.testing.net.packets.DataPacket;
 
@@ -15,7 +16,7 @@ public class SendStreamWorker implements Runnable {
     private static final int BUFFER_SIZE = 8192;
 
     private ParcelFileDescriptor mReadPipeFD;
-    private WifiP2pHandler mHandler;
+    private WifiP2pController mController;
 
     private Thread mThread;
     private boolean mEnabled;
@@ -30,9 +31,9 @@ public class SendStreamWorker implements Runnable {
         mEnabled = false;
     }
 
-    public SendStreamWorker(ParcelFileDescriptor fd, WifiP2pHandler handler) {
+    public SendStreamWorker(ParcelFileDescriptor fd, WifiP2pController controller) {
         mReadPipeFD = fd;
-        mHandler = handler;
+        mController = controller;
         mEnabled = false;
     }
 
@@ -53,7 +54,7 @@ public class SendStreamWorker implements Runnable {
                     {
                         //todo leemos los datos hacer algo con ellos
                         DataPacket packet = DataPacket.createStreamPacket(Arrays.copyOfRange(buffer,0,read));
-                        mHandler.mController.send(packet);
+                        mController.send(packet);
                     }
                 } else {
                     sleep(10);

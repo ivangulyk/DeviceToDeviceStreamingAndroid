@@ -30,7 +30,6 @@ import java.util.List;
 
 import d2d.testing.helpers.Logger;
 import d2d.testing.net.WifiP2pController;
-import d2d.testing.net.threads.workers.SendFileWorker;
 import d2d.testing.net.threads.workers.SendStreamWorker;
 
 import static d2d.testing.net.helpers.IOUtils.getOutputMediaFile;
@@ -291,10 +290,17 @@ public class CameraActivity extends AppCompatActivity {
         }else {
             if(mRecording){
                 //todo grabar y streaming
+                mMediaRecorder.stop();
+                mStreamWorker.stop();
+                releaseMediaRecorder();
+                prepareVideoRecorder();
+
                 btnCapture.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(android.R.color.holo_red_dark)));
                 btnCapture.setImageDrawable(null);
                 mRecording = false;
             }else{
+                mMediaRecorder.start();
+                mStreamWorker.start();
                 btnCapture.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.colorCameraButton)));
                 btnCapture.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_stop));
                 mRecording = true;
@@ -380,7 +386,7 @@ public class CameraActivity extends AppCompatActivity {
         // Step 4: Set output file
         //todo output a socket?
         createPipe();
-        mStreamWorker = new SendStreamWorker(readFD,mHandler);
+        mStreamWorker = new SendStreamWorker(readFD, mController);
         mMediaRecorder.setOutputFile(writeFD.getFileDescriptor());
 
         // Step 5: Set the preview output
