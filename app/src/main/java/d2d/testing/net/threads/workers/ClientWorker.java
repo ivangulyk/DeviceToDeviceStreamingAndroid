@@ -29,6 +29,11 @@ public class ClientWorker extends AbstractWorker {
                     Logger.d("ClientWorker received TYPE_FILE command but no permission we are losing the file fix");
                 }
                 break;
+
+            case DataPacket.TYPE_VIDEO_STREAM:
+                Logger.d("ClientWorker received TYPE_VIDEO_STREAM");
+                break;
+
             default:
                 Logger.e("ClientWorker received no TYPE_FILE");
                 //ERROR NO HAY TIPO DE MENSAJE!!
