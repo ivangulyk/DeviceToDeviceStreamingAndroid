@@ -6,15 +6,20 @@ import android.media.CamcorderProfile;
 import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.OrientationEventListener;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.animation.AnimationUtils;
+import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -52,6 +57,9 @@ public class CameraActivity extends AppCompatActivity {
     private boolean mRecording;
 
     private FloatingActionButton btnSwitchCamera;
+    private FloatingActionButton btnCapture;
+    private FloatingActionButton btnSwitchMode;
+    private MenuItem btnSwitchFlash;
     private Toolbar cameraToolbar;
 
     @Override
@@ -67,6 +75,7 @@ public class CameraActivity extends AppCompatActivity {
         mRecording = false;
 
         setContentView(R.layout.camera);
+        initialWork();
 
         // Create an instance of Camera
         mCamera = getCameraInstance();
@@ -81,6 +90,8 @@ public class CameraActivity extends AppCompatActivity {
         }
 
         List<String> flashModes = params.getSupportedFlashModes();
+        if(flashModes == null)
+            //todo
         if (flashModes.contains(Camera.Parameters.FLASH_MODE_AUTO)) {
             // Autofocus mode is supported
             params.setFlashMode(Camera.Parameters.FLASH_MODE_AUTO);
@@ -93,19 +104,45 @@ public class CameraActivity extends AppCompatActivity {
         mPreview = new CameraPreview(this, mCamera);
         FrameLayout preview = findViewById(R.id.camera_preview);
         preview.addView(mPreview);
-        initialWork();
     }
-
     public void initialWork() {
 
         btnSwitchCamera = findViewById(R.id.button_switch_camera);
+        btnCapture = findViewById(R.id.button_capture);
+        btnSwitchMode = findViewById(R.id.button_switch_mode);
         cameraToolbar = findViewById(R.id.camera_toolbar);
+
+        OrientationEventListener mOrientationListener = new OrientationEventListener(getApplicationContext()) {
+            @Override
+            public void onOrientationChanged(int orientation) {
+                Logger.d("Camera orientation " + orientation);
+                if(orientation > 45 && orientation < 135) {
+                    setRotation(-90);
+                } else if (orientation > 135 && orientation < 225) {
+                    setRotation(180);
+                } else if (orientation > 225 && orientation < 315) {
+                    setRotation(-270);
+                } else { //asumed if (orientation > 315 && orientation < 45) {
+                    setRotation(0);
+                }
+            }
+        };
+
+        if (mOrientationListener.canDetectOrientation()) {
+            mOrientationListener.enable();
+        }
 
         setSupportActionBar(cameraToolbar);
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.setDisplayShowTitleEnabled(false);
         }
+    }
+
+    public void setRotation(int rotation) {
+        btnSwitchCamera.setRotation(rotation);
+        btnCapture.setRotation(rotation);
+        btnSwitchMode.setRotation(rotation);
     }
 
     public static Camera getCameraInstance(){
@@ -145,6 +182,7 @@ public class CameraActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.camera_menu, menu);
+        btnSwitchFlash = menu.findItem(R.id.switch_flash);
         return true;
     }
 
@@ -179,7 +217,8 @@ public class CameraActivity extends AppCompatActivity {
         // Checks the orientation of the screen
         if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             //Toast.makeText(this, "landscape", Toast.LENGTH_SHORT).show();
-            btnSwitchCamera.animate().rotationBy(0).setDuration(100).start();
+            //btnSwitchCamera.animate().rotationBy(0).setDuration(100).start();
+
         } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT){
             //Toast.makeText(this, "portrait", Toast.LENGTH_SHORT).show();
             btnSwitchCamera.animate().rotationBy(90).setDuration(100).start();
@@ -202,6 +241,24 @@ public class CameraActivity extends AppCompatActivity {
         mCamera = Camera.open(mCurrentCamera);
 
         //setCameraDisplayOrientation(CameraActivity.this, currentCameraId, camera);
+
+        Camera.Parameters params = mCamera.getParameters();
+
+        List<String> flashModes = params.getSupportedFlashModes();
+        if(flashModes != null) {
+            if (flashModes.contains(FLASH_OPTIONS[mCurrentFlash])) {
+                params.setFlashMode(FLASH_OPTIONS[mCurrentFlash]);
+            }
+            else
+            {
+                setDefaultFlashMode(params,flashModes);
+            }
+
+            btnSwitchFlash.setVisible(true);
+        } else {
+            btnSwitchFlash.setVisible(false);
+        }
+
         try {
             mCamera.setPreviewDisplay(mPreview.getHolder());
             mCamera.setDisplayOrientation(90);
@@ -211,9 +268,14 @@ public class CameraActivity extends AppCompatActivity {
         mCamera.startPreview();
     }
 
+    private Camera.Parameters setDefaultFlashMode(Camera.Parameters params, List<String> flashModes) {
+        params.setFlashMode(FLASH_OPTIONS[mCurrentFlash]);
+        return params;
+    }
+
     public void onCapture(View view){
         if(!mVideoMode){
-            mCamera.takePicture(null, null, mPicture);
+            mCamera.takePicture(null, null, mPictureCallback);
         }else {
             if(mRecording){
                 //todo grabar y streaming
@@ -230,8 +292,14 @@ public class CameraActivity extends AppCompatActivity {
             //todo estamos grabando!
             mRecording = false;
         }
-
-        mVideoMode = !mVideoMode;
+        if(mVideoMode)
+        {
+            btnSwitchMode.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_video_camera));
+            mVideoMode = false;
+        } else {
+            btnSwitchMode.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_camera));
+            mVideoMode = true;
+        }
     }
 
     private boolean prepareVideoRecorder(){
@@ -272,7 +340,7 @@ public class CameraActivity extends AppCompatActivity {
         return true;
     }
 
-    private Camera.PictureCallback mPicture = new Camera.PictureCallback() {
+    private Camera.PictureCallback mPictureCallback = new Camera.PictureCallback() {
 
         @Override
         public void onPictureTaken(byte[] data, Camera camera) {
@@ -284,6 +352,8 @@ public class CameraActivity extends AppCompatActivity {
             }
 
             try {
+                //todo podemos enviarlo directamente
+
                 FileOutputStream fos = new FileOutputStream(pictureFile);
                 fos.write(data);
                 fos.close();

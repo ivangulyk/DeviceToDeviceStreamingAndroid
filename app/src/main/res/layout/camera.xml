@@ -62,7 +62,7 @@
             android:clickable="true"
             android:onClick="onSwitchMode"
             app:backgroundTint="@color/design_default_color_primary_dark"
-            app:srcCompat="@drawable/outline_camera_alt_black_18dp"
+            app:srcCompat="@drawable/ic_video_camera"
             app:useCompatPadding="true" />
 
     </LinearLayout>
