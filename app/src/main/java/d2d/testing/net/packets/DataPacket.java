@@ -24,7 +24,8 @@ public class DataPacket {
     public static final byte    TYPE_OPEN = -1;
     public static final byte    TYPE_MSG  = 0x15;
     public static final byte    TYPE_FILE = 0x17;
-    public static final byte[]  TYPE_LIST = {0x15,0x17};
+    public static final byte    TYPE_VIDEO_STREAM = 0x19;
+    public static final byte[]  TYPE_LIST = {TYPE_MSG, TYPE_FILE, TYPE_VIDEO_STREAM};
 
     public static final int STATUS_INVALID   = -1;
     public static final int STATUS_OPEN      = 0;
@@ -164,6 +165,21 @@ public class DataPacket {
             packet.createPacket(output.toByteArray());
         } catch (IOException e) {
             e.printStackTrace();
+        }
+
+        return packet;
+    }
+
+    public static DataPacket createStreamPacket(byte[] data){
+        DataPacket packet = new DataPacket();
+        packet.setType(TYPE_VIDEO_STREAM);
+
+        try {
+            //CREATE THE packet WITH JUST THE MSG
+            packet.createPacket(data);
+        } catch (IOException e) {
+            e.printStackTrace();
+            packet = null;
         }
 
         return packet;

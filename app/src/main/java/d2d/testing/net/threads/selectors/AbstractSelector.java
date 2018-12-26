@@ -1,6 +1,7 @@
 package d2d.testing.net.threads.selectors;
 
 import java.io.IOException;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -19,7 +20,6 @@ import java.util.Map;
 
 import d2d.testing.MainActivity;
 import d2d.testing.helpers.Logger;
-import d2d.testing.net.helpers.IOUtils;
 import d2d.testing.net.threads.workers.AbstractWorker;
 
 import static java.lang.Thread.sleep;
@@ -139,6 +139,19 @@ public abstract class AbstractSelector implements Runnable{
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static DatagramSocket initiateConnectionUDP(InetAddress address, int port){
+        try {
+            DatagramSocket datagramSocket = new DatagramSocket();
+            datagramSocket.connect(new InetSocketAddress(address.getHostAddress(), port));
+
+            Logger.d("ClientSelector: initiateConnection UDP client 'connected' to " + address.getHostAddress() + ":" + port);
+            return datagramSocket;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     protected void send(SocketChannel socket, byte[] data) {
