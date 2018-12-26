@@ -1,10 +1,14 @@
 package d2d.testing;
 
+import android.content.SharedPreferences;
+import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.hardware.Camera;
 import android.media.CamcorderProfile;
 import android.media.MediaRecorder;
 import android.os.Bundle;
+import android.os.ParcelFileDescriptor;
+import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
@@ -16,10 +20,7 @@ import android.view.OrientationEventListener;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
-import android.view.animation.AnimationUtils;
-import android.widget.Button;
 import android.widget.FrameLayout;
-import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -28,6 +29,8 @@ import java.io.IOException;
 import java.util.List;
 
 import d2d.testing.helpers.Logger;
+import d2d.testing.net.threads.workers.SendFileWorker;
+import d2d.testing.net.threads.workers.SendStreamWorker;
 
 import static d2d.testing.net.helpers.IOUtils.getOutputMediaFile;
 
@@ -50,6 +53,7 @@ public class CameraActivity extends AppCompatActivity {
     private Camera mCamera;
     private CameraPreview mPreview;
     private MediaRecorder mMediaRecorder;
+    private SendStreamWorker mStreamWorker;
 
     private int mCurrentFlash;
     private int mCurrentCamera;
@@ -283,8 +287,12 @@ public class CameraActivity extends AppCompatActivity {
         }else {
             if(mRecording){
                 //todo grabar y streaming
+                btnCapture.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(android.R.color.holo_red_dark)));
+                btnCapture.setImageDrawable(null);
                 mRecording = false;
             }else{
+                btnCapture.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.colorCameraButton)));
+                btnCapture.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_stop));
                 mRecording = true;
             }
         }
@@ -298,13 +306,19 @@ public class CameraActivity extends AppCompatActivity {
         }
         if(mVideoMode)
         {
+            btnCapture.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.colorCameraButton)));
+            btnCapture.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_camera));
             btnSwitchMode.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_video_camera));
             mVideoMode = false;
         } else {
+            prepareVideoRecorder();
+            btnCapture.setImageDrawable(null);
+            btnCapture.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(android.R.color.holo_red_dark)));
             btnSwitchMode.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_camera));
             mVideoMode = true;
         }
     }
+
     private void createPipe(){
         fdPair = new ParcelFileDescriptor[0];
         try {
@@ -317,6 +331,7 @@ public class CameraActivity extends AppCompatActivity {
         readFD = fdPair[0];
         writeFD = fdPair[1];
     }
+
     private boolean prepareVideoRecorder(){
         SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
 
@@ -361,6 +376,7 @@ public class CameraActivity extends AppCompatActivity {
         // Step 4: Set output file
         //todo output a socket?
         createPipe();
+        mStreamWorker = new SendStreamWorker(readFD,mHandler);
         mMediaRecorder.setOutputFile(writeFD.getFileDescriptor());
 
         // Step 5: Set the preview output
