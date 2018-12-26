@@ -39,7 +39,8 @@
             android:layout_weight="1"
             android:clickable="true"
             android:onClick="onSwitchCamera"
-            app:backgroundTint="@color/design_default_color_primary_dark"
+            app:backgroundTint="?attr/colorButtonNormal"
+            app:borderWidth="4dp"
             app:srcCompat="@drawable/ic_switch_camera"
             app:useCompatPadding="true" />
 
@@ -50,7 +51,8 @@
             android:layout_weight="1"
             android:clickable="true"
             android:onClick="onCapture"
-            app:backgroundTint="@color/design_default_color_primary_dark"
+            app:backgroundTint="?attr/colorButtonNormal"
+            app:borderWidth="4dp"
             app:srcCompat="@drawable/ic_camera"
             app:useCompatPadding="true" />
 
@@ -61,7 +63,8 @@
             android:layout_weight="1"
             android:clickable="true"
             android:onClick="onSwitchMode"
-            app:backgroundTint="@color/design_default_color_primary_dark"
+            app:backgroundTint="?attr/colorButtonNormal"
+            app:borderWidth="4dp"
             app:srcCompat="@drawable/ic_video_camera"
             app:useCompatPadding="true" />
 

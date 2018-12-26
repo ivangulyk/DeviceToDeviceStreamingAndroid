@@ -1,5 +1,6 @@
 package d2d.testing;
 
+import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.hardware.Camera;
 import android.media.CamcorderProfile;
@@ -279,8 +280,12 @@ public class CameraActivity extends AppCompatActivity {
         }else {
             if(mRecording){
                 //todo grabar y streaming
+                btnCapture.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(android.R.color.holo_red_dark)));
+                btnCapture.setImageDrawable(null);
                 mRecording = false;
             }else{
+                btnCapture.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.colorCameraButton)));
+                btnCapture.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_stop));
                 mRecording = true;
             }
         }
@@ -294,9 +299,13 @@ public class CameraActivity extends AppCompatActivity {
         }
         if(mVideoMode)
         {
+            btnCapture.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.colorCameraButton)));
+            btnCapture.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_camera));
             btnSwitchMode.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_video_camera));
             mVideoMode = false;
         } else {
+            btnCapture.setImageDrawable(null);
+            btnCapture.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(android.R.color.holo_red_dark)));
             btnSwitchMode.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_camera));
             mVideoMode = true;
         }
