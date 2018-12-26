@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.util.List;
 
 import d2d.testing.helpers.Logger;
+import d2d.testing.net.WifiP2pController;
 import d2d.testing.net.threads.workers.SendFileWorker;
 import d2d.testing.net.threads.workers.SendStreamWorker;
 
@@ -70,6 +71,8 @@ public class CameraActivity extends AppCompatActivity {
     private ParcelFileDescriptor readFD;
     private ParcelFileDescriptor writeFD;
 
+    private WifiP2pController mController;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -77,6 +80,7 @@ public class CameraActivity extends AppCompatActivity {
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
+        mController = getIntent().getParcelableExtra("controller");
         mCurrentFlash = 0;
         mCurrentCamera = Camera.CameraInfo.CAMERA_FACING_BACK;
         mVideoMode = false;
