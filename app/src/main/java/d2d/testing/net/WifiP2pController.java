@@ -41,6 +41,8 @@ mManager.requestGroupInfo(mChannel, new GroupInfoListener() {
 
 public class WifiP2pController {
 
+    private static WifiP2pController mInstance;
+
     private WifiP2pHandler mWifiP2pHandler;
     private MainActivity mContext;
 
@@ -55,7 +57,7 @@ public class WifiP2pController {
     protected List<WifiP2pDevice> peers = new ArrayList<>();
     protected WifiP2pDevice[] deviceArray;
 
-    public WifiP2pController(MainActivity context)
+    private WifiP2pController(MainActivity context)
     {
         this.mContext = context;
         this.mWifiManager = (WifiManager) this.mContext.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
@@ -64,6 +66,17 @@ public class WifiP2pController {
 
         this.mWifiP2pHandler = new WifiP2pHandler (this.mContext, this.mWifiP2pManager, this.mChannel, this);
         this.mReciever = new WiFiP2pBroadcastReceiver(this.mWifiP2pHandler);
+    }
+
+    public static WifiP2pController getInstance(MainActivity context){
+        if(mInstance == null)
+            mInstance = new WifiP2pController(context);
+
+        return mInstance;
+    }
+
+    public static WifiP2pController getInstance(){
+            return mInstance;
     }
 
     public boolean isWifiEnabled() {

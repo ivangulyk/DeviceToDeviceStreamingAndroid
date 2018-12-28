@@ -117,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
         myName = findViewById(R.id.my_name);
         myStatus = findViewById(R.id.my_status);
 
-        mWifiP2pController = new WifiP2pController(this);
+        mWifiP2pController = WifiP2pController.getInstance(this);
         mIntentFilter = new IntentFilter();
         wiFiP2pPermissions = new WiFiP2pPermissions(this,this);
         // Indicates a change in the Wi-Fi P2P status.
@@ -357,7 +357,6 @@ public class MainActivity extends AppCompatActivity {
     }
     private void openCameraActivity() {
         Intent CameraActivityIntent = new Intent(this, CameraActivity.class);
-        CameraActivityIntent.putExtra("controller", (Parcelable) mWifiP2pController);
         this.startActivity(CameraActivityIntent);
     }
 }

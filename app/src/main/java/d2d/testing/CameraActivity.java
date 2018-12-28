@@ -4,7 +4,6 @@ import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.hardware.Camera;
-import android.media.CamcorderProfile;
 import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
@@ -23,6 +22,7 @@ import android.view.WindowManager;
 import android.widget.FrameLayout;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -35,8 +35,6 @@ import d2d.testing.net.threads.workers.SendStreamWorker;
 import static d2d.testing.net.helpers.IOUtils.getOutputMediaFile;
 
 public class CameraActivity extends AppCompatActivity {
-    private static final int MODE_PICTURE = 0;
-    private static final int MODE_VIDEO = 1;
 
     private static final String[] FLASH_OPTIONS = {
             Camera.Parameters.FLASH_MODE_AUTO,
@@ -55,16 +53,17 @@ public class CameraActivity extends AppCompatActivity {
     private MediaRecorder mMediaRecorder;
     private SendStreamWorker mStreamWorker;
 
-    private int mCurrentFlash;
-    private int mCurrentCamera;
     private boolean mVideoMode;
     private boolean mRecording;
+    private int mCurrentFlash;
+    private int mCurrentCamera;
 
     private FloatingActionButton btnSwitchCamera;
     private FloatingActionButton btnCapture;
     private FloatingActionButton btnSwitchMode;
-    private MenuItem btnSwitchFlash;
+
     private Toolbar cameraToolbar;
+    private MenuItem btnSwitchFlash;
 
     private ParcelFileDescriptor[] fdPair;
     private ParcelFileDescriptor readFD;
@@ -126,7 +125,7 @@ public class CameraActivity extends AppCompatActivity {
         OrientationEventListener mOrientationListener = new OrientationEventListener(getApplicationContext()) {
             @Override
             public void onOrientationChanged(int orientation) {
-                Logger.d("Camera orientation " + orientation);
+                //Logger.d("Camera orientation " + orientation);
                 if(orientation > 45 && orientation < 135) {
                     setRotation(-90);
                 } else if (orientation > 135 && orientation < 225) {
@@ -227,12 +226,8 @@ public class CameraActivity extends AppCompatActivity {
 
         // Checks the orientation of the screen
         if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            //Toast.makeText(this, "landscape", Toast.LENGTH_SHORT).show();
-            //btnSwitchCamera.animate().rotationBy(0).setDuration(100).start();
 
         } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT){
-            //Toast.makeText(this, "portrait", Toast.LENGTH_SHORT).show();
-            btnSwitchCamera.animate().rotationBy(90).setDuration(100).start();
         }
     }
 
@@ -270,13 +265,7 @@ public class CameraActivity extends AppCompatActivity {
             btnSwitchFlash.setVisible(false);
         }
 
-        try {
-            mCamera.setPreviewDisplay(mPreview.getHolder());
-            mCamera.setDisplayOrientation(90);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        mCamera.startPreview();
+        mPreview.setCamera(mCamera);
     }
 
     private Camera.Parameters setDefaultFlashMode(Camera.Parameters params, List<String> flashModes) {
@@ -289,18 +278,28 @@ public class CameraActivity extends AppCompatActivity {
             mCamera.takePicture(null, null, mPictureCallback);
         }else {
             if(mRecording){
-                //todo grabar y streaming
-                mMediaRecorder.stop();
+                try {
+                    mMediaRecorder.stop();
+                    releaseMediaRecorder();
+                    prepareVideoRecorder();
+                } catch (Exception e) {
+                    Logger.d("Exception stopping MediaRecorder: " + e.toString());
+                }
                 mStreamWorker.stop();
-                releaseMediaRecorder();
-                prepareVideoRecorder();
 
+                btnSwitchMode.setEnabled(false);
                 btnCapture.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(android.R.color.holo_red_dark)));
                 btnCapture.setImageDrawable(null);
                 mRecording = false;
             }else{
-                mMediaRecorder.start();
+                try {
+                    mMediaRecorder.start();
+                } catch (Exception e) {
+                    Logger.d("Exception starting MediaRecorder: " + e.toString());
+                }
                 mStreamWorker.start();
+
+                btnSwitchMode.setEnabled(true);
                 btnCapture.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.colorCameraButton)));
                 btnCapture.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_stop));
                 mRecording = true;
@@ -309,11 +308,6 @@ public class CameraActivity extends AppCompatActivity {
     }
 
     public void onSwitchMode(View view){
-        if(mRecording)
-        {
-            //todo estamos grabando!
-            mRecording = false;
-        }
         if(mVideoMode)
         {
             btnCapture.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.colorCameraButton)));
@@ -327,19 +321,6 @@ public class CameraActivity extends AppCompatActivity {
             btnSwitchMode.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_camera));
             mVideoMode = true;
         }
-    }
-
-    private void createPipe(){
-        fdPair = new ParcelFileDescriptor[0];
-        try {
-            fdPair = ParcelFileDescriptor.createPipe();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        //get a handle to your read and write fd objects.
-        readFD = fdPair[0];
-        writeFD = fdPair[1];
     }
 
     private boolean prepareVideoRecorder(){
@@ -357,7 +338,6 @@ public class CameraActivity extends AppCompatActivity {
         video_framerate =  Integer.parseInt(settings.getString("video_framerate", "30"));
         video_size = Integer.parseInt(settings.getString("video_size", "0"));
 
-        mCamera = getCameraInstance();
         mMediaRecorder = new MediaRecorder();
 
         // Step 1: Unlock and set camera to MediaRecorder
@@ -365,29 +345,49 @@ public class CameraActivity extends AppCompatActivity {
         mMediaRecorder.setCamera(mCamera);
 
         // Step 2: Set sources
-        mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
+        mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
 
         // set TS
-        mMediaRecorder.setOutputFormat(8);
-        mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
-        mMediaRecorder.setAudioChannels(2);
-        mMediaRecorder.setAudioSamplingRate(44100);
-        mMediaRecorder.setAudioEncodingBitRate(audio_bitrate);
+        mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.DEFAULT);
+        mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.DEFAULT);
+        mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.DEFAULT);
+        //mMediaRecorder.setAudioChannels(1);
+        //mMediaRecorder.setAudioSamplingRate(44100);
+        //mMediaRecorder.setAudioEncodingBitRate(audio_bitrate);
 
-        mMediaRecorder.setVideoSize(video_width, video_height);
-        mMediaRecorder.setVideoFrameRate(video_framerate);
-        mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
-        mMediaRecorder.setVideoEncodingBitRate(video_bitrate);
+        //mMediaRecorder.setVideoSize(video_width, video_height);
+        //mMediaRecorder.setVideoFrameRate(video_framerate);
+        //mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
+        //mMediaRecorder.setVideoEncodingBitRate(video_bitrate);
 
         // Step 3: Set a CamcorderProfile (requires API Level 8 or higher)
-        mMediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH));
+        //mMediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH));
 
         // Step 4: Set output file
         //todo output a socket?
-        createPipe();
-        mStreamWorker = new SendStreamWorker(readFD, mController);
-        mMediaRecorder.setOutputFile(writeFD.getFileDescriptor());
+        try {
+            fdPair = ParcelFileDescriptor.createPipe();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        //get a handle to your read and write fd objects.
+        //mStreamWorker = new SendStreamWorker(new ParcelFileDescriptor.AutoCloseInputStream(fdPair[0]));
+        //new ParcelFileDescriptor.AutoCloseOutputStream(fdPair[1]);
+        //mMediaRecorder.setOutputFile(fdPair[1].getFileDescriptor());
+
+        try {
+            File file = getOutputMediaFile("video.mp4");
+            FileOutputStream fileOutput = new FileOutputStream(file);
+            FileInputStream fileInput = new FileInputStream(file);
+            mMediaRecorder.setOutputFile(fileOutput.getFD());
+            mStreamWorker = new SendStreamWorker(fileInput);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         // Step 5: Set the preview output
         mMediaRecorder.setPreviewDisplay(mPreview.getHolder().getSurface());
