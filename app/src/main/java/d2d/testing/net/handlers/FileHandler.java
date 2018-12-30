@@ -22,8 +22,9 @@ public class FileHandler {
         try {
             if(f.createNewFile()) {
                 final FileOutputStream fileOutputStream = new FileOutputStream(f);
-                Logger.d("FileHandler: copying file... " + f.toString());
-                fileOutputStream.write(Arrays.copyOfRange(data,4+fileNameLength,data.length), 0 ,data.length-4-fileNameLength);
+                Logger.d("FileHandler: copying to file " + f.toString() + " - " + data.length + " bytes");
+                //fileOutputStream.write(Arrays.copyOfRange(data,4+fileNameLength,data.length), 0 ,data.length-4-fileNameLength);
+                fileOutputStream.write(data,4+fileNameLength,data.length-4-fileNameLength);
                 fileOutputStream.close();
                 Logger.d("FileHandler: file created successfully");
             } else {

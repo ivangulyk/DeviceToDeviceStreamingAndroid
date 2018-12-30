@@ -37,9 +37,8 @@ public class IOUtils {
     public static byte[] copyMax(byte[] byteArr, int offset, int max)
     {
         if(byteArr.length > offset + max){
-            return  Arrays.copyOfRange(byteArr, offset, max );
-        }
-        else {
+            return Arrays.copyOfRange(byteArr, offset, offset + max);
+        } else {
             return Arrays.copyOfRange(byteArr, offset, byteArr.length);
         }
     }
@@ -64,6 +63,4 @@ public class IOUtils {
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         return new File(mediaStorageDir.getPath() + File.separator + timeStamp + "_" + fileName);
     }
-
-
 }

@@ -361,7 +361,7 @@ public class MainActivity extends AppCompatActivity {
         this.startActivity(cameraActivityIntent);
     }
 
-    private void openMediaActivity(Uri uri) {
+    public void openMediaActivity(Uri uri) {
         Intent mediaActivityIntent = new Intent(this, MediaActivity.class);
         mediaActivityIntent.putExtra("key-uri", uri);
         this.startActivity(mediaActivityIntent);

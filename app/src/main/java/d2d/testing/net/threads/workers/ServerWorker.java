@@ -4,11 +4,12 @@ import java.nio.channels.SelectableChannel;
 
 import d2d.testing.helpers.Logger;
 import d2d.testing.net.handlers.FileHandler;
+import d2d.testing.net.handlers.StreamHandler;
 import d2d.testing.net.packets.DataPacket;
 import d2d.testing.net.threads.selectors.AbstractSelector;
 
 public class ServerWorker extends AbstractWorker {
-    private DataPacket openPacket;
+    private StreamHandler mStream = null;
 
     @Override
     protected void processData(DataPacket dataPacket, AbstractSelector selector, SelectableChannel channel) {
@@ -29,12 +30,18 @@ public class ServerWorker extends AbstractWorker {
                 } else {
                     //todo perdemos el archivo si no tenemos permisos
                     //TODO colas en permisos
-                    Logger.d("ClientWorker received TYPE_FILE command but no permission we are losing the file fix");
+                    Logger.d("ServerWorker received TYPE_FILE command but no permission we are losing the file fix");
                 }
                 break;
 
             case DataPacket.TYPE_VIDEO_STREAM:
                 Logger.d("ClientWorker received TYPE_VIDEO_STREAM");
+                if(mStream == null)
+                {
+                    mStream = new StreamHandler();
+                }
+
+                mStream.handle(dataPacket);
                 break;
 
             default:

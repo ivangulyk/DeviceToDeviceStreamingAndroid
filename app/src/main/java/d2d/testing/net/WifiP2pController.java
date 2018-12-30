@@ -79,6 +79,10 @@ public class WifiP2pController {
             return mInstance;
     }
 
+    public MainActivity getMainActivity(){
+        return this.mContext;
+    }
+
     public boolean isWifiEnabled() {
         return mWifiManager.isWifiEnabled();
     }

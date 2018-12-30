@@ -72,8 +72,8 @@ public abstract class AbstractWorker implements Runnable {
 
         while(cont < dataReceived.getData().length)
         {
-            byte[] packetData = IOUtils.copyMax(dataReceived.getData(),cont, openPacket.getRemainingLength());
-            Logger.d("AbstractWorker written " + packetData.length + " into open packet");
+            byte[] packetData = IOUtils.copyMax(dataReceived.getData(), cont, openPacket.getRemainingLength());
+            //Logger.d("AbstractWorker written " + packetData.length + " into open packet");
             cont += packetData.length;
             openPacket.addData(packetData);
 
