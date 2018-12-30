@@ -25,6 +25,8 @@ import d2d.testing.net.threads.workers.AbstractWorker;
 import static java.lang.Thread.sleep;
 
 public abstract class AbstractSelector implements Runnable{
+    private static final int BUFFER_SIZE = 8192;
+
     protected static final int PORT_TCP = 3462;
     protected static final int PORT_UDP = 3463;
 
@@ -40,7 +42,7 @@ public abstract class AbstractSelector implements Runnable{
     protected final List<SocketChannel> mConnections = new ArrayList<>();
     private final List<ChangeRequest> mPendingChangeRequests = new LinkedList<>();
     private final Map<SocketChannel, List> mPendingData = new HashMap<>();
-    private final ByteBuffer mReadBuffer = ByteBuffer.allocate(8192);
+    private final ByteBuffer mReadBuffer = ByteBuffer.allocate(BUFFER_SIZE);
 
     private DatagramChannel mDatagramChannel;
     protected InetAddress mInetAddress;

@@ -355,8 +355,15 @@ public class MainActivity extends AppCompatActivity {
         }
         return c; // returns null if camera is unavailable
     }
+
     private void openCameraActivity() {
-        Intent CameraActivityIntent = new Intent(this, CameraActivity.class);
-        this.startActivity(CameraActivityIntent);
+        Intent cameraActivityIntent = new Intent(this, CameraActivity.class);
+        this.startActivity(cameraActivityIntent);
+    }
+
+    private void openMediaActivity(Uri uri) {
+        Intent mediaActivityIntent = new Intent(this, MediaActivity.class);
+        mediaActivityIntent.putExtra("key-uri", uri);
+        this.startActivity(mediaActivityIntent);
     }
 }
