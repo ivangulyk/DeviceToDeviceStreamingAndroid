@@ -137,6 +137,12 @@ public class CameraActivity extends AppCompatActivity {
                 mCurrentFocus = Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO;
             else if (availableFocusModes.contains(Camera.Parameters.FOCUS_MODE_AUTO))
                 mCurrentFocus = Camera.Parameters.FOCUS_MODE_AUTO;
+            else if (availableFocusModes.contains(Camera.Parameters.FOCUS_MODE_FIXED))
+                mCurrentFocus = Camera.Parameters.FOCUS_MODE_FIXED;
+            else if (availableFocusModes.contains(Camera.Parameters.FOCUS_MODE_INFINITY))
+                mCurrentFocus = Camera.Parameters.FOCUS_MODE_INFINITY;
+            else if (availableFocusModes.contains(Camera.Parameters.FOCUS_MODE_EDOF))
+                mCurrentFocus = Camera.Parameters.FOCUS_MODE_EDOF;
         }
         params.setFocusMode(mCurrentFocus);
 
@@ -147,6 +153,27 @@ public class CameraActivity extends AppCompatActivity {
         btnSwitchCamera.setRotation(rotation);
         btnCapture.setRotation(rotation);
         btnSwitchVideo.setRotation(rotation);
+    }
+
+    public void updateButtonsStatus() {
+        if(mVideoMode)
+        {
+            btnCapture.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(android.R.color.holo_red_dark)));
+            if(mRecording)
+                btnCapture.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_stop));
+            else
+                btnCapture.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_video_camera));
+
+            btnSwitchVideo.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_camera));
+            btnSwitchCamera.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_switch_camera));
+            btnSwitchCamera.refreshDrawableState();
+        } else {
+            btnCapture.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.colorCameraButton)));
+            btnCapture.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_camera));
+            btnSwitchVideo.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_video_camera));
+            btnSwitchCamera.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_switch_camera));
+            btnSwitchCamera.refreshDrawableState();
+        }
     }
 
     @Override
@@ -249,11 +276,6 @@ public class CameraActivity extends AppCompatActivity {
         mPreview.setCamera(mCamera);
     }
 
-    private Camera.Parameters setDefaultFlashMode(Camera.Parameters params, List<String> flashModes) {
-        params.setFlashMode(FLASH_OPTIONS[mCurrentFlash]);
-        return params;
-    }
-
     public void onCapture(View view){
         if(!mVideoMode){
             mCamera.takePicture(null, null, mPictureCallback);
@@ -266,11 +288,9 @@ public class CameraActivity extends AppCompatActivity {
                     Logger.d("Exception stopping MediaRecorder: " + e.toString());
                 }
                 mStreamWorker.stop();
-
-                //btnSwitchMode.setEnabled(false);
-                btnCapture.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(android.R.color.holo_red_dark)));
-                btnCapture.setImageDrawable(null);
                 mRecording = false;
+
+                updateButtonsStatus();
             }else{
                 try {
                     prepareVideoRecorder();
@@ -279,30 +299,17 @@ public class CameraActivity extends AppCompatActivity {
                     Logger.d("Exception starting MediaRecorder: " + e.toString());
                 }
                 mStreamWorker.start();
-
-                //btnSwitchMode.setEnabled(true);
-                btnCapture.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.colorCameraButton)));
-                btnCapture.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_stop));
                 mRecording = true;
+
+                updateButtonsStatus();
             }
         }
     }
 
     public void onSwitchMode(View view){
-        if(mVideoMode)
-        {
-            btnCapture.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.colorCameraButton)));
-            btnCapture.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_camera));
-            btnSwitchVideo.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_video_camera));
-            btnSwitchCamera.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_switch_camera));
-            mVideoMode = false;
-        } else {
-            btnCapture.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(android.R.color.holo_red_dark)));
-            btnCapture.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_video_camera));
-            btnSwitchVideo.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_camera));
-            btnSwitchCamera.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_switch_camera));
-            mVideoMode = true;
-        }
+        mVideoMode = !mVideoMode;
+
+        updateButtonsStatus();
     }
 
     private boolean prepareVideoRecorder(){
