@@ -7,7 +7,6 @@ import android.content.res.Configuration;
 import android.hardware.Camera;
 import android.media.MediaRecorder;
 import android.os.Bundle;
-import android.os.ParcelFileDescriptor;
 import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.ContextCompat;
@@ -76,10 +75,13 @@ public class CameraActivity extends AppCompatActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Logger.d("CameraActivity: onCreate() starting");
+
         this.requestWindowFeature(Window.FEATURE_NO_TITLE); //se puede mover al xml? mirar
         this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
         this.setContentView(R.layout.camera);
-        initialWork();
+        this.initialWork();
 
         mOrientationListener = new CameraOrientationEventListener(this);
 
@@ -87,15 +89,11 @@ public class CameraActivity extends AppCompatActivity {
             mOrientationListener.enable();
         }
 
-        // Create an instance of Camera
-        mCamera = getCameraInstance();
         mCurrentCamera = Camera.CameraInfo.CAMERA_FACING_BACK; //RECORDAR LA CAMARA FLASH ETC...?
         mCurrentFlash = 0;
         mCurrentFocus = Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE;
 
-        updateCameraParameters();
-
-        mPreview = new CameraPreview(this, mCamera); // Create our Preview view and set it as the content of our activity.
+        mPreview = new CameraPreview(this); // Create our Preview view and set it as the content of our activity.
         ((FrameLayout)findViewById(R.id.camera_preview)).addView(mPreview);
     }
 
@@ -121,13 +119,11 @@ public class CameraActivity extends AppCompatActivity {
 
         if (availableFlashModes == null) {
             //todo no flash mode hide button etc...
-
         } else {
             //todo set flash buttons..
             if (!availableFlashModes.contains(FLASH_OPTIONS[mCurrentFlash])) {
                 if (availableFlashModes.contains(Camera.Parameters.FLASH_MODE_AUTO)) {
                     mCurrentFlash = 0;
-                    params.setFlashMode(FLASH_OPTIONS[mCurrentFlash]);
                 }
             }
             params.setFlashMode(FLASH_OPTIONS[mCurrentFlash]);
@@ -153,16 +149,6 @@ public class CameraActivity extends AppCompatActivity {
         btnSwitchVideo.setRotation(rotation);
     }
 
-    public static Camera getCameraInstance(){
-        Camera c = null;
-        try {
-            c = Camera.open(); // attempt to get a Camera instance
-        } catch (Exception e){
-            // Camera is not available (in use or does not exist)
-        }
-        return c; // returns null if camera is unavailable
-    }
-
     @Override
     protected void onPause() {
         super.onPause();
@@ -171,6 +157,21 @@ public class CameraActivity extends AppCompatActivity {
         }
         releaseMediaRecorder();       // if you are using MediaRecorder, release it first
         releaseCamera();              // release the camera immediately on pause event
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Logger.d("CameraActivity: onCreate() starting");
+
+        try {
+            mCamera = Camera.open(mCurrentCamera);
+        } catch (Exception e) {
+            Logger.e("CameraActivity: Error opening the camera");
+        }
+
+        updateCameraParameters();
+        mPreview.setCamera(mCamera);
     }
 
     private void releaseMediaRecorder(){
@@ -387,6 +388,12 @@ public class CameraActivity extends AppCompatActivity {
 
         @Override
         public void onPictureTaken(byte[] data, Camera camera) {
+            try {
+                camera.reconnect();
+                mPreview.setCamera(camera);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
             File pictureFile = getOutputMediaFile("imagen_camara.jpg");
             if (pictureFile == null){
@@ -420,7 +427,6 @@ public class CameraActivity extends AppCompatActivity {
 
         @Override
         public void onOrientationChanged(int orientation) {
-            //Logger.d("Camera orientation " + orientation);
             if(orientation > 45 && orientation < 135) {
                 setButtonsRotation(270);
             } else if (orientation > 135 && orientation < 225) {

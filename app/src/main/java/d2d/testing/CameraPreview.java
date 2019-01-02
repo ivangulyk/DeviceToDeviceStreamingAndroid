@@ -12,16 +12,16 @@ import  d2d.testing.helpers.Logger;
 
 /** A basic Camera preview class */
 public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback {
-    private Camera mCamera;
+    private Camera mCamera = null;
 
-    public CameraPreview(Context context, Camera camera) {
+    public CameraPreview(Context context) {
         super(context);
-        mCamera = camera;
         this.getHolder().addCallback(this);
     }
 
     public void setCamera(Camera camera)
     {
+        Logger.d("CameraPreview: set camera");
         try {
             mCamera = camera;
             mCamera.setPreviewDisplay(this.getHolder());
@@ -33,6 +33,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     }
 
     public void surfaceCreated(SurfaceHolder holder) {
+        Logger.d("CameraPreview: surface created");
         // The Surface has been created, now tell the camera where to draw the preview.
         try {
             mCamera.setPreviewDisplay(holder);
@@ -44,10 +45,12 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     }
 
     public void surfaceDestroyed(SurfaceHolder holder) {
+        Logger.d("CameraPreview: surface destroyed");
         // empty. Take care of releasing the Camera preview in your activity.
     }
 
     public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
+        Logger.d("CameraPreview: surface changed");
         if (this.getHolder().getSurface() == null)
             return;     // preview surface does not exist
 
