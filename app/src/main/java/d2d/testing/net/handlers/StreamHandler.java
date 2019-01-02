@@ -42,16 +42,18 @@ public class StreamHandler {
 
         try {
             Logger.d("FileHandler: copying " + data.length + " bytes to temp stream file");
-            mFileOutputStream.write(data, 0, data.length);
+
 
             if(!running && cont > 15000)
             {
                 running = true;
+                mFileOutputStream.close();
                 WifiP2pController.getInstance().getMainActivity().openMediaActivity(Uri.fromFile(mFile));
                 Logger.d("FileHandler: starting activity with " + cont + " bytes");
             }
             else
             {
+                mFileOutputStream.write(data, 0, data.length);
                 cont += data.length;
             }
         }

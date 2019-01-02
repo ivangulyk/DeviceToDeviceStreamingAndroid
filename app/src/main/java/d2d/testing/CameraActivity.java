@@ -1,5 +1,6 @@
 package d2d.testing;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.content.res.Configuration;
@@ -52,95 +53,58 @@ public class CameraActivity extends AppCompatActivity {
     private CameraPreview mPreview;
     private MediaRecorder mMediaRecorder;
     private SendStreamWorker mStreamWorker;
+    private CameraOrientationEventListener mOrientationListener;
 
-    private boolean mVideoMode;
-    private boolean mRecording;
+    private boolean mVideoMode = false;
+    private boolean mRecording = false;
     private int mCurrentFlash;
     private int mCurrentCamera;
+    private String mCurrentFocus;
+
+    private List<String> availableFocusModes;
+    private List<String> availableFlashModes;
 
     private FloatingActionButton btnSwitchCamera;
     private FloatingActionButton btnCapture;
-    private FloatingActionButton btnSwitchMode;
+    private FloatingActionButton btnSwitchVideo;
 
     private Toolbar cameraToolbar;
     private MenuItem btnSwitchFlash;
-
-    private ParcelFileDescriptor[] fdPair;
-    private ParcelFileDescriptor readFD;
-    private ParcelFileDescriptor writeFD;
 
     private WifiP2pController mController;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        this.requestWindowFeature(Window.FEATURE_NO_TITLE); //se puede mover al xml? mirar
         this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-
-        mController = getIntent().getParcelableExtra("controller");
-        mCurrentFlash = 0;
-        mCurrentCamera = Camera.CameraInfo.CAMERA_FACING_BACK;
-        mVideoMode = false;
-        mRecording = false;
-
-        setContentView(R.layout.camera);
+        this.setContentView(R.layout.camera);
         initialWork();
 
-        // Create an instance of Camera
-        mCamera = getCameraInstance();
-
-        // get Camera parameters
-        Camera.Parameters params = mCamera.getParameters();
-
-        List<String> focusModes = params.getSupportedFocusModes();
-        if (focusModes.contains(Camera.Parameters.FOCUS_MODE_AUTO)) {
-            // Autofocus mode is supported
-            params.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
-        }
-
-        List<String> flashModes = params.getSupportedFlashModes();
-        if(flashModes == null)
-            //todo
-        if (flashModes.contains(Camera.Parameters.FLASH_MODE_AUTO)) {
-            // Autofocus mode is supported
-            params.setFlashMode(Camera.Parameters.FLASH_MODE_AUTO);
-        }
-
-        // set Camera parameters
-        mCamera.setParameters(params);
-
-        // Create our Preview view and set it as the content of our activity.
-        mPreview = new CameraPreview(this, mCamera);
-        FrameLayout preview = findViewById(R.id.camera_preview);
-        preview.addView(mPreview);
-    }
-    public void initialWork() {
-
-        btnSwitchCamera = findViewById(R.id.button_switch_camera);
-        btnCapture = findViewById(R.id.button_capture);
-        btnSwitchMode = findViewById(R.id.button_switch_mode);
-        cameraToolbar = findViewById(R.id.camera_toolbar);
-
-        OrientationEventListener mOrientationListener = new OrientationEventListener(getApplicationContext()) {
-            @Override
-            public void onOrientationChanged(int orientation) {
-                //Logger.d("Camera orientation " + orientation);
-                if(orientation > 45 && orientation < 135) {
-                    setRotation(-90);
-                } else if (orientation > 135 && orientation < 225) {
-                    setRotation(180);
-                } else if (orientation > 225 && orientation < 315) {
-                    setRotation(-270);
-                } else { //asumed if (orientation > 315 && orientation < 45) {
-                    setRotation(0);
-                }
-            }
-        };
+        mOrientationListener = new CameraOrientationEventListener(this);
 
         if (mOrientationListener.canDetectOrientation()) {
             mOrientationListener.enable();
         }
+
+        // Create an instance of Camera
+        mCamera = getCameraInstance();
+        mCurrentCamera = Camera.CameraInfo.CAMERA_FACING_BACK; //RECORDAR LA CAMARA FLASH ETC...?
+        mCurrentFlash = 0;
+        mCurrentFocus = Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE;
+
+        updateCameraParameters();
+
+        mPreview = new CameraPreview(this, mCamera); // Create our Preview view and set it as the content of our activity.
+        ((FrameLayout)findViewById(R.id.camera_preview)).addView(mPreview);
+    }
+
+    public void initialWork() {
+
+        btnSwitchCamera = findViewById(R.id.button_switch_camera);
+        btnCapture = findViewById(R.id.button_capture);
+        btnSwitchVideo = findViewById(R.id.button_switch_video);
+        cameraToolbar = findViewById(R.id.camera_toolbar);
 
         setSupportActionBar(cameraToolbar);
         ActionBar actionBar = getSupportActionBar();
@@ -149,18 +113,51 @@ public class CameraActivity extends AppCompatActivity {
         }
     }
 
-    public void setRotation(int rotation) {
+    public void updateCameraParameters() {
+        Camera.Parameters params = mCamera.getParameters();
+
+        availableFocusModes = params.getSupportedFocusModes();
+        availableFlashModes = params.getSupportedFlashModes();
+
+        if (availableFlashModes == null) {
+            //todo no flash mode hide button etc...
+
+        } else {
+            //todo set flash buttons..
+            if (!availableFlashModes.contains(FLASH_OPTIONS[mCurrentFlash])) {
+                if (availableFlashModes.contains(Camera.Parameters.FLASH_MODE_AUTO)) {
+                    mCurrentFlash = 0;
+                    params.setFlashMode(FLASH_OPTIONS[mCurrentFlash]);
+                }
+            }
+            params.setFlashMode(FLASH_OPTIONS[mCurrentFlash]);
+        }
+
+        //todo set focus buttons..???
+        if (!availableFocusModes.contains(mCurrentFocus)) { //IF NOT AVAILABLE CURRENT FOCUS WE SET DEFAULT FOCUS
+            if (!mVideoMode && availableFocusModes.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE))
+                mCurrentFocus = Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE;
+            else if (mVideoMode && availableFocusModes.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO))
+                mCurrentFocus = Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO;
+            else if (availableFocusModes.contains(Camera.Parameters.FOCUS_MODE_AUTO))
+                mCurrentFocus = Camera.Parameters.FOCUS_MODE_AUTO;
+        }
+        params.setFocusMode(mCurrentFocus);
+
+        mCamera.setParameters(params);
+    }
+
+    public void setButtonsRotation(int rotation) {
         btnSwitchCamera.setRotation(rotation);
         btnCapture.setRotation(rotation);
-        btnSwitchMode.setRotation(rotation);
+        btnSwitchVideo.setRotation(rotation);
     }
 
     public static Camera getCameraInstance(){
         Camera c = null;
         try {
             c = Camera.open(); // attempt to get a Camera instance
-        }
-        catch (Exception e){
+        } catch (Exception e){
             // Camera is not available (in use or does not exist)
         }
         return c; // returns null if camera is unavailable
@@ -169,6 +166,9 @@ public class CameraActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
+        if (mVideoMode && mRecording) {
+            //todo stop recording?
+        }
         releaseMediaRecorder();       // if you are using MediaRecorder, release it first
         releaseCamera();              // release the camera immediately on pause event
     }
@@ -232,39 +232,19 @@ public class CameraActivity extends AppCompatActivity {
     }
 
     public void onSwitchCamera (View view){
-        //if (inPreview) {
+        if(Camera.getNumberOfCameras() < 2)
+            return;  //ONLY ONE CAMERA
+
         mCamera.stopPreview();
-        //}
-        //NB: if you don't release the current camera before switching, you app will crash
         releaseCamera();
 
-        //swap the id of the camera to be used
-        if (mCurrentCamera == Camera.CameraInfo.CAMERA_FACING_BACK) {
+        if (mCurrentCamera == Camera.CameraInfo.CAMERA_FACING_BACK)
             mCurrentCamera = Camera.CameraInfo.CAMERA_FACING_FRONT;
-        } else {
+        else
             mCurrentCamera = Camera.CameraInfo.CAMERA_FACING_BACK;
-        }
+
         mCamera = Camera.open(mCurrentCamera);
-
-        //setCameraDisplayOrientation(CameraActivity.this, currentCameraId, camera);
-
-        Camera.Parameters params = mCamera.getParameters();
-
-        List<String> flashModes = params.getSupportedFlashModes();
-        if(flashModes != null) {
-            if (flashModes.contains(FLASH_OPTIONS[mCurrentFlash])) {
-                params.setFlashMode(FLASH_OPTIONS[mCurrentFlash]);
-            }
-            else
-            {
-                setDefaultFlashMode(params,flashModes);
-            }
-
-            btnSwitchFlash.setVisible(true);
-        } else {
-            btnSwitchFlash.setVisible(false);
-        }
-
+        updateCameraParameters();
         mPreview.setCamera(mCamera);
     }
 
@@ -281,25 +261,25 @@ public class CameraActivity extends AppCompatActivity {
                 try {
                     mMediaRecorder.stop();
                     releaseMediaRecorder();
-                    prepareVideoRecorder();
                 } catch (Exception e) {
                     Logger.d("Exception stopping MediaRecorder: " + e.toString());
                 }
                 mStreamWorker.stop();
 
-                btnSwitchMode.setEnabled(false);
+                //btnSwitchMode.setEnabled(false);
                 btnCapture.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(android.R.color.holo_red_dark)));
                 btnCapture.setImageDrawable(null);
                 mRecording = false;
             }else{
                 try {
+                    prepareVideoRecorder();
                     mMediaRecorder.start();
                 } catch (Exception e) {
                     Logger.d("Exception starting MediaRecorder: " + e.toString());
                 }
                 mStreamWorker.start();
 
-                btnSwitchMode.setEnabled(true);
+                //btnSwitchMode.setEnabled(true);
                 btnCapture.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.colorCameraButton)));
                 btnCapture.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_stop));
                 mRecording = true;
@@ -312,13 +292,14 @@ public class CameraActivity extends AppCompatActivity {
         {
             btnCapture.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.colorCameraButton)));
             btnCapture.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_camera));
-            btnSwitchMode.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_video_camera));
+            btnSwitchVideo.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_video_camera));
+            btnSwitchCamera.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_switch_camera));
             mVideoMode = false;
         } else {
-            prepareVideoRecorder();
-            btnCapture.setImageDrawable(null);
             btnCapture.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(android.R.color.holo_red_dark)));
-            btnSwitchMode.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_camera));
+            btnCapture.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_video_camera));
+            btnSwitchVideo.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_camera));
+            btnSwitchCamera.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_switch_camera));
             mVideoMode = true;
         }
     }
@@ -349,9 +330,9 @@ public class CameraActivity extends AppCompatActivity {
         mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
 
         // set TS
-        mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.DEFAULT);
-        mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.DEFAULT);
-        mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.DEFAULT);
+        mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
+        mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
+        mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
         //mMediaRecorder.setAudioChannels(1);
         //mMediaRecorder.setAudioSamplingRate(44100);
         //mMediaRecorder.setAudioEncodingBitRate(audio_bitrate);
@@ -366,11 +347,6 @@ public class CameraActivity extends AppCompatActivity {
 
         // Step 4: Set output file
         //todo output a socket?
-        try {
-            fdPair = ParcelFileDescriptor.createPipe();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
         //get a handle to your read and write fd objects.
         //mStreamWorker = new SendStreamWorker(new ParcelFileDescriptor.AutoCloseInputStream(fdPair[0]));
@@ -428,6 +404,31 @@ public class CameraActivity extends AppCompatActivity {
                 Logger.d("File not found: " + e.getMessage());
             } catch (IOException e) {
                 Logger.d("Error accessing file: " + e.getMessage());
+            }
+        }
+    };
+
+    private class CameraOrientationEventListener extends OrientationEventListener {
+
+        public CameraOrientationEventListener(Context context) {
+            super(context);
+        }
+
+        public CameraOrientationEventListener(Context context, int rate) {
+            super(context, rate);
+        }
+
+        @Override
+        public void onOrientationChanged(int orientation) {
+            //Logger.d("Camera orientation " + orientation);
+            if(orientation > 45 && orientation < 135) {
+                setButtonsRotation(270);
+            } else if (orientation > 135 && orientation < 225) {
+                setButtonsRotation(180);
+            } else if (orientation > 225 && orientation < 315) {
+                setButtonsRotation(90);
+            } else { //asumed if (orientation > 315 && orientation < 45) {
+                setButtonsRotation(0);
             }
         }
     };
