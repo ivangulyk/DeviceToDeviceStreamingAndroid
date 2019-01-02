@@ -12,7 +12,6 @@ import  d2d.testing.helpers.Logger;
 
 /** A basic Camera preview class */
 public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback {
-    private SurfaceHolder mHolder;
     private Camera mCamera;
 
     public CameraPreview(Context context, Camera camera) {
@@ -49,7 +48,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     }
 
     public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
-        if (mHolder.getSurface() == null)
+        if (this.getHolder().getSurface() == null)
             return;     // preview surface does not exist
 
         // If your preview can change or rotate, take care of those events here.
@@ -67,7 +66,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
         // start preview with new settings
         try {
-            mCamera.setPreviewDisplay(mHolder);
+            mCamera.setPreviewDisplay(this.getHolder());
             //mCamera.startPreview();
 
         } catch (Exception e){
