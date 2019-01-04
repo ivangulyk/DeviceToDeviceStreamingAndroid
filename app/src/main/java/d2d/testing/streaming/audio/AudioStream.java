@@ -22,7 +22,7 @@ import java.io.FileDescriptor;
 import java.io.IOException;
 import java.io.InputStream;
 
-import net.majorkernelpanic.streaming.MediaStream;
+import d2d.testing.streaming.MediaStream;
 import android.media.MediaRecorder;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;

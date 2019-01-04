@@ -25,7 +25,7 @@ import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-import net.majorkernelpanic.streaming.rtcp.SenderReport;
+import d2d.testing.streaming.rtcp.SenderReport;
 import android.os.SystemClock;
 import android.util.Log;
 

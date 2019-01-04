@@ -19,8 +19,8 @@
 package d2d.testing.streaming.gl;
 
 import java.util.concurrent.Semaphore;
-import net.majorkernelpanic.streaming.MediaStream;
-import net.majorkernelpanic.streaming.video.VideoStream;
+import d2d.testing.streaming.MediaStream;
+import d2d.testing.streaming.video.VideoStream;
 import android.content.Context;
 import android.graphics.SurfaceTexture;
 import android.graphics.SurfaceTexture.OnFrameAvailableListener;

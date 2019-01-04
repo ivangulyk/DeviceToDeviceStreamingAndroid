@@ -22,9 +22,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.util.Random;
-import net.majorkernelpanic.streaming.audio.AudioStream;
-import net.majorkernelpanic.streaming.rtp.AbstractPacketizer;
-import net.majorkernelpanic.streaming.video.VideoStream;
+import d2d.testing.streaming.audio.AudioStream;
+import d2d.testing.streaming.rtp.AbstractPacketizer;
+import d2d.testing.streaming.video.VideoStream;
 import android.annotation.SuppressLint;
 import android.media.MediaCodec;
 import android.media.MediaRecorder;
@@ -246,8 +246,8 @@ public abstract class MediaStream implements Stream {
 
 	/**
 	 * Configures the stream with the settings supplied with 
-	 * {@link VideoStream#setVideoQuality(net.majorkernelpanic.streaming.video.VideoQuality)}
-	 * for a {@link VideoStream} and {@link AudioStream#setAudioQuality(net.majorkernelpanic.streaming.audio.AudioQuality)}
+	 * {@link VideoStream#setVideoQuality(d2d.testing.streaming.video.VideoQuality)}
+	 * for a {@link VideoStream} and {@link AudioStream#setAudioQuality(d2d.testing.streaming.audio.AudioQuality)}
 	 * for a {@link AudioStream}.
 	 */
 	public synchronized void configure() throws IllegalStateException, IOException {
@@ -315,7 +315,7 @@ public abstract class MediaStream implements Stream {
 	public abstract String getSessionDescription();
 	
 	/**
-	 * Returns the SSRC of the underlying {@link net.majorkernelpanic.streaming.rtp.RtpSocket}.
+	 * Returns the SSRC of the underlying {@link d2d.testing.streaming.rtp.RtpSocket}.
 	 * @return the SSRC of the stream
 	 */
 	public int getSSRC() {
@@ -326,7 +326,7 @@ public abstract class MediaStream implements Stream {
 
 		if (sPipeApi == PIPE_API_LS) {
 			
-			final String LOCAL_ADDR = "net.majorkernelpanic.streaming-";
+			final String LOCAL_ADDR = "d2d.testing.streaming-";
 	
 			for (int i=0;i<10;i++) {
 				try {

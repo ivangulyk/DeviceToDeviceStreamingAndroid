@@ -18,12 +18,12 @@
 
 package d2d.testing.streaming.rtsp;
 
-import static net.majorkernelpanic.streaming.SessionBuilder.AUDIO_AAC;
-import static net.majorkernelpanic.streaming.SessionBuilder.AUDIO_AMRNB;
-import static net.majorkernelpanic.streaming.SessionBuilder.AUDIO_NONE;
-import static net.majorkernelpanic.streaming.SessionBuilder.VIDEO_H263;
-import static net.majorkernelpanic.streaming.SessionBuilder.VIDEO_H264;
-import static net.majorkernelpanic.streaming.SessionBuilder.VIDEO_NONE;
+import static d2d.testing.streaming.SessionBuilder.AUDIO_AAC;
+import static d2d.testing.streaming.SessionBuilder.AUDIO_AMRNB;
+import static d2d.testing.streaming.SessionBuilder.AUDIO_NONE;
+import static d2d.testing.streaming.SessionBuilder.VIDEO_H263;
+import static d2d.testing.streaming.SessionBuilder.VIDEO_H264;
+import static d2d.testing.streaming.SessionBuilder.VIDEO_NONE;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -31,11 +31,11 @@ import java.net.URI;
 import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.util.Set;
-import net.majorkernelpanic.streaming.MediaStream;
-import net.majorkernelpanic.streaming.Session;
-import net.majorkernelpanic.streaming.SessionBuilder;
-import net.majorkernelpanic.streaming.audio.AudioQuality;
-import net.majorkernelpanic.streaming.video.VideoQuality;
+import d2d.testing.streaming.MediaStream;
+import d2d.testing.streaming.Session;
+import d2d.testing.streaming.SessionBuilder;
+import d2d.testing.streaming.audio.AudioQuality;
+import d2d.testing.streaming.video.VideoQuality;
 
 import android.content.ContentValues;
 import android.hardware.Camera.CameraInfo;

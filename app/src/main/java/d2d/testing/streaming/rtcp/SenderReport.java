@@ -18,8 +18,8 @@
 
 package d2d.testing.streaming.rtcp;
 
-import static net.majorkernelpanic.streaming.rtp.RtpSocket.TRANSPORT_TCP;
-import static net.majorkernelpanic.streaming.rtp.RtpSocket.TRANSPORT_UDP;
+import static d2d.testing.streaming.rtp.RtpSocket.TRANSPORT_TCP;
+import static d2d.testing.streaming.rtp.RtpSocket.TRANSPORT_UDP;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.DatagramPacket;

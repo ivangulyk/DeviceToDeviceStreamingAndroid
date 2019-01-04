@@ -33,9 +33,9 @@ import java.util.Locale;
 import java.util.concurrent.Semaphore;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import net.majorkernelpanic.streaming.Session;
-import net.majorkernelpanic.streaming.Stream;
-import net.majorkernelpanic.streaming.rtp.RtpSocket;
+import d2d.testing.streaming.Session;
+import d2d.testing.streaming.Stream;
+import d2d.testing.streaming.rtp.RtpSocket;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
@@ -140,7 +140,7 @@ public class RtspClient {
 		mState = STATE_STOPPED;
 
 		final Semaphore signal = new Semaphore(0);
-		new HandlerThread("net.majorkernelpanic.streaming.RtspClient"){
+		new HandlerThread("d2d.testing.streaming.RtspClient"){
 			@Override
 			protected void onLooperPrepared() {
 				mHandler = new Handler();

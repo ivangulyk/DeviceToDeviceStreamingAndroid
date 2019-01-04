@@ -19,7 +19,7 @@
 package d2d.testing.streaming.rtp;
 
 import java.io.IOException;
-import net.majorkernelpanic.streaming.audio.AACStream;
+import d2d.testing.streaming.audio.AACStream;
 import android.os.SystemClock;
 import android.util.Log;
 

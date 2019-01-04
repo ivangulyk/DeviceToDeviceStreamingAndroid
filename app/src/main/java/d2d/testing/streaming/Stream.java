@@ -95,7 +95,7 @@ public interface Stream {
 	
 
 	/**
-	 * Returns the SSRC of the underlying {@link net.majorkernelpanic.streaming.rtp.RtpSocket}.
+	 * Returns the SSRC of the underlying {@link d2d.testing.streaming.rtp.RtpSocket}.
 	 * @return the SSRC of the stream.
 	 */
 	public int getSSRC();

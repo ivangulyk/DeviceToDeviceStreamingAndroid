@@ -22,16 +22,16 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.concurrent.CountDownLatch;
-import net.majorkernelpanic.streaming.audio.AudioQuality;
-import net.majorkernelpanic.streaming.audio.AudioStream;
-import net.majorkernelpanic.streaming.exceptions.CameraInUseException;
-import net.majorkernelpanic.streaming.exceptions.ConfNotSupportedException;
-import net.majorkernelpanic.streaming.exceptions.InvalidSurfaceException;
-import net.majorkernelpanic.streaming.exceptions.StorageUnavailableException;
-import net.majorkernelpanic.streaming.gl.SurfaceView;
-import net.majorkernelpanic.streaming.rtsp.RtspClient;
-import net.majorkernelpanic.streaming.video.VideoQuality;
-import net.majorkernelpanic.streaming.video.VideoStream;
+import d2d.testing.streaming.audio.AudioQuality;
+import d2d.testing.streaming.audio.AudioStream;
+import d2d.testing.streaming.exceptions.CameraInUseException;
+import d2d.testing.streaming.exceptions.ConfNotSupportedException;
+import d2d.testing.streaming.exceptions.InvalidSurfaceException;
+import d2d.testing.streaming.exceptions.StorageUnavailableException;
+import d2d.testing.streaming.gl.SurfaceView;
+import d2d.testing.streaming.rtsp.RtspClient;
+import d2d.testing.streaming.video.VideoQuality;
+import d2d.testing.streaming.video.VideoStream;
 import android.hardware.Camera.CameraInfo;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -117,7 +117,7 @@ public class Session {
 	public Session() {
 		long uptime = System.currentTimeMillis();
 
-		HandlerThread thread = new HandlerThread("net.majorkernelpanic.streaming.Session");
+		HandlerThread thread = new HandlerThread("d2d.testing.streaming.Session");
 		thread.start();
 
 		mHandler = new Handler(thread.getLooper());

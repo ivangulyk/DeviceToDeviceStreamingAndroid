@@ -20,8 +20,8 @@ package d2d.testing.streaming.audio;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
-import net.majorkernelpanic.streaming.SessionBuilder;
-import net.majorkernelpanic.streaming.rtp.AMRNBPacketizer;
+import d2d.testing.streaming.SessionBuilder;
+import d2d.testing.streaming.rtp.AMRNBPacketizer;
 import android.media.MediaRecorder;
 import android.service.textservice.SpellCheckerService.Session;
 
