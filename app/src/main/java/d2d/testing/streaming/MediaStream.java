@@ -99,7 +99,7 @@ public abstract class MediaStream implements Stream {
 			Class.forName("android.media.MediaCodec");
 			// Will be set to MODE_MEDIACODEC_API at some point...
 			sSuggestedMode = MODE_MEDIACODEC_API;
-			Log.i(TAG,"Phone supports the MediaCoded API");
+			Log.i(TAG,"Phone supports the MediaCodec API");
 		} catch (ClassNotFoundException e) {
 			sSuggestedMode = MODE_MEDIARECORDER_API;
 			Log.i(TAG,"Phone does not support the MediaCodec API");
