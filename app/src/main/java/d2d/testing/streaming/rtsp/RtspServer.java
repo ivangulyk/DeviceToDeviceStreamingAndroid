@@ -195,6 +195,7 @@ public class RtspServer extends Service {
 			} catch (Exception e) {
 			} finally {
 				mListenerThread = null;
+				postMessage(MESSAGE_STREAMING_STOPPED);
 			}
 		}
 	}
