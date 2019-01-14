@@ -147,7 +147,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void handleCamera(){
         this.mCamera = getCameraInstance();
-        openCameraActivity();
+        //openCameraActivity();
+        openStreamActivity();
     }
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
@@ -359,6 +360,11 @@ public class MainActivity extends AppCompatActivity {
     private void openCameraActivity() {
         Intent cameraActivityIntent = new Intent(this, CameraActivity.class);
         this.startActivity(cameraActivityIntent);
+    }
+
+    private void openStreamActivity() {
+        Intent streamActivityIntent = new Intent(this, StreamActivity.class);
+        this.startActivity(streamActivityIntent);
     }
 
     public void openMediaActivity(Uri uri) {
