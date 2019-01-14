@@ -175,6 +175,7 @@ public abstract class VideoStream extends MediaStream {
 		}
 	}
 
+	//todo auto??
 	/** Turns the LED on or off if phone has one. */
 	public synchronized void setFlashState(boolean state) {
 		// If the camera has already been opened, we apply the change immediately
@@ -379,7 +380,7 @@ public abstract class VideoStream extends MediaStream {
 
 		// This will skip the MPEG4 header if this step fails we can't stream anything :(
 		try {
-			byte buffer[] = new byte[4];
+			byte[] buffer = new byte[4];
 			// Skip all atoms preceding mdat atom
 			while (!Thread.interrupted()) {
 				while (is.read() != 'm');
