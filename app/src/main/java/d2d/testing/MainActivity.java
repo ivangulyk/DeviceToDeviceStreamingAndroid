@@ -1,82 +1,106 @@
 package d2d.testing;
 
 import android.Manifest;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.net.wifi.WifiManager;
+import android.net.Uri;
+import android.hardware.Camera;
 import android.net.wifi.p2p.WifiP2pDevice;
-import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pManager;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
+import android.os.Parcelable;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v7.app.AppCompatActivity;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
-import android.widget.ArrayAdapter;
+import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.ArrayList;
-import java.util.List;
+import d2d.testing.gui.DeviceListAdapter;
+import d2d.testing.helpers.Logger;
+import d2d.testing.net.WifiP2pController;
+import d2d.testing.net.packets.DataPacket;
+
 
 public class MainActivity extends AppCompatActivity {
-    public static final int MY_PERMISSIONS_REQUEST_COARSE_LOCATION = 1;
+    private static final int REQUEST_COARSE_LOCATION_CODE = 101;
+    private static final int MY_CAMERA_REQUEST_CODE = 100;
+    private static final int MY_WRITE_EXTERNAL_STORAGE_CODE = 103;
+    private static final int CHOOSE_FILE_CODE = 102;
+    private boolean camera_has_perm = false;
+    private boolean location_has_perm = false;
+    private boolean storage_has_perm = false;
+    private Camera mCamera;
 
-    Button btnOnOff, btnsrch;
+    Button btnSend;
     ListView listView;
     TextView textView;
+    EditText editTextMsg;
+    TextView redMsg;
+    TextView myName;
+    TextView myAdd;
+    TextView myStatus;
 
-    WifiManager wifiManager;
-    WifiP2pManager mManager;
-    WifiP2pManager.Channel mChannel;
+    WifiP2pController mWifiP2pController;
+    WiFiP2pPermissions wiFiP2pPermissions;
 
-    BroadcastReceiver mReciever;
+
     IntentFilter mIntentFilter;
+    WifiP2pDevice[] mDeviceArray;
 
-    List<WifiP2pDevice> peers = new ArrayList<WifiP2pDevice>();
-    String [] deviceNameArray;
-    WifiP2pDevice[] deviceArray;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         initialWork();
         execListener();
-        this.checkPermissions();
+    }
+
+    public void set_camera_has_perm(boolean camera){
+        this.camera_has_perm = camera;
+    }
+    public void set_location_has_perm(boolean location){
+        this.location_has_perm = location;
+    }
+    public void set_storage_has_perm(boolean storage){
+        this.storage_has_perm = storage;
+    }
+
+    public WiFiP2pPermissions getWiFiP2pPermissions() {
+        return wiFiP2pPermissions;
+    }
+    public boolean get_storage_has_perm(){
+        return storage_has_perm;
     }
 
     private void execListener() {
-        btnOnOff.setOnClickListener(new View.OnClickListener() {
+        btnSend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(wifiManager.isWifiEnabled()) {
-                    wifiManager.setWifiEnabled(false);
-                    btnOnOff.setText("ON");
-                }
-                else{
-                    wifiManager.setWifiEnabled(true);
-                    btnOnOff.setText("OFF");
-                }
+                mWifiP2pController.send(DataPacket.createMsgPacket(editTextMsg.getText().toString()));
             }
         });
-        btnsrch.setOnClickListener(new View.OnClickListener() {
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener(){
+
             @Override
-            public void onClick(View v) {
-                mManager.discoverPeers(mChannel, new WifiP2pManager.ActionListener() {
-                    @Override
-                    public void onSuccess() {
-                        textView.setText("Discovery Started");
-                    }
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                mWifiP2pController.connectToPeer(mDeviceArray[position], new WifiP2pManager.ActionListener() {
 
                     @Override
+                    public void onSuccess() {
+                        Toast.makeText(getApplicationContext(), "Connecting to peer ...", Toast.LENGTH_SHORT).show();
+                    }
+                    @Override
                     public void onFailure(int reason) {
-                        textView.setText("Discovery Starting Failed");
+                        Toast.makeText(getApplicationContext(), "Peer connection failed with code " + Integer.toString(reason), Toast.LENGTH_SHORT).show();
                     }
                 });
             }
@@ -84,130 +108,262 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initialWork() {
-        btnOnOff = (Button) findViewById(R.id.onOff);
-        btnsrch = (Button) findViewById(R.id.discover);
-        listView = (ListView) findViewById(R.id.peerListView);
-        textView = (TextView) findViewById(R.id.connectionStatus);
+        btnSend = findViewById(R.id.sendButton);
+        listView = findViewById(R.id.peerListView);
+        textView = findViewById(R.id.connectionStatus);
+        editTextMsg = findViewById(R.id.writeMsg);
+        redMsg = findViewById(R.id.readMsg);
+        myAdd = findViewById(R.id.my_address);
+        myName = findViewById(R.id.my_name);
+        myStatus = findViewById(R.id.my_status);
 
-        wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-
-        mManager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
-        mChannel = mManager.initialize(this, getMainLooper(), null);
-
-        mReciever = new WiFiDirectBroadcastReceiver(mManager,mChannel,this);
+        mWifiP2pController = WifiP2pController.getInstance(this);
         mIntentFilter = new IntentFilter();
+        wiFiP2pPermissions = new WiFiP2pPermissions(this,this);
         // Indicates a change in the Wi-Fi P2P status.
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
-
         // Indicates a change in the list of available peers.
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
-
         // Indicates the state of Wi-Fi P2P connectivity has changed.
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
-
         // Indicates this device's details have changed.
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
 
     }
 
- public WifiP2pManager.PeerListListener peerListListener = new WifiP2pManager.PeerListListener() {
-      @Override
-      public void onPeersAvailable(WifiP2pDeviceList peerList) {
+    private void DiscoverPeers(){
+        mWifiP2pController.discoverPeers(new WifiP2pManager.ActionListener() {
+            @Override
+            public void onSuccess() {
+                textView.setText("Discovery Started");
+            }
 
-          //List<WifiP2pDevice> refreshedPeers = (List<WifiP2pDevice>) peerList.getDeviceList();
-          if ( !peerList.getDeviceList().equals(peers)) {
-              peers.clear();
-              peers.addAll(peerList.getDeviceList());
-              deviceNameArray = new String[peerList.getDeviceList().size()];
-              deviceArray = new WifiP2pDevice[peerList.getDeviceList().size()];
-              int index = 0;
+            @Override
+            public void onFailure(int reason) {
+                textView.setText("Discovery Starting Failed");
+            }
+        });
+    }
 
-              for (WifiP2pDevice device : peerList.getDeviceList()) {
-                  deviceNameArray[index] = device.deviceName;
-                  deviceArray[index] = device;
-                  index++;
-              }
-              ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(), android.R.layout.simple_list_item_1, deviceNameArray);
-              listView.setAdapter(adapter);
-          }
+    private void handleCamera(){
+        this.mCamera = getCameraInstance();
+        openCameraActivity();
+    }
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.action_items, menu);
+        return true;
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.atn_direct_enable:
+                if(mWifiP2pController.isWifiEnabled()) {
+                    mWifiP2pController.setWifiEnabled(false);
+                }
+                else{
+                    mWifiP2pController.setWifiEnabled(true);
+                }
+                return true;
 
+            case R.id.atn_direct_discover:
+                wiFiP2pPermissions.location();
+                if(location_has_perm) {
+                    DiscoverPeers();
+                }
+                return true;
+            case R.id.atn_direct_camera:
+                if(checkCameraHardware()) {
+                    wiFiP2pPermissions.camera();
+                    if(camera_has_perm) {
+                        //TODO here goes all the functionality
+                        handleCamera();
+                    }
+                }
+                return true;
+            case R.id.atn_direct_file_transfer:
+                    onBrowse();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
 
-          if (peers.size() == 0) {
-              //Log.d(WiFiDirectActivity.TAG, "No devices found");
-              Toast.makeText(getApplicationContext(), "No Devices Found", Toast.LENGTH_SHORT).show();
-              return;
-          }
-      }
-  };
+    public static String getDeviceStatus(int deviceStatus) {
+        //Log.d(MainActivity.TAG, "Peer status :" + deviceStatus);
+        switch (deviceStatus) {
+            case WifiP2pDevice.AVAILABLE:
+                return "Available";
+            case WifiP2pDevice.INVITED:
+                return "Invited";
+            case WifiP2pDevice.CONNECTED:
+                return "Connected";
+            case WifiP2pDevice.FAILED:
+                return "Failed";
+            case WifiP2pDevice.UNAVAILABLE:
+                return "Unavailable";
+            default:
+                return "Unknown";
+
+        }
+    }
+
+    public void updateThisDevice(WifiP2pDevice device) {
+         myName.setText(device.deviceName);
+         myStatus.setText(getDeviceStatus(device.status));
+         myAdd.setText(device.deviceAddress);
+    }
+
+    public void updateMsg(final String str){
+        runOnUiThread(new Runnable() {
+            public void run() {
+                redMsg.setText(str);
+            }
+        });
+    }
+
+    public void updatePeers(WifiP2pDevice[] deviceArray)
+    {
+        this.mDeviceArray = deviceArray;
+        if (deviceArray.length == 0) {
+            Toast.makeText(getApplicationContext(), "No Devices Found", Toast.LENGTH_SHORT).show();
+        }
+        else
+        {
+            DeviceListAdapter deviceListAdapter = new DeviceListAdapter(this, deviceArray);
+            listView.setAdapter(deviceListAdapter);
+        }
+
+    }
+
+    public void onBrowse() {
+        Intent chooseFile;
+        Intent intent;
+        chooseFile = new Intent(Intent.ACTION_GET_CONTENT);
+        chooseFile.addCategory(Intent.CATEGORY_OPENABLE);
+        chooseFile.setType("image/*");
+        intent = Intent.createChooser(chooseFile, "Choose a file");
+        startActivityForResult(intent, CHOOSE_FILE_CODE);
+    }
+
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (resultCode != RESULT_OK) return;
+        if(requestCode == CHOOSE_FILE_CODE)
+        {
+            Uri uri = data.getData();
+            Logger.d("Path selected " + uri);
+            this.mWifiP2pController.sendFile(uri);
+        }
+    }
 
     @Override
     public void onResume() {
         super.onResume();
-        //mReciever = new WiFiDirectBroadcastReceiver(mManager, mChannel, this);
-        registerReceiver(mReciever, mIntentFilter);
-    }
 
+        registerReceiver(this.mWifiP2pController.getWiFiP2pBroadcastReceiver(), mIntentFilter);
+//        editText.clearFocus();
+    }
     @Override
     public void onPause() {
         super.onPause();
-        unregisterReceiver(mReciever);
+        unregisterReceiver(this.mWifiP2pController.getWiFiP2pBroadcastReceiver());
     }
-
-    public void checkPermissions()
-    {
-        // Here, thisActivity is the current activity
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_COARSE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED) {
-
-            // Should we show an explanation?
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                    Manifest.permission.ACCESS_COARSE_LOCATION)) {
-
-                // Show an expanation to the user *asynchronously* -- don't block
-                // this thread waiting for the user's response! After the user
-                // sees the explanation, try again to request the permission.
-
-            } else {
-
-                // No explanation needed, we can request the permission.
-
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
-                        MY_PERMISSIONS_REQUEST_COARSE_LOCATION);
-
-                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
-                // app-defined int constant. The callback method gets the
-                // result of the request.
-            }
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           String permissions[], int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
         switch (requestCode) {
-            case MY_PERMISSIONS_REQUEST_COARSE_LOCATION: {
+            case REQUEST_COARSE_LOCATION_CODE: {
                 // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
-                    // permission was granted, yay! Do the
-                    // contacts-related task you need to do.
-
-                    Toast.makeText(getApplicationContext(), "YAY PERMISSON FOUND", Toast.LENGTH_SHORT).show();
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    this.location_has_perm = true;
+                    // permission was granted,
+                    Toast.makeText(getApplicationContext(), "LOCATION PERMISSION GRANTED", Toast.LENGTH_SHORT).show();
+                    DiscoverPeers();
                 } else {
 
-                    // permission denied, boo! Disable the
-                    // functionality that depends on this permission.
+                    // permission denied, wifi direct wont work under version ??? maybe we dont need it....
 
-                    Toast.makeText(getApplicationContext(), "YAY PERMISSON not FOUND", Toast.LENGTH_SHORT).show();
+                    if (!ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_COARSE_LOCATION)) {
+                        //Show permission explanation dialog...
+                        Toast.makeText(getApplicationContext(), "YOU DENIED PERMISSION AND CHECKED TO NEVER ASK AGAIN, GO SETTING AND ADD LOCATION PERMISSION MANUALLY TO USE THIS", Toast.LENGTH_SHORT).show();
+                    }
+                    else{
+                        Toast.makeText(getApplicationContext(), "LOCATION PERMISSION NOT GRANTED, YOU WONT BE ABLE TO USE THIS", Toast.LENGTH_SHORT).show();
+                    }
                 }
-                return;
+                break;
             }
+            case MY_CAMERA_REQUEST_CODE: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    this.camera_has_perm = true;
+                    // permission was granted,
+                    Toast.makeText(getApplicationContext(), "CAMERA PERMISSION GRANTED", Toast.LENGTH_SHORT).show();
+                    handleCamera();
+                } else {
 
-            // other 'case' lines to check for other
-            // permissions this app might request
+                    // permission denied, wifi direct wont work under version ??? maybe we dont need it...
+                    if (!ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA)) {
+                        //Show permission explanation dialog...
+                        Toast.makeText(getApplicationContext(), "YOU DENIED PERMISSION AND CHECKED TO NEVER ASK AGAIN, GO SETTING AND ADD CAMERA PERMISSION MANUALLY TO USE THIS", Toast.LENGTH_SHORT).show();
+                    }
+                    else{
+                        Toast.makeText(getApplicationContext(), "CAMERA PERMISSION NOT GRANTED, YOU WONT BE ABLE TO USE THIS", Toast.LENGTH_SHORT).show();
+                    }
+                }
+                break;
+            }
+            case MY_WRITE_EXTERNAL_STORAGE_CODE: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    this.storage_has_perm = true;
+                    // permission was granted,
+                    Toast.makeText(getApplicationContext(), "STORAGE PERMISSION GRANTED", Toast.LENGTH_SHORT).show();
+                } else {
+
+                    // permission denied, wifi direct wont work under version ??? maybe we dont need it...
+                    if (!ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                        //Show permission explanation dialog...
+                        Toast.makeText(getApplicationContext(), "YOU DENIED PERMISSION AND CHECKED TO NEVER ASK AGAIN, GO SETTING AND ADD STORAGE PERMISSION MANUALLY TO USE THIS", Toast.LENGTH_SHORT).show();
+                    }
+                    else{
+                        Toast.makeText(getApplicationContext(), "STORAGE PERMISSION NOT GRANTED, YOU WONT BE ABLE TO USE THIS,TRY AGAIN", Toast.LENGTH_SHORT).show();
+                    }
+                }
+                break;
+            }
         }
+    }
+
+    private boolean checkCameraHardware() {
+        if (this.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)){
+            // this device has a camera
+            //Toast.makeText(getApplicationContext(), "YOUR DEVICE HAS CAMERA", Toast.LENGTH_SHORT).show();
+            return true;
+        } else {
+            // no camera on this device
+            Toast.makeText(getApplicationContext(), "YOUR DEVICE HAS NO CAMERA", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+    }
+
+    public static Camera getCameraInstance(){
+        Camera c = null;
+        try {
+            c = Camera.open(); // attempt to get a Camera instance
+        }
+        catch (Exception e){
+            // Camera is not available (in use or does not exist)
+        }
+        return c; // returns null if camera is unavailable
+    }
+
+    private void openCameraActivity() {
+        Intent cameraActivityIntent = new Intent(this, CameraActivity.class);
+        this.startActivity(cameraActivityIntent);
+    }
+
+    public void openMediaActivity(Uri uri) {
+        Intent mediaActivityIntent = new Intent(this, MediaActivity.class);
+        mediaActivityIntent.putExtra("key-uri", uri);
+        this.startActivity(mediaActivityIntent);
     }
 }

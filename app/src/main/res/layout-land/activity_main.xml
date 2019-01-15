@@ -10,15 +10,18 @@
         android:id="@+id/textView"
         android:layout_width="wrap_content"
         android:layout_height="19dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="5dp"
         android:layout_below="@id/connectionStatus"
-        android:layout_marginLeft="8dp"
+        android:gravity="center_vertical"
         android:text="@string/mi_dispositivo" />
 
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/linearLayout2"
-        android:layout_width="368dp"
+        android:layout_width="330dp"
         android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="5dp"
         android:layout_below="@id/textView"
         android:background="?android:attr/activatedBackgroundIndicator"
         android:padding="3dip"
@@ -34,7 +37,7 @@
             android:layout_marginEnd="2dp" />
 
         <LinearLayout
-            android:layout_width="0dp"
+            android:layout_width="300dp"
             android:layout_height="64dp"
             android:layout_weight="1"
             android:orientation="vertical">
@@ -69,25 +72,29 @@
         android:id="@+id/peer_list"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
+        android:gravity="center_vertical"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="5dp"
         android:layout_below="@id/linearLayout2"
         android:text="@string/dispositivos_encontrados"
         android:textAlignment="center"/>
 
     <ListView
         android:id="@+id/peerListView"
-        android:layout_width="350dp"
-        android:layout_height="150dp"
+        android:layout_width="330dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_height="90dp"
         android:layout_below="@id/peer_list"
-        android:layout_centerHorizontal="true"
         android:background="@android:color/holo_orange_light" />
 
     <TextView
         android:id="@+id/connectionStatus"
-        android:layout_width="263dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="5dp"
         android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
         android:text="@string/connection_status"
         android:textAlignment="center"
         android:textColor="@android:color/holo_blue_dark"
@@ -96,10 +103,11 @@
 
     <LinearLayout
         android:id="@+id/linearLayout"
-        android:layout_width="238dp"
+        android:layout_width="match_parent"
         android:layout_height="40dp"
         android:focusable="true"
         android:layout_alignParentBottom="true"
+        android:layout_toLeftOf="@id/sendButton"
         android:layout_marginBottom="5dp"
         android:layout_marginLeft="10dp"
         android:focusableInTouchMode="true">
@@ -126,11 +134,10 @@
 
     <TextView
         android:id="@+id/readMsg"
-        android:layout_width="347dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/peerListView"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="50dp"
+        android:layout_toRightOf="@id/peerListView"
+        android:layout_centerVertical="true"
         android:text="@string/message"
         android:textAlignment="center"
         android:textSize="20sp"
