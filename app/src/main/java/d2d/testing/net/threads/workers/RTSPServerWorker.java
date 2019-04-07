@@ -206,7 +206,7 @@ public class RTSPServerWorker extends AbstractWorker {
     @Override
     protected void parsePackets(DataReceived dataReceived) {
         //TODO POSIBILIDAD DE QUE LOS PAQUETES SE QUEDEN ABIERTOS...!!! HAY QUE CONTROLAR
-
+        RtspResponse response = new RtspResponse();
         RtspRequest request = new RtspRequest();
         String line;
         Matcher matcher;
@@ -232,26 +232,27 @@ public class RTSPServerWorker extends AbstractWorker {
                 request.headers.put(matcher.group(1).toLowerCase(Locale.US),matcher.group(2));
             }
 
-            if (line==null) {
+            /*if (line==null) {
                 //todo para nosotros no es desconectado... simplemente no hay una linea completa?
                 throw new SocketException("Client disconnected");
-            }
+            }*/
 
             // It's not an error, it's just easier to follow what's happening in logcat with the request in red
             Logger.e(request.method+" "+request.uri);
             inputReader.close();
 
-            processRequest(request, dataReceived.getSocket());
+            response = processRequest(request, dataReceived.getSocket());
 
         } catch (IOException e) {
-            RtspResponse response = new RtspResponse();
+            response = new RtspResponse();
             response.status = RtspResponse.STATUS_BAD_REQUEST;
-            try {
-                dataReceived.getSelector().send((SocketChannel) dataReceived.getSocket(), response.build().getBytes());
-            } catch (IOException e1) {
-                e1.printStackTrace();
-            }
             e.printStackTrace();
+        }
+
+        try {
+            dataReceived.getSelector().send((SocketChannel) dataReceived.getSocket(), response.build().getBytes());
+        } catch (IOException e1) {
+            e1.printStackTrace();
         }
     }
 
