@@ -190,7 +190,7 @@ public class WifiP2pController {
                 // The other device acts as the peer (client). In this case,
                 // you'll want to create a peer thread that connects
                 // to the group owner.
-                if(mServerSelectorThread == null) {
+                if(mClientSelectorThread == null) {
                     try {
                         mClientSelectorThread = new ClientSelector(groupOwnerAddress, mContext);
                         new Thread(mClientSelectorThread).start();

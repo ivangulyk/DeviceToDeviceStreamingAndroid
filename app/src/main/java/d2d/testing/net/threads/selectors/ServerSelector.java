@@ -24,7 +24,7 @@ public class ServerSelector extends AbstractSelector {
     protected void initiateConnection() {
         try {
             mServerSocketChannel = (ServerSocketChannel) ServerSocketChannel.open().configureBlocking(false);
-            mServerSocketChannel.socket().bind(new InetSocketAddress(PORT_TCP));
+            mServerSocketChannel.socket().bind(new InetSocketAddress(mPortTCP));
             // Create a new non-blocking server socket channel  and start listening
             mStatusTCP = STATUS_LISTENING;
             addChangeRequest(new ChangeRequest(mServerSocketChannel, ChangeRequest.REGISTER, SelectionKey.OP_ACCEPT));

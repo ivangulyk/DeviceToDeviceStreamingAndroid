@@ -15,7 +15,7 @@ import d2d.testing.net.threads.selectors.AbstractSelector;
 
 public abstract class AbstractWorker implements Runnable {
     private final List<DataReceived> mDataReceivedQueue;
-    private final Map<SelectableChannel, DataPacket> mOpenPacketsMap;
+    protected final Map<SelectableChannel, DataPacket> mOpenPacketsMap;
 
     private Thread mThread;
     private boolean mEnabled;
@@ -63,7 +63,8 @@ public abstract class AbstractWorker implements Runnable {
         }
     }
 
-    private void parsePackets(DataReceived dataReceived) {
+
+    protected void parsePackets(DataReceived dataReceived) {
         DataPacket openPacket = mOpenPacketsMap.get(dataReceived.getSocket());
         int cont = 0;
 

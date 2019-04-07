@@ -28,6 +28,7 @@ import d2d.testing.gui.DeviceListAdapter;
 import d2d.testing.helpers.Logger;
 import d2d.testing.net.WifiP2pController;
 import d2d.testing.net.packets.DataPacket;
+import d2d.testing.net.packets.DataPacketBuilder;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -85,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
         btnSend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mWifiP2pController.send(DataPacket.createMsgPacket(editTextMsg.getText().toString()));
+                mWifiP2pController.send(DataPacketBuilder.buildMsgPacket(editTextMsg.getText().toString()));
             }
         });
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener(){

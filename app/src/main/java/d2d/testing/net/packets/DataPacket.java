@@ -83,7 +83,7 @@ public class DataPacket {
     }
 
 
-    public void addData(byte[] data){
+    public void addData(byte[] data) {
         try {
             mDataStream.write(data);
         } catch (IOException e) {
@@ -91,8 +91,7 @@ public class DataPacket {
         }
     }
 
-    public void parsePacket()
-    {
+    public void parsePacket() {
         mData = mDataStream.toByteArray();
 
         if (getRemainingLength() > 0)
@@ -118,7 +117,7 @@ public class DataPacket {
         }
 
 
-        if(!IOUtils.contains(TYPE_LIST,mData[TYPE_POSITION])){
+        if(!IOUtils.contains(TYPE_LIST, mData[TYPE_POSITION])){
             mStatus = STATUS_INVALID;
             Logger.d("DataFormatter: No packet type found!");
             return;
@@ -134,55 +133,6 @@ public class DataPacket {
         //todo VAMOS A TENER QUE HACER ALGO MAS AQUI SEPARADO? CABECERAS PROPIAS... ETC
 
         mStatus = STATUS_HEADER;
-    }
-
-    public static DataPacket createMsgPacket(String msg){
-        DataPacket packet = new DataPacket();
-        packet.setType(TYPE_MSG);
-
-        try {
-            //CREATE THE MSG WITH JUST THE MSG
-            packet.createPacket(msg.getBytes());
-        } catch (IOException e) {
-            e.printStackTrace();
-            packet = null;
-        }
-
-        return packet;
-    }
-
-    public static DataPacket createFilePacket(byte[] file, String fileName){
-        DataPacket packet = new DataPacket();
-        packet.setType(TYPE_FILE);
-
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
-        try {
-            //LENGTH + FILENAME
-            output.write(IOUtils.intToByteArray(fileName.length()));
-            output.write(fileName.getBytes());
-            //FILE
-            output.write(file);
-            packet.createPacket(output.toByteArray());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return packet;
-    }
-
-    public static DataPacket createStreamPacket(byte[] data){
-        DataPacket packet = new DataPacket();
-        packet.setType(TYPE_VIDEO_STREAM);
-
-        try {
-            //CREATE THE packet WITH JUST THE MSG
-            packet.createPacket(data);
-        } catch (IOException e) {
-            e.printStackTrace();
-            packet = null;
-        }
-
-        return packet;
     }
 
     protected void createPacket(byte[] data) throws IOException {

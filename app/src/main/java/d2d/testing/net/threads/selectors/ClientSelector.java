@@ -24,7 +24,7 @@ public class ClientSelector extends AbstractSelector {
     protected void initiateConnection() {
         try {
             mSocketChannel = (SocketChannel) SocketChannel.open().configureBlocking(false);
-            mSocketChannel.connect(new InetSocketAddress(mInetAddress.getHostAddress(), PORT_TCP));
+            mSocketChannel.connect(new InetSocketAddress(mInetAddress.getHostAddress(), mPortTCP));
             // Create a non-blocking socket channel and connect to GroupOwner
             mStatusTCP = STATUS_CONNECTING;
             this.addChangeRequest(new ChangeRequest(mSocketChannel, ChangeRequest.REGISTER, SelectionKey.OP_CONNECT));

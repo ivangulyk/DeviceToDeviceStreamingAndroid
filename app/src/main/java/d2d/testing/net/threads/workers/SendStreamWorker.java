@@ -7,6 +7,7 @@ import java.util.Arrays;
 import d2d.testing.helpers.Logger;
 import d2d.testing.net.WifiP2pController;
 import d2d.testing.net.packets.DataPacket;
+import d2d.testing.net.packets.DataPacketBuilder;
 
 import static java.lang.Thread.sleep;
 
@@ -49,7 +50,7 @@ public class SendStreamWorker implements Runnable {
                     if(read > 0)   //todo leemos los datos hacer algo con ellos
                     {
                         Logger.d("SendStreamWorker: " + read + " bytes read from stream output");
-                        DataPacket packet = DataPacket.createStreamPacket(Arrays.copyOfRange(buffer, 0, read));
+                        DataPacket packet = DataPacketBuilder.buildStreamPacket(Arrays.copyOfRange(buffer, 0, read));
                         WifiP2pController.getInstance().send(packet);
                     }
                 } else {

@@ -47,6 +47,8 @@ public abstract class AbstractSelector implements Runnable{
     private DatagramChannel mDatagramChannel;
     protected InetAddress mInetAddress;
 
+    protected int mPortTCP = PORT_TCP;
+
     private boolean mEnabled = true;
     protected int mStatusTCP = STATUS_DISCONNECTED;
     private int mStatusUDP = STATUS_DISCONNECTED;
@@ -156,7 +158,7 @@ public abstract class AbstractSelector implements Runnable{
         return null;
     }
 
-    protected void send(SocketChannel socket, byte[] data) {
+    public void send(SocketChannel socket, byte[] data) {
         synchronized(mPendingChangeRequests) {
             this.mPendingChangeRequests.add(new ChangeRequest(socket, ChangeRequest.CHANGE_OPS, SelectionKey.OP_WRITE));
 
