@@ -36,6 +36,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import d2d.testing.streaming.Session;
 import d2d.testing.streaming.SessionBuilder;
+import d2d.testing.streaming.video.VideoStream;
+
 import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -88,6 +90,7 @@ public class RtspServer extends Service {
 	protected boolean mEnabled = true;	
 	protected int mPort = DEFAULT_RTSP_PORT;
 	protected WeakHashMap<Session,Object> mSessions = new WeakHashMap<>(2);
+	protected VideoStream mVideoStream;
 	
 	private RequestListener mListenerThread;
 	private final IBinder mBinder = new LocalBinder();
