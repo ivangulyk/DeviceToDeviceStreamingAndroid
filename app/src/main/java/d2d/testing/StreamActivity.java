@@ -39,8 +39,7 @@ public class StreamActivity extends AppCompatActivity {
                 .setPreviewOrientation(90)
                 .setContext(getApplicationContext())
                 .setAudioEncoder(SessionBuilder.AUDIO_AAC)
-                .setVideoEncoder(SessionBuilder.VIDEO_H264)
-                .setDestination("192.168.1.255");
+                .setVideoEncoder(SessionBuilder.VIDEO_H264);
 
         // Starts the RTSP server
         this.startService(new Intent(this,RtspServer.class));
