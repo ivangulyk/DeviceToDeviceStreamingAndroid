@@ -228,17 +228,6 @@ public class RtspServer extends Service {
 		}
 		return bitrate;
 	}
-
-	/** Returns the bandwidth consumed by the RTSP server in bits per second. */
-	public Session getSession() {
-		Session retSession = null;
-		for ( Session session : mSessions.keySet() ) {
-			if ( session != null && session.isStreaming() ) {
-				return session;
-			}
-		}
-		return retSession;
-	}
 	
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
@@ -470,14 +459,9 @@ public class RtspServer extends Service {
 			    /* ********************************************************************************** */
                 if (request.method.equalsIgnoreCase("DESCRIBE")) {
 
-                	if(getSession() != null) {
-						mSession = getSession();
-					} else {
-						// Parse the requested URI and configure the session
-						mSession = handleRequest(request.uri, mClient);
-						mSessions.put(mSession, null);
-						mSession.syncConfigure();
-					}
+					mSession = handleRequest(request.uri, mClient);
+					mSessions.put(mSession, null);
+					mSession.syncConfigure();
 
                     String requestContent = mSession.getSessionDescription();
                     String requestAttributes =

@@ -18,6 +18,7 @@
 
 package d2d.testing.streaming.gl;
 
+import java.util.ArrayList;
 import java.util.concurrent.Semaphore;
 import d2d.testing.streaming.MediaStream;
 import d2d.testing.streaming.video.VideoStream;
@@ -72,6 +73,7 @@ public class SurfaceView extends android.view.SurfaceView implements Runnable, O
 	
 	// The input surface of the MediaCodec
 	private SurfaceManager mCodecSurfaceManager = null;
+	private ArrayList<SurfaceManager> mCodecSurfaceManagers = new ArrayList<>();
 	
 	// Handles the rendering of the SurfaceTexture we got 
 	// from the camera, onto a Surface
@@ -99,7 +101,8 @@ public class SurfaceView extends android.view.SurfaceView implements Runnable, O
 
 	public void addMediaCodecSurface(Surface surface) {
 		synchronized (mSyncObject) {
-			mCodecSurfaceManager = new SurfaceManager(surface,mViewSurfaceManager);			
+			mCodecSurfaceManagers.add(new SurfaceManager(surface, mViewSurfaceManager));
+			//mCodecSurfaceManager = new SurfaceManager(surface,mViewSurfaceManager);
 		}
 	}
 
@@ -147,7 +150,17 @@ public class SurfaceView extends android.view.SurfaceView implements Runnable, O
 						mTextureManager.drawFrame();
 						mViewSurfaceManager.swapBuffer();
 
-						if (mCodecSurfaceManager != null) {
+						for(SurfaceManager codecSurfaceManager : mCodecSurfaceManagers) {
+							codecSurfaceManager.makeCurrent();
+							mTextureManager.drawFrame();
+							oldts = ts;
+							ts = mTextureManager.getSurfaceTexture().getTimestamp();
+							//Log.d(TAG,"FPS: "+(1000000000/(ts-oldts)));
+							codecSurfaceManager.setPresentationTime(ts);
+							codecSurfaceManager.swapBuffer();
+						}
+
+						/*if (mCodecSurfaceManager != null) {
 							mCodecSurfaceManager.makeCurrent();
 							mTextureManager.drawFrame();
 							oldts = ts;
@@ -155,7 +168,7 @@ public class SurfaceView extends android.view.SurfaceView implements Runnable, O
 							//Log.d(TAG,"FPS: "+(1000000000/(ts-oldts)));
 							mCodecSurfaceManager.setPresentationTime(ts);
 							mCodecSurfaceManager.swapBuffer();
-						}
+						}*/
 
 					} else {
 						Log.e(TAG,"No frame received !");

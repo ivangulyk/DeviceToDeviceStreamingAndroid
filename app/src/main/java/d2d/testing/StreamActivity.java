@@ -12,6 +12,7 @@ import d2d.testing.streaming.Session;
 import d2d.testing.streaming.SessionBuilder;
 import d2d.testing.streaming.gl.SurfaceView;
 import d2d.testing.streaming.rtsp.RtspServer;
+import d2d.testing.streaming.video.VideoQuality;
 
 public class StreamActivity extends AppCompatActivity {
 
@@ -40,7 +41,10 @@ public class StreamActivity extends AppCompatActivity {
                 .setContext(getApplicationContext())
                 .setAudioEncoder(SessionBuilder.AUDIO_AAC)
                 .setVideoEncoder(SessionBuilder.VIDEO_H264)
-                .setDestination("192.168.1.255");
+                //.set
+                .setVideoQuality(VideoQuality.parseQuality("5000-15-1920-1080"));
+                //.setVideoQuality(VideoQuality.determineClosestSupportedResolution())
+                //.setDestination("192.168.1.255");
 
         // Starts the RTSP server
         this.startService(new Intent(this,RtspServer.class));
