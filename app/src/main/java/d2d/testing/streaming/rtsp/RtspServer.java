@@ -36,6 +36,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import d2d.testing.streaming.Session;
 import d2d.testing.streaming.SessionBuilder;
+import d2d.testing.streaming.video.VideoStream;
+
 import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -88,6 +90,7 @@ public class RtspServer extends Service {
 	protected boolean mEnabled = true;	
 	protected int mPort = DEFAULT_RTSP_PORT;
 	protected WeakHashMap<Session,Object> mSessions = new WeakHashMap<>(2);
+	protected VideoStream mVideoStream;
 	
 	private RequestListener mListenerThread;
 	private final IBinder mBinder = new LocalBinder();
@@ -224,17 +227,6 @@ public class RtspServer extends Service {
 		    } 
 		}
 		return bitrate;
-	}
-
-	/** Returns the bandwidth consumed by the RTSP server in bits per second. */
-	public Session getSession() {
-		Session retSession = null;
-		for ( Session session : mSessions.keySet() ) {
-			if ( session != null && session.isStreaming() ) {
-				return session;
-			}
-		}
-		return retSession;
 	}
 	
 	@Override
@@ -467,14 +459,9 @@ public class RtspServer extends Service {
 			    /* ********************************************************************************** */
                 if (request.method.equalsIgnoreCase("DESCRIBE")) {
 
-                	if(getSession() != null) {
-						mSession = getSession();
-					} else {
-						// Parse the requested URI and configure the session
-						mSession = handleRequest(request.uri, mClient);
-						mSessions.put(mSession, null);
-						mSession.syncConfigure();
-					}
+					mSession = handleRequest(request.uri, mClient);
+					mSessions.put(mSession, null);
+					mSession.syncConfigure();
 
                     String requestContent = mSession.getSessionDescription();
                     String requestAttributes =

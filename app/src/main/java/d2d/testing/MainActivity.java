@@ -183,7 +183,8 @@ public class MainActivity extends AppCompatActivity {
                 }
                 return true;
             case R.id.atn_direct_file_transfer:
-                    onBrowse();
+                    //onBrowse();
+                openViewStreamActivity();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -371,5 +372,10 @@ public class MainActivity extends AppCompatActivity {
         Intent mediaActivityIntent = new Intent(this, MediaActivity.class);
         mediaActivityIntent.putExtra("key-uri", uri);
         this.startActivity(mediaActivityIntent);
+    }
+
+    private void openViewStreamActivity() {
+        Intent streamActivityIntent = new Intent(this, ViewStreamActivity.class);
+        this.startActivity(streamActivityIntent);
     }
 }
