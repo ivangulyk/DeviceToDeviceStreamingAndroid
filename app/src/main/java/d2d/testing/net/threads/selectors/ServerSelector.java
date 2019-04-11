@@ -21,6 +21,11 @@ public class ServerSelector extends AbstractSelector {
     }
 
     @Override
+    protected void onClientDisconnected(SocketChannel socketChannel) {
+
+    }
+
+    @Override
     protected void initiateConnection() {
         try {
             mServerSocketChannel = (ServerSocketChannel) ServerSocketChannel.open().configureBlocking(false);

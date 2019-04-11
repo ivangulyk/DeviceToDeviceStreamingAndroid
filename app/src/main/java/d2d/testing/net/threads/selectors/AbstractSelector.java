@@ -217,6 +217,7 @@ public abstract class AbstractSelector implements Runnable{
         }
 
         if (numRead == -1) {
+            onClientDisconnected(socketChannel);
             key.cancel();       // Remote entity shut the socket down cleanly. Do the same
             socketChannel.close();
             mConnections.remove(socketChannel);
@@ -227,6 +228,8 @@ public abstract class AbstractSelector implements Runnable{
         // Hand the data off to our worker thread
         this.mWorker.addData(this, socketChannel, mReadBuffer.array(), numRead);
     }
+
+    protected abstract void onClientDisconnected(SocketChannel socketChannel);
 
     private void write(SelectionKey key) throws IOException {
         SocketChannel socketChannel = (SocketChannel) key.channel();
@@ -274,13 +277,17 @@ public abstract class AbstractSelector implements Runnable{
     private void processChangeRequests() throws Exception {
         synchronized (mPendingChangeRequests) {
             for (ChangeRequest changeRequest : mPendingChangeRequests) {
-                switch (changeRequest.getType()) {
-                    case ChangeRequest.CHANGE_OPS:
-                        changeRequest.getChannel().keyFor(mSelector).interestOps(changeRequest.getOps());
-                        break;
-                    case ChangeRequest.REGISTER:
-                        changeRequest.getChannel().register(mSelector, changeRequest.getOps());
-                        break;
+                try {
+                    switch (changeRequest.getType()) {
+                        case ChangeRequest.CHANGE_OPS:
+                            changeRequest.getChannel().keyFor(mSelector).interestOps(changeRequest.getOps());
+                            break;
+                        case ChangeRequest.REGISTER:
+                            changeRequest.getChannel().register(mSelector, changeRequest.getOps());
+                            break;
+                    }
+                } catch (Exception e) {
+                    Logger.e("AbstractSelector: Error in process change Request...", e);
                 }
             }
             this.mPendingChangeRequests.clear();

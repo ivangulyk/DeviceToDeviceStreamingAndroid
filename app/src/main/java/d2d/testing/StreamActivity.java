@@ -10,6 +10,7 @@ import android.view.WindowManager;
 
 import java.io.IOException;
 
+import d2d.testing.helpers.Logger;
 import d2d.testing.net.threads.selectors.ClientSelector;
 import d2d.testing.net.threads.selectors.RTSPServerSelector;
 import d2d.testing.streaming.Session;
@@ -35,28 +36,25 @@ public class StreamActivity extends AppCompatActivity {
         mSurfaceView = findViewById(R.id.surface);
 
         // Configures the SessionBuilder
-        Session s = SessionBuilder.getInstance()
+        SessionBuilder.getInstance()
                 .setSurfaceView(mSurfaceView)
                 .setPreviewOrientation(90)
                 .setContext(getApplicationContext())
                 .setAudioEncoder(SessionBuilder.AUDIO_AAC)
-                .setVideoEncoder(SessionBuilder.VIDEO_H264)
-                .build();
-        try {
-            s.syncStart();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        s.syncStop();
+                .setVideoEncoder(SessionBuilder.VIDEO_H264);
+                //.build();
 
         // Starts the RTSP server
-        this.startService(new Intent(this,RtspServer.class));
-
-        try {
-            mRtspServerSelector = new RTSPServerSelector(1234);
-            new Thread(mRtspServerSelector).start();
-        } catch (IOException e) {
-            e.printStackTrace();
+        //this.startService(new Intent(this,RtspServer.class));
+        Logger.d("running on create stream activity....");
+        if(savedInstanceState == null) {
+            Logger.d("no saved instace");
+            try {
+                mRtspServerSelector = new RTSPServerSelector(1235);
+                new Thread(mRtspServerSelector).start();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 }

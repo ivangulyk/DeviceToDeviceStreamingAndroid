@@ -144,6 +144,8 @@ public class RTSPServerWorker extends AbstractWorker {
 
                 requestSession.getTrack(trackId).setDestinationPorts(p1, p2);
 
+                requestSession.syncStart(trackId);
+
                 response.attributes = "Transport: RTP/AVP/UDP;" + (InetAddress.getByName(destination).isMulticastAddress() ? "multicast" : "unicast") +
                         ";destination=" + requestSession.getDestination() +
                         ";client_port=" + p1 + "-" + p2 +
@@ -208,7 +210,7 @@ public class RTSPServerWorker extends AbstractWorker {
         //TODO POSIBILIDAD DE QUE LOS PAQUETES SE QUEDEN ABIERTOS...!!! HAY QUE CONTROLAR
         RtspResponse response = new RtspResponse();
         RtspRequest request = new RtspRequest();
-        String line;
+        String line = null;
         Matcher matcher;
 
         BufferedReader inputReader = new BufferedReader(new StringReader(new String(dataReceived.getData())));
@@ -244,8 +246,11 @@ public class RTSPServerWorker extends AbstractWorker {
             response = processRequest(request, dataReceived.getSocket());
 
         } catch (IOException e) {
-            response = new RtspResponse();
             response.status = RtspResponse.STATUS_BAD_REQUEST;
+            e.printStackTrace();
+        } catch (IllegalStateException e) {
+            response.status = RtspResponse.STATUS_BAD_REQUEST;
+            Logger.e("illegal state with line" + line.toString());
             e.printStackTrace();
         }
 
@@ -287,10 +292,24 @@ public class RTSPServerWorker extends AbstractWorker {
      */
     protected Session handleRequest(String uri, Socket client) throws IllegalStateException, IOException {
         Session session = UriParser.parse(uri);
-        session.setOrigin(client.getLocalAddress().getHostAddress());
+        Logger.d("handlerequest: socket addr" + client.getInetAddress().getHostAddress());
+        session.setOrigin(client.getInetAddress().getHostAddress());
         if (session.getDestination()==null) {
             session.setDestination(client.getInetAddress().getHostAddress());
         }
         return session;
+    }
+
+    public void onClientDisconnected(SocketChannel socketChannel) {
+        //boolean streaming = isStreaming();
+        Session requestSession = mSessions.get(socketChannel);
+
+        if(requestSession != null) {
+            if (requestSession.isStreaming()) {
+                requestSession.syncStop();
+            }
+
+            requestSession.release();
+        }
     }
 }

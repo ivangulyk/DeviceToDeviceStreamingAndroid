@@ -36,6 +36,11 @@ public class ClientSelector extends AbstractSelector {
     }
 
     @Override
+    protected void onClientDisconnected(SocketChannel socketChannel) {
+
+    }
+
+    @Override
     public void send(byte[] data) {
         this.send(mSocketChannel, data);
     }

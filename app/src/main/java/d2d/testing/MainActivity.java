@@ -147,7 +147,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void handleCamera(){
-        this.mCamera = getCameraInstance();
+        //this.mCamera = getCameraInstance();
         //openCameraActivity();
         openStreamActivity();
     }
