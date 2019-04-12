@@ -1,7 +1,6 @@
 package d2d.testing.net.threads.workers;
 
 import android.util.Base64;
-import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -13,7 +12,6 @@ import java.nio.channels.SelectableChannel;
 import java.nio.channels.SocketChannel;
 import java.util.HashMap;
 import java.util.Locale;
-import java.util.WeakHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -55,8 +53,6 @@ public class RTSPServerWorker extends AbstractWorker {
         Session requestSession = mSessions.get(channel);
         RtspResponse response = new RtspResponse(request);
 
-        Socket requestSocket = ((SocketChannel) channel).socket();
-
 
         //Ask for authorization unless this is an OPTIONS request
         if(!isAuthorized(request) && !request.method.equalsIgnoreCase("OPTIONS"))
@@ -66,143 +62,197 @@ public class RTSPServerWorker extends AbstractWorker {
         }
         else
         {
-            /* ********************************************************************************** */
-            /* ********************************* Method DESCRIBE ******************************** */
-            /* ********************************************************************************** */
-            if (request.method.equalsIgnoreCase("DESCRIBE")) {
-
-                // Parse the requested URI and configure the session
-                requestSession = handleRequest(request.uri, requestSocket);
-                mSessions.put(channel, requestSession);
-                requestSession.syncConfigure();
-
-                String requestContent = requestSession.getSessionDescription();
-                String requestAttributes =
-                        "Content-Base: " + requestSocket.getLocalAddress().getHostAddress() + ":" + requestSocket.getLocalPort() + "/\r\n" +
-                                "Content-Type: application/sdp\r\n";
-
-                response.attributes = requestAttributes;
-                response.content = requestContent;
-
-                // If no exception has been thrown, we reply with OK
-                response.status = RtspResponse.STATUS_OK;
-
-            }
-
-            /* ********************************************************************************** */
-            /* ********************************* Method OPTIONS ********************************* */
-            /* ********************************************************************************** */
-            else if (request.method.equalsIgnoreCase("OPTIONS")) {
-                response.status = RtspResponse.STATUS_OK;
-                response.attributes = "Public: DESCRIBE,SETUP,TEARDOWN,PLAY,PAUSE\r\n";
-                response.status = RtspResponse.STATUS_OK;
-            }
-
-            /* ********************************************************************************** */
-            /* ********************************** Method SETUP ********************************** */
-            /* ********************************************************************************** */
-            else if (request.method.equalsIgnoreCase("SETUP")) {
-                Pattern p;
-                Matcher m;
-                int p2, p1, ssrc, trackId, src[];
-                String destination;
-
-                p = Pattern.compile("trackID=(\\w+)", Pattern.CASE_INSENSITIVE);
-                m = p.matcher(request.uri);
-
-                if (!m.find()) {
+            switch (request.method) {
+                case "OPTIONS":
+                    response.status = RtspResponse.STATUS_OK;
+                    response.attributes = "Public: DESCRIBE,SETUP,TEARDOWN,PLAY,PAUSE\r\n";
+                    break;
+                case "DESCRIBE":
+                    return DESCRIBE(request, (SocketChannel) channel);
+                case "SETUP":
+                    return SETUP(request, requestSession);
+                case "TEARDOWN":
+                    return TEARDOWN();
+                case "ANNOUNCE":
+                    return ANNOUNCE();
+                case "REDIRECT":
+                    return REDIRECT();
+                case "PLAY":
+                    return PLAY(((SocketChannel) channel).socket(),requestSession);
+                case "PAUSE":
+                    return PAUSE();
+                default:
+                    Logger.e("Command unknown: " + request);
                     response.status = RtspResponse.STATUS_BAD_REQUEST;
-                    return response;
-                }
-
-                trackId = Integer.parseInt(m.group(1));
-
-                if (!requestSession.trackExists(trackId)) {
-                    response.status = RtspResponse.STATUS_NOT_FOUND;
-                    return response;
-                }
-
-                p = Pattern.compile("client_port=(\\d+)(?:-(\\d+))?", Pattern.CASE_INSENSITIVE);
-                m = p.matcher(request.headers.get("transport"));
-
-                if (!m.find()) {
-                    int[] ports = requestSession.getTrack(trackId).getDestinationPorts();
-                    p1 = ports[0];
-                    p2 = ports[1];
-                } else {
-                    p1 = Integer.parseInt(m.group(1));
-                    if (m.group(2) == null) {
-                        p2 = p1+1;
-                    } else {
-                        p2 = Integer.parseInt(m.group(2));
-                    }
-                }
-
-                ssrc = requestSession.getTrack(trackId).getSSRC();
-                src = requestSession.getTrack(trackId).getLocalPorts();
-                destination = requestSession.getDestination();
-
-                requestSession.getTrack(trackId).setDestinationPorts(p1, p2);
-
-                requestSession.syncStart(trackId);
-
-                response.attributes = "Transport: RTP/AVP/UDP;" + (InetAddress.getByName(destination).isMulticastAddress() ? "multicast" : "unicast") +
-                        ";destination=" + requestSession.getDestination() +
-                        ";client_port=" + p1 + "-" + p2 +
-                        ";server_port=" + src[0] + "-" + src[1] +
-                        ";ssrc=" + Integer.toHexString(ssrc) +
-                        ";mode=play\r\n" +
-                        "Session: " + "1185d20035702ca" + "\r\n" +
-                        "Cache-Control: no-cache\r\n";
-                response.status = RtspResponse.STATUS_OK;
-
-                // If no exception has been thrown, we reply with OK
-                response.status = RtspResponse.STATUS_OK;
-
-            }
-
-            /* ********************************************************************************** */
-            /* ********************************** Method PLAY *********************************** */
-            /* ********************************************************************************** */
-            else if (request.method.equalsIgnoreCase("PLAY")) {
-                String requestAttributes = "RTP-Info: ";
-                if (requestSession.trackExists(0))
-                    requestAttributes += "url=rtsp://" + requestSocket.getLocalAddress().getHostAddress() + ":" + requestSocket.getLocalPort() + "/trackID=" + 0 + ";seq=0,";
-                if (requestSession.trackExists(1))
-                    requestAttributes += "url=rtsp://" + requestSocket.getLocalAddress().getHostAddress() + ":" + requestSocket.getLocalPort() + "/trackID=" + 1 + ";seq=0,";
-                requestAttributes = requestAttributes.substring(0, requestAttributes.length() - 1) + "\r\nSession: 1185d20035702ca\r\n";
-
-                response.attributes = requestAttributes;
-
-                // If no exception has been thrown, we reply with OK
-                response.status = RtspResponse.STATUS_OK;
-
-            }
-
-            /* ********************************************************************************** */
-            /* ********************************** Method PAUSE ********************************** */
-            /* ********************************************************************************** */
-            else if (request.method.equalsIgnoreCase("PAUSE")) {
-                response.status = RtspResponse.STATUS_OK;
-            }
-
-            /* ********************************************************************************** */
-            /* ********************************* Method TEARDOWN ******************************** */
-            /* ********************************************************************************** */
-            else if (request.method.equalsIgnoreCase("TEARDOWN")) {
-                response.status = RtspResponse.STATUS_OK;
-            }
-
-            /* ********************************************************************************** */
-            /* ********************************* Unknown method ? ******************************* */
-            /* ********************************************************************************** */
-            else {
-                Logger.e("Command unknown: " + request);
-                response.status = RtspResponse.STATUS_BAD_REQUEST;
             }
         }
         return response;
 
+    }
+
+    private RtspResponse DESCRIBE(RtspRequest request, SocketChannel channel) throws IOException {
+        RtspResponse response = new RtspResponse();
+        // Parse the requested URI and configure the session
+        Session requestSession = handleRequest(request.uri, channel.socket());
+        mSessions.put(channel, requestSession);
+        requestSession.syncConfigure();
+
+        String requestContent = requestSession.getSessionDescription();
+        String requestAttributes =
+                "Content-Base: " + channel.socket().getLocalAddress().getHostAddress() + ":" + channel.socket().getLocalPort() + "/\r\n" +
+                        "Content-Type: application/sdp\r\n";
+
+        response.attributes = requestAttributes;
+        response.content = requestContent;
+
+        // If no exception has been thrown, we reply with OK
+        response.status = RtspResponse.STATUS_OK;
+
+        return response;
+    }
+
+    private RtspResponse SETUP(RtspRequest request, Session requestSession) throws IOException {
+        RtspResponse response = new RtspResponse();
+        Pattern p;
+        Matcher m;
+        int p2, p1, ssrc, trackId, src[];
+        String destination;
+
+        p = Pattern.compile("trackID=(\\w+)", Pattern.CASE_INSENSITIVE);
+        m = p.matcher(request.uri);
+
+        if (!m.find()) {
+            response.status = RtspResponse.STATUS_BAD_REQUEST;
+            return response;
+        }
+
+        trackId = Integer.parseInt(m.group(1));
+
+        if (!requestSession.trackExists(trackId)) {
+            response.status = RtspResponse.STATUS_NOT_FOUND;
+            return response;
+        }
+
+        p = Pattern.compile("client_port=(\\d+)(?:-(\\d+))?", Pattern.CASE_INSENSITIVE);
+        m = p.matcher(request.headers.get("transport"));
+
+        if (!m.find()) {
+            int[] ports = requestSession.getTrack(trackId).getDestinationPorts();
+            p1 = ports[0];
+            p2 = ports[1];
+        } else {
+            p1 = Integer.parseInt(m.group(1));
+            if (m.group(2) == null) {
+                p2 = p1+1;
+            } else {
+                p2 = Integer.parseInt(m.group(2));
+            }
+        }
+
+        ssrc = requestSession.getTrack(trackId).getSSRC();
+        src = requestSession.getTrack(trackId).getLocalPorts();
+        destination = requestSession.getDestination();
+
+        requestSession.getTrack(trackId).setDestinationPorts(p1, p2);
+
+        requestSession.syncStart(trackId);
+
+        response.attributes = "Transport: RTP/AVP/UDP;" + (InetAddress.getByName(destination).isMulticastAddress() ? "multicast" : "unicast") +
+                ";destination=" + requestSession.getDestination() +
+                ";client_port=" + p1 + "-" + p2 +
+                ";server_port=" + src[0] + "-" + src[1] +
+                ";ssrc=" + Integer.toHexString(ssrc) +
+                ";mode=play\r\n" +
+                "Session: " + "1185d20035702ca" + "\r\n" +
+                "Cache-Control: no-cache\r\n";
+        response.status = RtspResponse.STATUS_OK;
+
+        // If no exception has been thrown, we reply with OK
+        response.status = RtspResponse.STATUS_OK;
+
+        return response;
+    }
+
+    private RtspResponse PLAY(Socket requestSocket, Session requestSession) {
+        RtspResponse response = new RtspResponse();
+        String requestAttributes = "RTP-Info: ";
+        if (requestSession.trackExists(0))
+            requestAttributes += "url=rtsp://" + requestSocket.getLocalAddress().getHostAddress() + ":" + requestSocket.getLocalPort() + "/trackID=" + 0 + ";seq=0,";
+        if (requestSession.trackExists(1))
+            requestAttributes += "url=rtsp://" + requestSocket.getLocalAddress().getHostAddress() + ":" + requestSocket.getLocalPort() + "/trackID=" + 1 + ";seq=0,";
+        requestAttributes = requestAttributes.substring(0, requestAttributes.length() - 1) + "\r\nSession: 1185d20035702ca\r\n";
+
+        response.attributes = requestAttributes;
+
+        // If no exception has been thrown, we reply with OK
+        response.status = RtspResponse.STATUS_OK;
+
+        return response;
+    }
+
+    /*
+        REDIRECT
+
+        A REDIRECT request informs the client that it must connect to another server location. It contains the mandatory header Location,
+        which indicates that the client should issue requests for that URL. It may contain the parameter Range, which indicates when the redirection takes effect.
+        If the client wants to continue to send or receive media for this URI, the client MUST issue a TEARDOWN request for the current session and a SETUP for the
+        new session at the designated host.
+
+        S->C: REDIRECT rtsp://example.com/media.mp4 RTSP/1.0
+            CSeq: 11
+            Location: rtsp://bigserver.com:8001
+            Range: clock=19960213T143205Z-
+    */
+    private RtspResponse REDIRECT() {
+        RtspResponse response = new RtspResponse();
+        response.status = RtspResponse.STATUS_OK;
+        return response;
+    }
+
+    /*
+        ANNOUNCE
+
+        The ANNOUNCE method serves two purposes:
+        When sent from client to server, ANNOUNCE posts the description of a presentation or media object identified by the request URL to a server. When sent from server to client, ANNOUNCE updates the session description in real-time. If a new media stream is added to a presentation (e.g., during a live presentation), the whole presentation description should be sent again, rather than just the additional components, so that components can be deleted.
+
+        C->S: ANNOUNCE rtsp://example.com/media.mp4 RTSP/1.0
+            CSeq: 7
+            Date: 23 Jan 1997 15:35:06 GMT
+            Session: 12345678
+            Content-Type: application/sdp
+            Content-Length: 332
+
+            v=0
+            o=mhandley 2890844526 2890845468 IN IP4 126.16.64.4
+            s=SDP Seminar
+                    i=A Seminar on the session description protocol
+            u=http://www.cs.ucl.ac.uk/staff/M.Handley/sdp.03.ps
+            e=mjh@isi.edu (Mark Handley)
+                    c=IN IP4 224.2.17.12/127
+            t=2873397496 2873404696
+            a=recvonly
+            m=audio 3456 RTP/AVP 0
+            m=video 2232 RTP/AVP 31
+
+        S->C: RTSP/1.0 200 OK
+            CSeq: 7
+    */
+    private RtspResponse ANNOUNCE() {
+        RtspResponse response = new RtspResponse();
+        response.status = RtspResponse.STATUS_OK;
+        return response;
+    }
+
+    private RtspResponse TEARDOWN() {
+        RtspResponse response = new RtspResponse();
+        response.status = RtspResponse.STATUS_OK;
+        return response;
+    }
+
+    private RtspResponse PAUSE() {
+        RtspResponse response = new RtspResponse();
+        response.status = RtspResponse.STATUS_OK;
+        return response;
     }
 
     @Override

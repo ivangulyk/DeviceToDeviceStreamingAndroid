@@ -7,9 +7,8 @@ import android.media.MediaCodec;
 import android.media.MediaRecorder;
 import android.util.Log;
 
-import java.nio.Buffer;
+import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.security.spec.ECField;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,26 +20,24 @@ public class AudioDispatcher implements Runnable {
     private static Thread mThread;
     private static AudioDispatcher mInstance;
 
-    private final int mSamplingRate;
+    private static final int SAMPLING_RATE = 8000;
+    private final VideoQuality mQuality = new VideoQuality(640,480,15,5000);
 
     private final int mBufferSize;
 
     private final AudioRecord mAudioRecord;
-    private final Map<MediaCodec, ByteBuffer[]> mMediaCodecsBuffersMap;
-    private final Map<MediaCodec, Integer> mMediaCodecsCountersMap;
+    private final Map<MediaCodec, ByteBuffer[]> mMediaCodecsBuffersMap = new HashMap<>();
+    private final Map<MediaCodec, Integer> mMediaCodecsCountersMap = new HashMap<>();
 
     @SuppressLint("NewApi")
-    private AudioDispatcher(int samplingRate, MediaCodec mediaCodec) {
-        this.mSamplingRate = samplingRate;
-        this.mBufferSize = AudioRecord.getMinBufferSize(mSamplingRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)*2;
-        this.mAudioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC, mSamplingRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, mBufferSize);
+    private AudioDispatcher() throws IOException {
+        this.mBufferSize = AudioRecord.getMinBufferSize(SAMPLING_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)*2;
+        this.mAudioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC, SAMPLING_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, mBufferSize);
 
         if(this.mAudioRecord.getState() != AudioRecord.STATE_INITIALIZED) {
             Log.e(TAG,"An error occurred with the AudioRecord API while initialization!");
         }
 
-        this.mMediaCodecsBuffersMap = new HashMap<>();
-        this.mMediaCodecsCountersMap = new HashMap<>();
 
 
         mAudioRecord.startRecording();
@@ -55,19 +52,18 @@ public class AudioDispatcher implements Runnable {
         return mInstance != null;
     }
 
-    public static void start(int samplingRate, MediaCodec mediaCodec) {
+    public static AudioDispatcher start() throws IOException {
         if(mInstance == null) {
-            mInstance = new AudioDispatcher(samplingRate, mediaCodec);
+            mInstance = new AudioDispatcher();
             mThread = new Thread(mInstance);
             mThread.start();
             Log.e(TAG,"Thread started!");
         }
+        return mInstance;
     }
 
-    public static void subscribe(MediaCodec mediaCodec) {
-        if(mInstance != null) {
-            mInstance.addInternalMediaCodec(mediaCodec);
-        }
+    public static void subscribe(MediaCodec mediaCodec) throws IOException {
+            AudioDispatcher.start().addInternalMediaCodec(mediaCodec);
     }
 
     public static void unsuscribe(MediaCodec mediaCodec) {
