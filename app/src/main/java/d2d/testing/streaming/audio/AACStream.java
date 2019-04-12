@@ -210,7 +210,7 @@ public class AACStream extends AudioStream {
 		if(!AudioDispatcher.isRunning()) {
 			AudioDispatcher.start(mQuality.samplingRate, mMediaCodec);
 		} else {
-			AudioDispatcher.addMediaCodec(mMediaCodec);
+			AudioDispatcher.subscribe(mMediaCodec);
 		}
 
 		// The packetizer encapsulates this stream in an RTP stream and send it over the network
@@ -226,12 +226,7 @@ public class AACStream extends AudioStream {
 		if (mStreaming) {
 			if (mMode==MODE_MEDIACODEC_API) {
 				Log.d(TAG, "Interrupting threads...");
-				//mThread.interrupt();
-
-				//todo controlar que no se cierre si lo esta usando otra aplicacion
-				//mAudioRecord.stop();
-				//mAudioRecord.release();
-				//mAudioRecord = null;
+				AudioDispatcher.unsuscribe(mMediaCodec);
 			}
 			super.stop();
 		}
