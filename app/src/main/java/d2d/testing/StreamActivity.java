@@ -1,9 +1,7 @@
 package d2d.testing;
 
-import android.content.Intent;
-import android.content.SharedPreferences;
+
 import android.content.pm.ActivityInfo;
-import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.WindowManager;
@@ -11,12 +9,10 @@ import android.view.WindowManager;
 import java.io.IOException;
 
 import d2d.testing.helpers.Logger;
-import d2d.testing.net.threads.selectors.ClientSelector;
 import d2d.testing.net.threads.selectors.RTSPServerSelector;
-import d2d.testing.streaming.Session;
 import d2d.testing.streaming.SessionBuilder;
 import d2d.testing.streaming.gl.SurfaceView;
-import d2d.testing.streaming.rtsp.RtspServer;
+
 
 public class StreamActivity extends AppCompatActivity {
 
@@ -42,7 +38,6 @@ public class StreamActivity extends AppCompatActivity {
                 .setContext(getApplicationContext())
                 .setAudioEncoder(SessionBuilder.AUDIO_AAC)
                 .setVideoEncoder(SessionBuilder.VIDEO_H264);
-                //.build();
 
         // Starts the RTSP server
         //this.startService(new Intent(this,RtspServer.class));

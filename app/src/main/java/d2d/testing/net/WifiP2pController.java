@@ -13,6 +13,7 @@ import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Build;
 import android.os.Looper;
 import android.support.annotation.RequiresApi;
+import android.util.Log;
 import android.widget.Toast;
 
 import java.io.IOException;
@@ -186,6 +187,8 @@ public class WifiP2pController {
                 {
                     //TODO somos el owner y ya tenemos el thread comprobar el estado de bind, conexion y seguir si no hay error
                 }
+                Toast.makeText(mContext,"You are Group Owner", Toast.LENGTH_SHORT).show();
+                Log.i("**** IP de owner:", "mi ip es: "+ groupOwnerAddress.toString());
             } else if (info.groupFormed) {
                 // The other device acts as the peer (client). In this case,
                 // you'll want to create a peer thread that connects

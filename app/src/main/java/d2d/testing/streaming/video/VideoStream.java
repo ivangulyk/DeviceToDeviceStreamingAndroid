@@ -318,7 +318,7 @@ public abstract class VideoStream extends MediaStream {
 	 * Stops the preview.
 	 */
 	public synchronized void stopPreview() {
-		mCameraOpenedManually = false;
+		mCameraOpenedManually = true;
 		stop();
 	}
 
