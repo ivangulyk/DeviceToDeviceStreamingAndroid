@@ -14,14 +14,13 @@ import java.util.Map;
 
 import d2d.testing.helpers.Logger;
 
-public class AudioDispatcher implements Runnable {
+public class AudioMediaCodecDispatcher implements Runnable {
 
-    private static String TAG = "AudioDispatcher";
+    private static String TAG = "AudioMediaCodecDispatcher";
     private static Thread mThread;
-    private static AudioDispatcher mInstance;
+    private static AudioMediaCodecDispatcher mInstance;
 
     private static final int SAMPLING_RATE = 8000;
-    private final VideoQuality mQuality = new VideoQuality(640,480,15,5000);
 
     private final int mBufferSize;
 
@@ -30,15 +29,13 @@ public class AudioDispatcher implements Runnable {
     private final Map<MediaCodec, Integer> mMediaCodecsCountersMap = new HashMap<>();
 
     @SuppressLint("NewApi")
-    private AudioDispatcher() throws IOException {
+    private AudioMediaCodecDispatcher() throws IOException {
         this.mBufferSize = AudioRecord.getMinBufferSize(SAMPLING_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)*2;
         this.mAudioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC, SAMPLING_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, mBufferSize);
 
         if(this.mAudioRecord.getState() != AudioRecord.STATE_INITIALIZED) {
             Log.e(TAG,"An error occurred with the AudioRecord API while initialization!");
         }
-
-
 
         mAudioRecord.startRecording();
         if(mAudioRecord.getRecordingState() != AudioRecord.RECORDSTATE_RECORDING) {
@@ -52,9 +49,9 @@ public class AudioDispatcher implements Runnable {
         return mInstance != null;
     }
 
-    public static AudioDispatcher start() throws IOException {
+    public static AudioMediaCodecDispatcher start() throws IOException {
         if(mInstance == null) {
-            mInstance = new AudioDispatcher();
+            mInstance = new AudioMediaCodecDispatcher();
             mThread = new Thread(mInstance);
             mThread.start();
             Log.e(TAG,"Thread started!");
@@ -63,10 +60,10 @@ public class AudioDispatcher implements Runnable {
     }
 
     public static void subscribe(MediaCodec mediaCodec) throws IOException {
-            AudioDispatcher.start().addInternalMediaCodec(mediaCodec);
+            start().addInternalMediaCodec(mediaCodec);
     }
 
-    public static void unsuscribe(MediaCodec mediaCodec) {
+    public static void unsubscribe(MediaCodec mediaCodec) {
         if(mInstance != null) {
             mInstance.removeInternalMediaCodec(mediaCodec);
         }

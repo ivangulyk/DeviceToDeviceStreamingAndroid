@@ -207,7 +207,7 @@ public class AACStream extends AudioStream {
 
 		final MediaCodecInputStream inputStream = new MediaCodecInputStream(mMediaCodec);
 
-		AudioDispatcher.subscribe(mMediaCodec);
+		AudioMediaCodecDispatcher.subscribe(mMediaCodec);
 
 		// The packetizer encapsulates this stream in an RTP stream and send it over the network
 		mPacketizer.setInputStream(inputStream);
@@ -222,7 +222,7 @@ public class AACStream extends AudioStream {
 		if (mStreaming) {
 			if (mMode==MODE_MEDIACODEC_API) {
 				Log.d(TAG, "Interrupting threads...");
-				AudioDispatcher.unsuscribe(mMediaCodec);
+				AudioMediaCodecDispatcher.unsubscribe(mMediaCodec);
 			}
 			super.stop();
 		}
