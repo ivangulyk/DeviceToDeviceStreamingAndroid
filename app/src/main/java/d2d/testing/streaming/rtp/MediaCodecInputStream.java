@@ -33,13 +33,12 @@ import android.util.Log;
  * libstreaming with the new MediaCodec API. This class is not thread safe !  
  */
 @SuppressLint("NewApi")
-public class MediaCodecInputStream extends InputStream {
+public class MediaCodecInputStream extends BufferInfoInputStream {
 
 	public final String TAG = "MediaCodecInputStream"; 
 
-	private MediaCodec mMediaCodec = null;
-	private BufferInfo mBufferInfo = new BufferInfo();
-	private ByteBuffer[] mBuffers = null;
+	private MediaCodec mMediaCodec;
+	private ByteBuffer[] mBuffers;
 	private ByteBuffer mBuffer = null;
 	private int mIndex = -1;
 	private int mCounter = 0;
@@ -58,7 +57,7 @@ public class MediaCodecInputStream extends InputStream {
 	}
 
 	@Override
-	public int read() throws IOException {
+	public int read() {
 		return 0;
 	}
 
@@ -115,9 +114,4 @@ public class MediaCodecInputStream extends InputStream {
 		else 
 			return 0;
 	}
-
-	public BufferInfo getLastBufferInfo() {
-		return mBufferInfo;
-	}
-
 }

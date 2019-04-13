@@ -21,7 +21,6 @@ package d2d.testing.streaming.rtp;
 import java.io.IOException;
 import android.annotation.SuppressLint;
 import android.media.MediaCodec.BufferInfo;
-import android.os.SystemClock;
 import android.util.Log;
 
 /**
@@ -83,8 +82,7 @@ public class AACLATMPacketizer extends AbstractPacketizer implements Runnable {
 				length = is.read(buffer, rtphl+4, MAXPACKETSIZE-(rtphl+4));
 				
 				if (length>0) {
-					
-					bufferInfo = ((MediaCodecInputStream)is).getLastBufferInfo();
+					bufferInfo = ((BufferInfoInputStream) is).getLastBufferInfo();
 					//Log.d(TAG,"length: "+length+" ts: "+bufferInfo.presentationTimeUs);
 					oldts = ts;
 					ts = bufferInfo.presentationTimeUs*1000;
