@@ -21,6 +21,7 @@ package d2d.testing.streaming;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import d2d.testing.streaming.audio.AudioQuality;
 import d2d.testing.streaming.audio.AudioStream;
@@ -36,6 +37,8 @@ import android.hardware.Camera.CameraInfo;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
+
+import static java.util.UUID.*;
 
 /**
  * You should instantiate this class with the {@link SessionBuilder}.<br />
@@ -102,6 +105,7 @@ public class Session {
 	private String mDestination;
 	private int mTimeToLive = 64;
 	private long mTimestamp;
+	public final String mSessionID;
 
 	private AudioStream mAudioStream = null;
 	private VideoStream mVideoStream = null;
@@ -124,6 +128,7 @@ public class Session {
 		mMainHandler = new Handler(Looper.getMainLooper());
 		mTimestamp = (uptime/1000)<<32 & (((uptime-((uptime/1000)*1000))>>32)/1000); // NTP timestamp
 		mOrigin = "127.0.0.1";
+		mSessionID = randomUUID().toString();
 	}
 
 	/**
@@ -334,6 +339,10 @@ public class Session {
 			sessionDescription.append("a=control:trackID="+1+"\r\n");
 		}			
 		return sessionDescription.toString();
+	}
+
+	public String getSessionID() {
+		return mSessionID;
 	}
 
 	/** Returns the destination set with {@link #setDestination(String)}. */

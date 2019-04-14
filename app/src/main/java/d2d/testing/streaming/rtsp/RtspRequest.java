@@ -1,5 +1,6 @@
 package d2d.testing.streaming.rtsp;
 
+import android.annotation.SuppressLint;
 import android.util.Log;
 
 import java.io.BufferedReader;
@@ -21,10 +22,12 @@ public class RtspRequest {
 
     public String method;
     public String uri;
+    public String body;
     public Map<String,String> headers = new HashMap<>();
 
     /** Parse the method, uri & headers of a RTSP request */
     public static RtspRequest parseRequest(BufferedReader input) throws IOException, IllegalStateException, SocketException {
+        boolean headerEnded = false;
         RtspRequest request = new RtspRequest();
         String line;
         Matcher matcher;
@@ -37,12 +40,12 @@ public class RtspRequest {
         request.uri = matcher.group(2);
 
         // Parsing headers of the request
-        while ( (line = input.readLine()) != null && line.length()>3 ) {
-            matcher = rexegHeader.matcher(line);
-            matcher.find();
-            request.headers.put(matcher.group(1).toLowerCase(Locale.US),matcher.group(2));
+        while ( (line = input.readLine()) != null && line.length()>3 && (matcher = rexegHeader.matcher(line)).find()) {
+            request.headers.put(matcher.group(1).toLowerCase(Locale.US), matcher.group(2));
         }
-        if (line==null) throw new SocketException("Client disconnected");
+        while ((line = input.readLine()) != null) {
+            request.body += line;
+        }
 
         // It's not an error, it's just easier to follow what's happening in logcat with the request in red
         Log.e(LOG_TAG,request.method+" "+request.uri);

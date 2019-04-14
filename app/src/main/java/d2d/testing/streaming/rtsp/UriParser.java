@@ -108,7 +108,7 @@ public class UriParser {
 				// MULTICAST -> the stream will be sent to a multicast group
 				// The default mutlicast address is 228.5.6.7, but the client can specify another
 				else if (paramName.equalsIgnoreCase("multicast")) {
-					if (paramValue!=null) {
+					if (paramValue!=null && !paramValue.isEmpty()) {
 						try {
 							InetAddress addr = InetAddress.getByName(paramValue);
 							if (!addr.isMulticastAddress()) {

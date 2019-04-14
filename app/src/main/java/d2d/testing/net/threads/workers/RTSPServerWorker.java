@@ -1,6 +1,7 @@
 package d2d.testing.net.threads.workers;
 
 import android.util.Base64;
+import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -20,6 +21,7 @@ import d2d.testing.net.handlers.StreamHandler;
 import d2d.testing.net.packets.DataPacket;
 import d2d.testing.net.packets.DataReceived;
 import d2d.testing.net.threads.selectors.AbstractSelector;
+import d2d.testing.streaming.ServerSession;
 import d2d.testing.streaming.Session;
 import d2d.testing.streaming.rtsp.RtspRequest;
 import d2d.testing.streaming.rtsp.RtspResponse;
@@ -27,6 +29,7 @@ import d2d.testing.streaming.rtsp.UriParser;
 
 public class RTSPServerWorker extends AbstractWorker {
 
+    private static final String TAG = "RTSPServerWorker";
     // RTSP Server Name
     public static String SERVER_NAME = "D2D RTSP Server";
 
@@ -36,6 +39,7 @@ public class RTSPServerWorker extends AbstractWorker {
     public static final Pattern rexegHeader = Pattern.compile("(\\S+):(.+)",Pattern.CASE_INSENSITIVE);
 
     protected HashMap<SelectableChannel, Session> mSessions = new HashMap<>();
+    protected HashMap<SelectableChannel, ServerSession> mServerSessions = new HashMap<>();
 
     private StreamHandler mStream = null;
 
@@ -51,6 +55,7 @@ public class RTSPServerWorker extends AbstractWorker {
 
     public RtspResponse processRequest(RtspRequest request, SelectableChannel channel) throws IllegalStateException, IOException {
         Session requestSession = mSessions.get(channel);
+        ServerSession serverSession = mServerSessions.get(channel);
         RtspResponse response = new RtspResponse(request);
 
 
@@ -68,17 +73,19 @@ public class RTSPServerWorker extends AbstractWorker {
                     response.attributes = "Public: DESCRIBE,SETUP,TEARDOWN,PLAY,PAUSE\r\n";
                     break;
                 case "DESCRIBE":
-                    return DESCRIBE(request, (SocketChannel) channel);
+                    return DESCRIBE(request, channel);
                 case "SETUP":
                     return SETUP(request, requestSession);
                 case "TEARDOWN":
                     return TEARDOWN();
                 case "ANNOUNCE":
-                    return ANNOUNCE();
+                    return ANNOUNCE(request, channel);
                 case "REDIRECT":
                     return REDIRECT();
                 case "PLAY":
-                    return PLAY(((SocketChannel) channel).socket(),requestSession);
+                    return PLAY(requestSession, channel);
+                case "RECORD":
+                    return RECORD(serverSession, channel);
                 case "PAUSE":
                     return PAUSE();
                 default:
@@ -90,16 +97,38 @@ public class RTSPServerWorker extends AbstractWorker {
 
     }
 
-    private RtspResponse DESCRIBE(RtspRequest request, SocketChannel channel) throws IOException {
+    /*
+    todo record para sesiones que recibimos, es similar al PLAY
+RECORD rtsp://192.169.6.151:1935/live/android_test RTSP/1.0
+Range: npt=0.000-
+CSeq: 4
+Content-Length: 0
+Session: 902878796
+Authorization: Digest username="User1",realm="Streaming Server",nonce="9d9e1266ebfe1e5d8f48432af4b97669",uri="rtsp://192.169.6.151:1935/live/android_test",response="93271d1b62097f92d85b34f65cdd89af"
+
+RTSP/1.0 200 OK
+CSeq: 4
+Server: Wowza Streaming Engine 4.4.0 build17748
+Cache-Control: no-cache
+Range: npt=now-
+Session: 902878796;timeout=60
+     */
+    private RtspResponse RECORD(ServerSession serverSession, SelectableChannel channel) {
+        RtspResponse response = new RtspResponse();
+        return response;
+    }
+
+    private RtspResponse DESCRIBE(RtspRequest request, SelectableChannel channel) throws IOException {
         RtspResponse response = new RtspResponse();
         // Parse the requested URI and configure the session
-        Session requestSession = handleRequest(request.uri, channel.socket());
+        Session requestSession = handleRequest(request.uri, ((SocketChannel) channel).socket());
         mSessions.put(channel, requestSession);
         requestSession.syncConfigure();
 
         String requestContent = requestSession.getSessionDescription();
         String requestAttributes =
-                "Content-Base: " + channel.socket().getLocalAddress().getHostAddress() + ":" + channel.socket().getLocalPort() + "/\r\n" +
+                "Content-Base: " + (((SocketChannel) channel).socket()).getLocalAddress().getHostAddress()
+                        + ":" + ((SocketChannel) channel).socket().getLocalPort() + "/\r\n" +
                         "Content-Type: application/sdp\r\n";
 
         response.attributes = requestAttributes;
@@ -111,12 +140,69 @@ public class RTSPServerWorker extends AbstractWorker {
         return response;
     }
 
+    /*
+    ANNOUNCE
+
+    The ANNOUNCE method serves two purposes:
+    When sent from client to server, ANNOUNCE posts the description of a presentation or media object identified by the request URL to a server. When sent from server to client, ANNOUNCE updates the session description in real-time. If a new media stream is added to a presentation (e.g., during a live presentation), the whole presentation description should be sent again, rather than just the additional components, so that components can be deleted.
+
+    C->S: ANNOUNCE rtsp://example.com/media.mp4 RTSP/1.0
+        CSeq: 7
+        Date: 23 Jan 1997 15:35:06 GMT
+        Session: 12345678
+        Content-Type: application/sdp
+        Content-Length: 332
+
+        v=0
+        o=mhandley 2890844526 2890845468 IN IP4 126.16.64.4
+        s=SDP Seminar
+                i=A Seminar on the session description protocol
+        u=http://www.cs.ucl.ac.uk/staff/M.Handley/sdp.03.ps
+        e=mjh@isi.edu (Mark Handley)
+                c=IN IP4 224.2.17.12/127
+        t=2873397496 2873404696
+        a=recvonly
+        m=audio 3456 RTP/AVP 0
+        m=video 2232 RTP/AVP 31
+
+    S->C: RTSP/1.0 200 OK
+        CSeq: 7
+*/
+    private RtspResponse ANNOUNCE(RtspRequest request, SelectableChannel channel) throws IOException {
+        RtspResponse response = new RtspResponse();
+        // Parse the requested URI and configure the session
+        //Session requestSession = handleRequest(request.uri, ((SocketChannel) channel).socket());
+        //mSessions.put(channel, requestSession);
+
+        //todo cambios en la session, es de modo recibir y no enviar...
+        //ponerle el origen
+        ServerSession requestSession = new ServerSession();
+
+        // local IP + PORT
+        String baseUrl = (((SocketChannel) channel).socket()).getLocalAddress().getHostAddress()
+                + ":" + ((SocketChannel) channel).socket().getLocalPort();
+        String requestAttributes = "Content-Base: " + baseUrl + "/\r\n" +
+                                    "Content-Type: application/sdp\r\n" +
+                                    "Session: " + requestSession.getSessionID() + ";timeout=60\r\n";
+
+        response.attributes = requestAttributes;
+
+        // If no exception has been thrown, we reply with OK
+        response.status = RtspResponse.STATUS_OK;
+        return response;
+    }
+
     private RtspResponse SETUP(RtspRequest request, Session requestSession) throws IOException {
         RtspResponse response = new RtspResponse();
         Pattern p;
         Matcher m;
         int p2, p1, ssrc, trackId, src[];
         String destination;
+
+        if (requestSession== null) {
+            response.status = RtspResponse.STATUS_BAD_REQUEST;
+            return response;
+        }
 
         p = Pattern.compile("trackID=(\\w+)", Pattern.CASE_INSENSITIVE);
         m = p.matcher(request.uri);
@@ -163,7 +249,7 @@ public class RTSPServerWorker extends AbstractWorker {
                 ";server_port=" + src[0] + "-" + src[1] +
                 ";ssrc=" + Integer.toHexString(ssrc) +
                 ";mode=play\r\n" +
-                "Session: " + "1185d20035702ca" + "\r\n" +
+                "Session: " + requestSession.getSessionID() + "\r\n" +
                 "Cache-Control: no-cache\r\n";
         response.status = RtspResponse.STATUS_OK;
 
@@ -173,16 +259,40 @@ public class RTSPServerWorker extends AbstractWorker {
         return response;
     }
 
-    private RtspResponse PLAY(Socket requestSocket, Session requestSession) {
+    /* todo setup para las sessiones de recibir
+SETUP rtsp://192.169.6.151:1935/live/android_test/trackID=1 RTSP/1.0
+Transport: RTP/AVP/UDP;unicast;client_port=5002-5003;mode=receive
+CSeq: 3
+Content-Length: 0
+Session: 902878796
+Authorization: Digest username="User1",realm="Streaming Server",nonce="9d9e1266ebfe1e5d8f48432af4b97669",uri="rtsp://192.169.6.151:1935/live/android_test",response="93271d1b62097f92d85b34f65cdd89af"
+
+RTSP/1.0 200 OK
+CSeq: 3
+Server: Wowza Streaming Engine 4.4.0 build17748
+Cache-Control: no-cache
+Expires: Fri, 4 Mar 2016 11:31:22 IST
+Transport: RTP/AVP/UDP;unicast;client_port=5002-5003;mode=receive;source=192.169.6.151;server_port=6974-6975
+Date: Fri, 4 Mar 2016 11:31:22 IST
+Session: 902878796;timeout=60
+    * */
+    private RtspResponse SETUP_SERVER(RtspRequest request, ServerSession requestSession) throws IOException {
         RtspResponse response = new RtspResponse();
+        return response;
+    }
+
+    private RtspResponse PLAY(Session requestSession, SelectableChannel channel) {
+        RtspResponse response = new RtspResponse();
+        Socket requestSocket = ((SocketChannel) channel).socket();
+        String url = requestSocket.getLocalAddress().getHostAddress() + ":" + requestSocket.getLocalPort();
+
         String requestAttributes = "RTP-Info: ";
         if (requestSession.trackExists(0))
-            requestAttributes += "url=rtsp://" + requestSocket.getLocalAddress().getHostAddress() + ":" + requestSocket.getLocalPort() + "/trackID=" + 0 + ";seq=0,";
+            requestAttributes += "url=rtsp://" + url + "/trackID=" + 0 + ";seq=0,";
         if (requestSession.trackExists(1))
-            requestAttributes += "url=rtsp://" + requestSocket.getLocalAddress().getHostAddress() + ":" + requestSocket.getLocalPort() + "/trackID=" + 1 + ";seq=0,";
-        requestAttributes = requestAttributes.substring(0, requestAttributes.length() - 1) + "\r\nSession: 1185d20035702ca\r\n";
-
-        response.attributes = requestAttributes;
+            requestAttributes += "url=rtsp://" + url + "/trackID=" + 1 + ";seq=0,";
+        response.attributes = requestAttributes.substring(0, requestAttributes.length() - 1)
+                            + "\r\nSession: " + requestSession.getSessionID() +"\r\n";
 
         // If no exception has been thrown, we reply with OK
         response.status = RtspResponse.STATUS_OK;
@@ -204,40 +314,6 @@ public class RTSPServerWorker extends AbstractWorker {
             Range: clock=19960213T143205Z-
     */
     private RtspResponse REDIRECT() {
-        RtspResponse response = new RtspResponse();
-        response.status = RtspResponse.STATUS_OK;
-        return response;
-    }
-
-    /*
-        ANNOUNCE
-
-        The ANNOUNCE method serves two purposes:
-        When sent from client to server, ANNOUNCE posts the description of a presentation or media object identified by the request URL to a server. When sent from server to client, ANNOUNCE updates the session description in real-time. If a new media stream is added to a presentation (e.g., during a live presentation), the whole presentation description should be sent again, rather than just the additional components, so that components can be deleted.
-
-        C->S: ANNOUNCE rtsp://example.com/media.mp4 RTSP/1.0
-            CSeq: 7
-            Date: 23 Jan 1997 15:35:06 GMT
-            Session: 12345678
-            Content-Type: application/sdp
-            Content-Length: 332
-
-            v=0
-            o=mhandley 2890844526 2890845468 IN IP4 126.16.64.4
-            s=SDP Seminar
-                    i=A Seminar on the session description protocol
-            u=http://www.cs.ucl.ac.uk/staff/M.Handley/sdp.03.ps
-            e=mjh@isi.edu (Mark Handley)
-                    c=IN IP4 224.2.17.12/127
-            t=2873397496 2873404696
-            a=recvonly
-            m=audio 3456 RTP/AVP 0
-            m=video 2232 RTP/AVP 31
-
-        S->C: RTSP/1.0 200 OK
-            CSeq: 7
-    */
-    private RtspResponse ANNOUNCE() {
         RtspResponse response = new RtspResponse();
         response.status = RtspResponse.STATUS_OK;
         return response;
@@ -342,9 +418,10 @@ public class RTSPServerWorker extends AbstractWorker {
      */
     protected Session handleRequest(String uri, Socket client) throws IllegalStateException, IOException {
         Session session = UriParser.parse(uri);
-        Logger.d("handlerequest: socket addr" + client.getInetAddress().getHostAddress());
-        session.setOrigin(client.getInetAddress().getHostAddress());
+        Log.d(TAG,"handlerequest: Origin" + client.getLocalAddress().getHostAddress());
+        session.setOrigin(client.getLocalAddress().getHostAddress());
         if (session.getDestination()==null) {
+            Log.d(TAG,"handlerequest: Destination" + client.getInetAddress().getHostAddress());
             session.setDestination(client.getInetAddress().getHostAddress());
         }
         return session;
