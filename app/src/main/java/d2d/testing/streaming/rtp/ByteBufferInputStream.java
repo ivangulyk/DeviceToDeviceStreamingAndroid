@@ -17,7 +17,6 @@ public class ByteBufferInputStream extends BufferInfoInputStream {
     private static final String TAG = "ByteBufferInputStream";
 
     LinkedList<ByteBufferInfo> mByteBufferInfos = new LinkedList<>();
-    Map<ByteBuffer, MediaCodec.BufferInfo> mByteBuffersMap = new HashMap<>();
     ByteBuffer mByteBuffer = null;
     private boolean mClosed = false;
 
@@ -25,13 +24,13 @@ public class ByteBufferInputStream extends BufferInfoInputStream {
         return 0;
     }
 
-    public int read(byte[] bytes, int off, int len) throws IOException {
+    public synchronized int read(byte[] bytes, int off, int len) throws IOException {
         int min = 0;
 
         try {
             while (!Thread.interrupted() && !mClosed && mByteBufferInfos.isEmpty() && mByteBuffer != null) {
                 try {
-                    Thread.sleep(50);
+                    wait();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -40,33 +39,23 @@ public class ByteBufferInputStream extends BufferInfoInputStream {
             if (mClosed)
                 throw new IOException("This InputStream was closed");
 
-            synchronized (mByteBufferInfos) {
-                if(mByteBuffer != null) {
-                    Log.v(TAG,"byteBuffer not null..!");
-                    if(mByteBuffer.hasRemaining()) {
-                        Log.v(TAG,"byteBuffer has remaining... reading...!");
-                        min = Math.min(len, mByteBuffer.remaining());
-                        mByteBuffer.get(bytes, off, min);
-                    }
-                    if(!mByteBuffer.hasRemaining()) {
-                        Log.v(TAG,"byteBuffer doesnt have remaining... nullifying...!");
-                        mByteBuffer = null;
-                    }
-                } else if(!mByteBufferInfos.isEmpty()) {
-                    Log.v(TAG,"mByteBufferInfos not empty..!");
+            if(mByteBuffer == null && !mByteBufferInfos.isEmpty()) {
+                Log.v(TAG,"mByteBufferInfos not empty...!");
 
-                    ByteBufferInfo byteBufferInfo = mByteBufferInfos.removeFirst();
-                    mByteBuffer = byteBufferInfo.getByteBuffer();
-                    mBufferInfo = byteBufferInfo.getBufferInfo();
-                    if(mByteBuffer.hasRemaining()) {
-                        Log.v(TAG,"byteBuffer has remaining... reading...!");
-                        min = Math.min(len, mByteBuffer.remaining());
-                        mByteBuffer.get(bytes, off, min);
-                    }
-                    if(!mByteBuffer.hasRemaining()) {
-                        Log.v(TAG,"byteBuffer doesnt have remaining... nullifying...!");
-                        mByteBuffer = null;
-                    }
+                ByteBufferInfo byteBufferInfo = mByteBufferInfos.removeFirst();
+                mByteBuffer = byteBufferInfo.getByteBuffer();
+                mBufferInfo = byteBufferInfo.getBufferInfo();
+            }
+
+            if(mByteBuffer != null){
+                if(mByteBuffer.hasRemaining()) {
+                    min = Math.min(len, mByteBuffer.remaining());
+                    Log.v(TAG,"byteBuffer has remaining..." + mByteBuffer.remaining() + " reading..." + min + "with offset" + off);
+                    mByteBuffer.get(bytes, off, min);
+                }
+                if(!mByteBuffer.hasRemaining()) {
+                    Log.v(TAG,"byteBuffer doesnt have remaining... nullifying...!");
+                    mByteBuffer = null;
                 }
             }
         } catch (RuntimeException e) {
@@ -76,40 +65,36 @@ public class ByteBufferInputStream extends BufferInfoInputStream {
         return min;
     }
 
-    public int available() {
+    public synchronized int available() {
         return mByteBuffer.remaining();
     }
 
-    public void addBufferInput(byte[] buffer, long presentationTime) {
-        synchronized (mByteBufferInfos) {
-            mByteBufferInfos.add(new ByteBufferInfo(ByteBuffer.wrap(buffer), presentationTime));
-
-            //mByteBuffersMap.put(byteBuffer, bufferInfo);
-            //mByteBuffer = byteBuffer;
-            //mBufferInfo = bufferInfo;
-        }
+    public synchronized void addBufferInput(byte[] buffer, long presentationTime) {
+        mByteBufferInfos.add(new ByteBufferInfo(ByteBuffer.wrap(buffer), presentationTime));
+        notifyAll();
+        //mByteBuffersMap.put(byteBuffer, bufferInfo);
+        //mByteBuffer = byteBuffer;
+        //mBufferInfo = bufferInfo;
     }
 
     @Override
-    public MediaCodec.BufferInfo getLastBufferInfo() {
-        synchronized (mByteBufferInfos) {
-            return mBufferInfo;
-        }
+    public synchronized MediaCodec.BufferInfo getLastBufferInfo() {
+        return mBufferInfo;
     }
 
     public class ByteBufferInfo {
         @SuppressLint("NewApi")
-        MediaCodec.BufferInfo mBufferInfo = new MediaCodec.BufferInfo();
+        MediaCodec.BufferInfo bufferInfo = new MediaCodec.BufferInfo();
         ByteBuffer mByteBuffer;
 
         @SuppressLint("NewApi")
         public ByteBufferInfo(ByteBuffer mByteBuffer, long presentationTime) {
-            this.mBufferInfo.presentationTimeUs = presentationTime;
+            this.bufferInfo.presentationTimeUs = presentationTime;
             this.mByteBuffer = mByteBuffer;
         }
 
         public MediaCodec.BufferInfo getBufferInfo() {
-            return mBufferInfo;
+            return this.bufferInfo;
         }
 
         public ByteBuffer getByteBuffer() {

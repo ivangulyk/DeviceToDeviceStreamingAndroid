@@ -172,13 +172,10 @@ public class AudioPacketizerDispatcher {
     class MediaCodecBufferReader implements Runnable {
         private String TAG = "MediaCodecBufferReader";
 
-        private MediaCodec.BufferInfo info;
-
         @SuppressLint("NewApi")
         @Override
         public void run() {
             byte[] buffer = new byte[mBufferSize];
-            long ts = 0;
             int read = 0;
             while (!Thread.interrupted()) {
                 try {
@@ -186,7 +183,7 @@ public class AudioPacketizerDispatcher {
                     Log.v(TAG, "readen from MediaCodecInputStream: " + read);
                     Log.v(TAG, "readen from MediaCodecInputStream: " + mMediaCodecInputStream.getLastBufferInfo().presentationTimeUs);
 
-                    if(read >= mBufferSize/5) {
+                    if(read > 0) {
                         Log.v(TAG, "readen from MediaCodecInputStream >= bufferSize: " + read);
                         synchronized (mPacketizersInputsMap) {
                             for(Map.Entry<AbstractPacketizer, InputStream> entry : mPacketizersInputsMap.entrySet()) {
@@ -194,7 +191,6 @@ public class AudioPacketizerDispatcher {
                                         .addBufferInput(Arrays.copyOfRange(buffer,0, read), mMediaCodecInputStream.getLastBufferInfo().presentationTimeUs);
                             }
                         }
-                        ts = mMediaCodecInputStream.getLastBufferInfo().presentationTimeUs;
                         read = 0;
                     }
                 } catch (IOException e) {
