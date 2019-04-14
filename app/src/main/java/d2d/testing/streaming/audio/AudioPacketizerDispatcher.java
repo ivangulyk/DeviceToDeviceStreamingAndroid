@@ -12,6 +12,7 @@ import android.util.Log;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,7 +28,7 @@ public class AudioPacketizerDispatcher {
     private static Thread mWriterThread;
     private static AudioPacketizerDispatcher mInstance;
 
-    private static final int SAMPLING_RATE = 8000;
+    private final int SAMPLING_RATE = 8000;
     private final VideoQuality mQuality = new VideoQuality(640,480,15,5000);
 
     private final int mBufferSize;
@@ -57,7 +58,6 @@ public class AudioPacketizerDispatcher {
 
         mMediaCodec = MediaCodec.createEncoderByType("audio/mp4a-latm");
         mMediaCodec.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
-        mMediaCodecsBuffers = mMediaCodec.getInputBuffers();
 
         mAudioRecord.startRecording();
         if(mAudioRecord.getRecordingState() != AudioRecord.RECORDSTATE_RECORDING) {
@@ -66,9 +66,11 @@ public class AudioPacketizerDispatcher {
 
         mMediaCodec.start();
         mMediaCodecInputStream = new MediaCodecInputStream(mMediaCodec);
-
+        mMediaCodecsBuffers = mMediaCodec.getInputBuffers();
         mReaderThread = new Thread(new AudioPacketizerDispatcher.MediaCodecBufferReader());
         mWriterThread = new Thread(new AudioPacketizerDispatcher.MediaCodecBufferWriter());
+        mReaderThread.start();
+        mWriterThread.start();
 
         Log.e(TAG,"Constructor finished");
     }
@@ -80,14 +82,13 @@ public class AudioPacketizerDispatcher {
     public static AudioPacketizerDispatcher start() throws IOException {
         if(mInstance == null) {
             mInstance = new AudioPacketizerDispatcher();
-            mReaderThread.start();
-            mWriterThread.start();
+
             Log.e(TAG,"Thread started!");
         }
         return mInstance;
     }
 
-    public static void stop() throws IOException {
+    public static void stop() {
         if(mInstance == null) {
             Log.e(TAG,"Stopping dispatcher...");
             mReaderThread.interrupt();
@@ -104,7 +105,7 @@ public class AudioPacketizerDispatcher {
             AudioPacketizerDispatcher.start().addInternalPacketizer(packetizer);
     }
 
-    public static void unsubscribe(AbstractPacketizer packetizer) throws IOException {
+    public static void unsubscribe(AbstractPacketizer packetizer) {
         if(mInstance != null) {
             mInstance.removeInternalMediaCodec(packetizer);
         }
@@ -117,14 +118,12 @@ public class AudioPacketizerDispatcher {
             packetizer.setInputStream(packetizerInput);
 
             mPacketizersInputsMap.put(packetizer, packetizerInput);
-
-            packetizer.start();
             Log.e(TAG,"Added internal packetizer to inputStreamMap!");
         }
     }
 
     @SuppressLint("NewApi")
-    private void removeInternalMediaCodec(AbstractPacketizer packetizer) throws IOException {
+    private void removeInternalMediaCodec(AbstractPacketizer packetizer){
         synchronized (mPacketizersInputsMap) {
             mPacketizersInputsMap.remove(packetizer);
             Log.e(TAG,"Removed internal media codec from map!");
@@ -137,23 +136,26 @@ public class AudioPacketizerDispatcher {
     }
 
     class MediaCodecBufferWriter implements Runnable {
+
+        private String TAG = "MediaCodecBufferWriter";
+
         @SuppressLint("NewApi")
         @Override
         public void run() {
-            int len = 0;
+            int len;
 
             while (!Thread.interrupted()) {
-                synchronized (mPacketizersInputsMap) {
-                    int bufferIndex = mMediaCodec.dequeueInputBuffer(10000);
-                    if (bufferIndex >= 0) {
-                        mMediaCodecsBuffers[bufferIndex].clear();
-                        len = mAudioRecord.read(mMediaCodecsBuffers[bufferIndex], mBufferSize);
+                int bufferIndex = mMediaCodec.dequeueInputBuffer(10000);
+                if (bufferIndex >= 0) {
+                    mMediaCodecsBuffers[bufferIndex].clear();
+                    len = mAudioRecord.read(mMediaCodecsBuffers[bufferIndex], mBufferSize);
 
-                        if (len == AudioRecord.ERROR_INVALID_OPERATION || len == AudioRecord.ERROR_BAD_VALUE) {
-                            Log.e(TAG, "An error occured with the AudioRecord API !");
-                        } else {
-                            mMediaCodec.queueInputBuffer(bufferIndex, 0, len, System.nanoTime() / 1000, 0);
-                        }
+                    if (len == AudioRecord.ERROR_INVALID_OPERATION || len == AudioRecord.ERROR_BAD_VALUE) {
+                        Log.e(TAG, "An error occurred with the AudioRecord API !");
+                    } else {
+                        Log.v(TAG, "pushing raw data to media encoder");
+                        mMediaCodec.queueInputBuffer(bufferIndex, 0, len, System.nanoTime() / 1000, 0);
+
                     }
                 }
             }
@@ -168,16 +170,32 @@ public class AudioPacketizerDispatcher {
     }
 
     class MediaCodecBufferReader implements Runnable {
+        private String TAG = "MediaCodecBufferReader";
+
+        private MediaCodec.BufferInfo info;
+
         @SuppressLint("NewApi")
         @Override
         public void run() {
+            byte[] buffer = new byte[mBufferSize];
+            long ts = 0;
+            int read = 0;
             while (!Thread.interrupted()) {
-                byte[] buffer = new byte[mBufferSize];
                 try {
-                    if(mMediaCodecInputStream.read(buffer) > 0) {
-                        for(Map.Entry<AbstractPacketizer, InputStream> entry : mPacketizersInputsMap.entrySet()) {
-                            ((ByteBufferInputStream) entry.getValue()).addBufferInput(buffer);
+                    read += mMediaCodecInputStream.read(buffer, read, mBufferSize - read);
+                    Log.v(TAG, "readen from MediaCodecInputStream: " + read);
+                    Log.v(TAG, "readen from MediaCodecInputStream: " + mMediaCodecInputStream.getLastBufferInfo().presentationTimeUs);
+
+                    if(read >= mBufferSize/5) {
+                        Log.v(TAG, "readen from MediaCodecInputStream >= bufferSize: " + read);
+                        synchronized (mPacketizersInputsMap) {
+                            for(Map.Entry<AbstractPacketizer, InputStream> entry : mPacketizersInputsMap.entrySet()) {
+                                ((ByteBufferInputStream) entry.getValue())
+                                        .addBufferInput(Arrays.copyOfRange(buffer,0, read), mMediaCodecInputStream.getLastBufferInfo().presentationTimeUs);
+                            }
                         }
+                        ts = mMediaCodecInputStream.getLastBufferInfo().presentationTimeUs;
+                        read = 0;
                     }
                 } catch (IOException e) {
                     e.printStackTrace();

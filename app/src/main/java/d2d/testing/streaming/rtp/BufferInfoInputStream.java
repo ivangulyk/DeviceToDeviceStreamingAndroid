@@ -10,8 +10,6 @@ public abstract class BufferInfoInputStream extends InputStream {
     protected BufferInfo mBufferInfo = new BufferInfo();
 
     public BufferInfo getLastBufferInfo() {
-        synchronized (this) {
-            return mBufferInfo;
-        }
+        return mBufferInfo;
     }
 }
