@@ -3,6 +3,7 @@ package d2d.testing.net.threads.selectors;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 
@@ -36,7 +37,7 @@ public class ClientSelector extends AbstractSelector {
     }
 
     @Override
-    protected void onClientDisconnected(SocketChannel socketChannel) {
+    protected void onClientDisconnected(SelectableChannel socketChannel) {
 
     }
 

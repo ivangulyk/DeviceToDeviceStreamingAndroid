@@ -2,6 +2,7 @@ package d2d.testing.net.threads.selectors;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
@@ -38,13 +39,13 @@ public class RTSPServerSelector extends ServerSelector {
     }
 
     @Override
-    protected void onClientDisconnected(SocketChannel socketChannel) {
-        ((RTSPServerWorker) mWorker).onClientDisconnected(socketChannel);
+    protected void onClientDisconnected(SelectableChannel socketChannel) {
+        ((RTSPServerWorker) mWorker).onClientDisconnected((SocketChannel) socketChannel);
     }
 
     @Override
     public void send(byte[] data) {
-        for (SocketChannel socket : mConnections) {
+        for (SelectableChannel socket : mConnections) {
             this.send(socket,data);
         }
     }

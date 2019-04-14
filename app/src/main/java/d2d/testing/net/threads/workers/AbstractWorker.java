@@ -20,7 +20,9 @@ public abstract class AbstractWorker implements Runnable {
     private Thread mThread;
     private boolean mEnabled;
 
-    protected abstract void processData(DataPacket dataPacket, AbstractSelector selector, SelectableChannel channel);
+    protected void processData(DataPacket dataPacket, AbstractSelector selector, SelectableChannel channel) {
+
+    }
 
     protected AbstractWorker() {
         mDataReceivedQueue = new LinkedList<>();
@@ -54,7 +56,7 @@ public abstract class AbstractWorker implements Runnable {
         }
     }
 
-    public void addData(AbstractSelector selectorThread, SocketChannel socket, byte[] data, int count) {
+    public void addData(AbstractSelector selectorThread, SelectableChannel socket, byte[] data, int count) {
         byte[] dataCopy = new byte[count];
         System.arraycopy(data, 0, dataCopy, 0, count);
         synchronized(mDataReceivedQueue) {

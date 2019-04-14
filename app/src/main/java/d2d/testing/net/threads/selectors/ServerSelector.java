@@ -2,6 +2,7 @@ package d2d.testing.net.threads.selectors;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
@@ -21,7 +22,7 @@ public class ServerSelector extends AbstractSelector {
     }
 
     @Override
-    protected void onClientDisconnected(SocketChannel socketChannel) {
+    protected void onClientDisconnected(SelectableChannel socketChannel) {
 
     }
 
@@ -42,7 +43,7 @@ public class ServerSelector extends AbstractSelector {
 
     @Override
     public void send(byte[] data) {
-        for (SocketChannel socket : mConnections) {
+        for (SelectableChannel socket : mConnections) {
             this.send(socket,data);
         }
     }

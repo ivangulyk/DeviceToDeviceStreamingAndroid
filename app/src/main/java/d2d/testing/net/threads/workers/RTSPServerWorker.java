@@ -121,6 +121,10 @@ Session: 902878796;timeout=60
     private RtspResponse DESCRIBE(RtspRequest request, SelectableChannel channel) throws IOException {
         RtspResponse response = new RtspResponse();
         // Parse the requested URI and configure the session
+
+        //todo hay que mirar en la uri si es /sessionID para REDIRIGIR LOS PUERTOS EN VEZ DE CREAR UN STREAM
+        //todo creamos una session differente RebroadCastSession
+
         Session requestSession = handleRequest(request.uri, ((SocketChannel) channel).socket());
         mSessions.put(channel, requestSession);
         requestSession.syncConfigure();
