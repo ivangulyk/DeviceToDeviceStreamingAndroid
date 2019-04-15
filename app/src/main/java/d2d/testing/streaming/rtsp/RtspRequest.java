@@ -22,6 +22,7 @@ public class RtspRequest {
 
     public String method;
     public String uri;
+    public String path;
     public String body;
     public Map<String,String> headers = new HashMap<>();
 

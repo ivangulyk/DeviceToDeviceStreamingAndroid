@@ -9,7 +9,6 @@ import java.io.StringReader;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketException;
-import java.nio.FloatBuffer;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SocketChannel;
 import java.util.HashMap;
@@ -37,6 +36,8 @@ public class RTSPServerWorker extends AbstractWorker {
 
     // Parse method & uri
     public static final Pattern regexMethod = Pattern.compile("(\\w+) (\\S+) RTSP",Pattern.CASE_INSENSITIVE);
+    // Parse the uri
+    public static final Pattern regexUrlMethod = Pattern.compile("rtsp://(\\S+)/(\\S+)",Pattern.CASE_INSENSITIVE);
     // Parse a request header
     public static final Pattern rexegHeader = Pattern.compile("(\\S+):(.+)",Pattern.CASE_INSENSITIVE);
 
@@ -135,29 +136,36 @@ Session: 902878796;timeout=60
         //todo hay que mirar en la uri si es /sessionID para REDIRIGIR LOS PUERTOS EN VEZ DE CREAR UN STREAM
         //todo creamos una session differente RebroadCastSession
 
+        // si no hay un path y no es el de nuestro stream es rebroadcast
+        if(!request.path.equals("") && !request.path.equals("live")) {
+            //if es una session para hacer play a un stream de rebroadcast entonces
 
-        //if es una session para hacer play a un stream de rebroadcast entonces
+            //Buscar la serverSession que corresponde al path
 
-        //RebroadcastSession session = new RebroadcastSession()
-        //session.setDestination()
-        //session.setSourceSession()
-        //mRebroadcastSessions.put(channel, session);
-        //
-        Session requestSession = handleRequest(request.uri, ((SocketChannel) channel).socket());
-        mSessions.put(channel, requestSession);
-        requestSession.syncConfigure();
+            //RebroadcastSession session = new RebroadcastSession()
+            //session.setDestination()
+            //session.setSourceSession()
+            //session.addServerSession()
+            //mRebroadcastSessions.put(channel, session);
 
-        String requestContent = requestSession.getSessionDescription();
-        String requestAttributes =
-                "Content-Base: " + (((SocketChannel) channel).socket()).getLocalAddress().getHostAddress()
-                        + ":" + ((SocketChannel) channel).socket().getLocalPort() + "/\r\n" +
-                        "Content-Type: application/sdp\r\n";
+            response.status = RtspResponse.STATUS_OK;
+        } else {
+            Session requestSession = handleRequest(request.uri, ((SocketChannel) channel).socket());
+            mSessions.put(channel, requestSession);
+            requestSession.syncConfigure();
 
-        response.attributes = requestAttributes;
-        response.content = requestContent;
+            String requestContent = requestSession.getSessionDescription();
+            String requestAttributes =
+                    "Content-Base: " + (((SocketChannel) channel).socket()).getLocalAddress().getHostAddress()
+                            + ":" + ((SocketChannel) channel).socket().getLocalPort() + "/\r\n" +
+                            "Content-Type: application/sdp\r\n";
 
-        // If no exception has been thrown, we reply with OK
-        response.status = RtspResponse.STATUS_OK;
+            response.attributes = requestAttributes;
+            response.content = requestContent;
+
+            // If no exception has been thrown, we reply with OK
+            response.status = RtspResponse.STATUS_OK;
+        }
 
         return response;
     }
@@ -491,6 +499,14 @@ Session: 902878796;timeout=60
             matcher.find();
             request.method = matcher.group(1);
             request.uri = matcher.group(2);
+
+            matcher = regexUrlMethod.matcher(request.uri);
+            if(matcher.find()) {
+                request.path = matcher.group(2);
+            } else {
+                request.path = "";
+            }
+            Log.d(TAG, "path: " + request.path);
 
             // Parsing headers of the request
             while ( (line = inputReader.readLine()) != null && line.length()>3 ) {
