@@ -356,7 +356,6 @@ Session: 902878796;timeout=60
         response.status = RtspResponse.STATUS_OK;
 
         return response;
-        return response;
     }
 
     private RtspResponse SETUP_REBROADCAST(RtspRequest request, RebroadcastSession session) throws IOException {
@@ -418,7 +417,6 @@ Session: 902878796;timeout=60
         // If no exception has been thrown, we reply with OK
         response.status = RtspResponse.STATUS_OK;
 
-        return response;
         return response;
     }
 
@@ -568,16 +566,33 @@ Session: 902878796;timeout=60
         return session;
     }
 
-    public void onClientDisconnected(SocketChannel socketChannel) {
-        //boolean streaming = isStreaming();
-        Session requestSession = mSessions.get(socketChannel);
-
-        if(requestSession != null) {
-            if (requestSession.isStreaming()) {
-                requestSession.syncStop();
+    /**
+     * Cerramos las sesiones asociadas al socket
+     * @param channel
+     */
+    public void onClientDisconnected(SelectableChannel channel) {
+        Session streamingSession = mSessions.get(channel);
+        if(streamingSession != null) {
+            if (streamingSession.isStreaming()) {
+                streamingSession.syncStop();
             }
 
-            requestSession.release();
+            streamingSession.release();
+            mSessions.remove(channel);
+        }
+
+        ServerSession serverSession = mServerSessions.get(channel);
+        if(serverSession != null) {
+            serverSession.stop();
+            serverSession.release();
+            mServerSessions.remove(channel);
+        }
+
+        RebroadcastSession rebroadcastSession = mRebroadcastSessions.get(channel);
+        if(rebroadcastSession != null) {
+            rebroadcastSession.stop();
+            rebroadcastSession.release();
+            mRebroadcastSessions.remove(channel);
         }
     }
 }

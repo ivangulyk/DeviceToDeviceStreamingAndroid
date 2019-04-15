@@ -39,8 +39,8 @@ public class RTSPServerSelector extends ServerSelector {
     }
 
     @Override
-    protected void onClientDisconnected(SelectableChannel socketChannel) {
-        ((RTSPServerWorker) mWorker).onClientDisconnected((SocketChannel) socketChannel);
+    protected void onClientDisconnected(SelectableChannel channel) {
+        ((RTSPServerWorker) mWorker).onClientDisconnected(channel);
     }
 
     @Override
