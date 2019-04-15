@@ -1,10 +1,8 @@
 package d2d.testing.streaming;
 
-import android.os.Handler;
 import android.os.HandlerThread;
-import android.os.Looper;
 
-import d2d.testing.net.threads.selectors.RTSPServerSelector;
+import java.io.IOException;
 import d2d.testing.streaming.video.VideoStream;
 
 import static java.util.UUID.randomUUID;
@@ -18,6 +16,7 @@ public class ServerSession {
     private int mTimeToLive = 64;
     private long mTimestamp;
     public final String mSessionID;
+
     private TrackInfo mVideoTrackInfo;
     private TrackInfo mAudioTrackInfo;
 
@@ -35,37 +34,6 @@ public class ServerSession {
         mOrigin = "127.0.0.1";
         mSessionID = randomUUID().toString();
     }
-
-    /** You probably don't need to use that directly, use the {@link SessionBuilder}.
-     * todo funcion para guardar informacion del streaming de audio recibida en el announce para reenviarla
-     * todo funcion para guardar informacion del streaming de audio del setup (puertos y demas)
-    void addAudioTrack(AudioStream track) {
-        removeAudioTrack();
-        mAudioStream = track;
-    }
-     */
-
-    /** You probably don't need to use that directly, use the {@link SessionBuilder}.
-     * * todo funcion para guardar informacion del streaming de video recibida en el announce para reenviarla
-     * todo funcion para guardar informacion del streaming de video del setup (puertos y demas)
-    void addVideoTrack(VideoStream track) {
-        removeVideoTrack();
-        mVideoStream = track;
-    }
-     */
-
-    /** Returns the underlying {@link AudioStream} used by the {@link Session}.
-     * todo getters para la informacion recibida del announce
-    public AudioStream getAudioTrack() {
-        return mAudioStream;
-    }
-     */
-
-    /** Returns the underlying {@link VideoStream} used by the {@link Session}.
-    public VideoStream getVideoTrack() {
-        return mVideoStream;
-    }
-     */
 
     /**
      * The origin address of the session.
@@ -132,31 +100,41 @@ public class ServerSession {
     /**
      * Asynchronously starts all streams of the session.
      **/
-    public void start() {
+    public void start() throws IOException {
+
+        if(trackExists(0)) {
+            mAudioTrackInfo.startServer();
+        }
+        if(trackExists(1)) {
+            mVideoTrackInfo.startServer();
+        }
 
         //....
     }
     /** Stops all existing streams. */
     public void stop() {
-
-
-        //........
+        if(trackExists(0)) {
+            mAudioTrackInfo.stopServer();
+        }
+        if(trackExists(1)) {
+            mVideoTrackInfo.stopServer();
+        }
     }
 
-
-    /** Deletes all existing tracks & release associated resources. */
-    public void release() {
-
-        //.........
-    }
-
-    /*
     public boolean trackExists(int id) {
         if (id==0)
-            return mAudioStream!=null;
+            return mAudioTrackInfo!=null;
         else
-            return mVideoStream!=null;
-    }*/
+            return mVideoTrackInfo!=null;
+    }
+
+
+    public void addTrack(TrackInfo track, int id) {
+        if (id==0)
+            mAudioTrackInfo = track;
+        else
+            mVideoTrackInfo = track;
+    }
 
     public TrackInfo getTrack(int id) {
         if (id==0)

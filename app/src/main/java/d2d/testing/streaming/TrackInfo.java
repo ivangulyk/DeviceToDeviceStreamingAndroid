@@ -1,12 +1,56 @@
 package d2d.testing.streaming;
 
+import java.io.IOException;
+import java.net.InetAddress;
+import java.nio.channels.SelectableChannel;
+import java.util.Random;
+
+import d2d.testing.net.threads.selectors.UDPServerSelector;
+
 public class TrackInfo {
-    private int mRemoteRtpPort = 15220;
-    private int mRemoteRtcpPort = 15221;
-    private int mLocalRtpPort = 25220;
-    private int mLocalRtcpPort = 25221;
+    private int mRemoteRtpPort;
+    private int mRemoteRtcpPort;
+    private int mLocalRtpPort;
+    private int mLocalRtcpPort;
+
+    private UDPServerSelector mRtcpUdpServer;
+    private Thread mRtcpUdpServerThread;
+    private UDPServerSelector mRtpUdpServer;
+    private Thread mRtpUdpServerThread;
 
     public TrackInfo() {
+        setLocalPorts(15000 * new Random().nextInt(1000));
+        setRemotePorts(14000 * new Random().nextInt(1000));
+    }
+
+    public void startServer() throws IOException {
+        mRtcpUdpServer = new UDPServerSelector(null, mLocalRtcpPort);
+        mRtcpUdpServerThread = new Thread(mRtcpUdpServer);
+        mRtcpUdpServerThread.start();
+        mRtpUdpServer = new UDPServerSelector(null, mLocalRtpPort);
+        mRtpUdpServerThread = new Thread(mRtpUdpServer);
+        mRtpUdpServerThread.start();
+    }
+
+    public void stopServer() {
+        mRtcpUdpServer.stop();
+        mRtcpUdpServer = null;
+        mRtcpUdpServerThread.interrupt();
+        mRtcpUdpServerThread = null;
+
+        mRtpUdpServer.stop();
+        mRtpUdpServer = null;
+        mRtpUdpServerThread.interrupt();
+        mRtpUdpServerThread = null;
+    }
+
+    public void addEchoSession(InetAddress address, int port) {
+        mRtcpUdpServer.addConnectionUDP(address, port);
+        mRtpUdpServer.addConnectionUDP(address, port);
+    }
+
+    public void removeSession(SelectableChannel channel) {
+        
     }
 
     public int[] getRemotePorts() {

@@ -24,6 +24,7 @@ import d2d.testing.net.threads.selectors.AbstractSelector;
 import d2d.testing.streaming.RebroadcastSession;
 import d2d.testing.streaming.ServerSession;
 import d2d.testing.streaming.Session;
+import d2d.testing.streaming.TrackInfo;
 import d2d.testing.streaming.rtsp.RtspRequest;
 import d2d.testing.streaming.rtsp.RtspResponse;
 import d2d.testing.streaming.rtsp.UriParser;
@@ -312,6 +313,9 @@ Session: 902878796;timeout=60
         int p2, p1, ssrc, trackId, src[];
         String destination;
 
+        // Almacenamos la informacion
+        TrackInfo trackInfo = new TrackInfo();
+
         if (session== null) {
             response.status = RtspResponse.STATUS_BAD_REQUEST;
             return response;
@@ -343,12 +347,15 @@ Session: 902878796;timeout=60
             }
         }
 
+
+
         //ssrc = session.getTrack(trackId).getSSRC();
         src = session.getTrack(trackId).getLocalPorts();
         destination = session.getDestination();
 
-        //session.getTrack(trackId).setDestinationPorts(p1, p2);
-
+        //track.setPorts();
+        //
+        //track.startServerSelector()
         //session.syncStart(trackId);
 
         response.attributes = "Transport: RTP/AVP/UDP;" + (InetAddress.getByName(destination).isMulticastAddress() ? "multicast" : "unicast") +
@@ -360,8 +367,7 @@ Session: 902878796;timeout=60
                 "Cache-Control: no-cache\r\n";
         response.status = RtspResponse.STATUS_OK;
 
-        // If no exception has been thrown, we reply with OK
-        response.status = RtspResponse.STATUS_OK;
+        session.addTrack(trackInfo, trackId);
 
         return response;
     }
