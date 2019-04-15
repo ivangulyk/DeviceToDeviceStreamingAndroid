@@ -9,6 +9,7 @@ import java.io.StringReader;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketException;
+import java.nio.FloatBuffer;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SocketChannel;
 import java.util.HashMap;
@@ -21,6 +22,7 @@ import d2d.testing.net.handlers.StreamHandler;
 import d2d.testing.net.packets.DataPacket;
 import d2d.testing.net.packets.DataReceived;
 import d2d.testing.net.threads.selectors.AbstractSelector;
+import d2d.testing.streaming.RebroadcastSession;
 import d2d.testing.streaming.ServerSession;
 import d2d.testing.streaming.Session;
 import d2d.testing.streaming.rtsp.RtspRequest;
@@ -40,6 +42,7 @@ public class RTSPServerWorker extends AbstractWorker {
 
     protected HashMap<SelectableChannel, Session> mSessions = new HashMap<>();
     protected HashMap<SelectableChannel, ServerSession> mServerSessions = new HashMap<>();
+    protected HashMap<SelectableChannel, RebroadcastSession> mRebroadcastSessions = new HashMap<>();
 
     private StreamHandler mStream = null;
 
@@ -56,6 +59,7 @@ public class RTSPServerWorker extends AbstractWorker {
     public RtspResponse processRequest(RtspRequest request, SelectableChannel channel) throws IllegalStateException, IOException {
         Session requestSession = mSessions.get(channel);
         ServerSession serverSession = mServerSessions.get(channel);
+        RebroadcastSession rebroadcastSession = mRebroadcastSessions.get(channel);
         RtspResponse response = new RtspResponse(request);
 
 
@@ -75,7 +79,13 @@ public class RTSPServerWorker extends AbstractWorker {
                 case "DESCRIBE":
                     return DESCRIBE(request, channel);
                 case "SETUP":
-                    return SETUP(request, requestSession);
+                    if(requestSession != null) {
+                        return SETUP(request, requestSession);
+                    } else if(rebroadcastSession != null) {
+                        return SETUP_RECEIVE(request, serverSession);
+                    } else if(rebroadcastSession != null) {
+                        return SETUP_REBROADCAST(request, rebroadcastSession);
+                    }
                 case "TEARDOWN":
                     return TEARDOWN();
                 case "ANNOUNCE":
@@ -125,6 +135,14 @@ Session: 902878796;timeout=60
         //todo hay que mirar en la uri si es /sessionID para REDIRIGIR LOS PUERTOS EN VEZ DE CREAR UN STREAM
         //todo creamos una session differente RebroadCastSession
 
+
+        //if es una session para hacer play a un stream de rebroadcast entonces
+
+        //RebroadcastSession session = new RebroadcastSession()
+        //session.setDestination()
+        //session.setSourceSession()
+        //mRebroadcastSessions.put(channel, session);
+        //
         Session requestSession = handleRequest(request.uri, ((SocketChannel) channel).socket());
         mSessions.put(channel, requestSession);
         requestSession.syncConfigure();
@@ -196,14 +214,14 @@ Session: 902878796;timeout=60
         return response;
     }
 
-    private RtspResponse SETUP(RtspRequest request, Session requestSession) throws IOException {
+    private RtspResponse SETUP(RtspRequest request, Session session) throws IOException {
         RtspResponse response = new RtspResponse();
         Pattern p;
         Matcher m;
         int p2, p1, ssrc, trackId, src[];
         String destination;
 
-        if (requestSession== null) {
+        if (session== null) {
             response.status = RtspResponse.STATUS_BAD_REQUEST;
             return response;
         }
@@ -218,7 +236,7 @@ Session: 902878796;timeout=60
 
         trackId = Integer.parseInt(m.group(1));
 
-        if (!requestSession.trackExists(trackId)) {
+        if (!session.trackExists(trackId)) {
             response.status = RtspResponse.STATUS_NOT_FOUND;
             return response;
         }
@@ -227,7 +245,7 @@ Session: 902878796;timeout=60
         m = p.matcher(request.headers.get("transport"));
 
         if (!m.find()) {
-            int[] ports = requestSession.getTrack(trackId).getDestinationPorts();
+            int[] ports = session.getTrack(trackId).getDestinationPorts();
             p1 = ports[0];
             p2 = ports[1];
         } else {
@@ -239,21 +257,21 @@ Session: 902878796;timeout=60
             }
         }
 
-        ssrc = requestSession.getTrack(trackId).getSSRC();
-        src = requestSession.getTrack(trackId).getLocalPorts();
-        destination = requestSession.getDestination();
+        ssrc = session.getTrack(trackId).getSSRC();
+        src = session.getTrack(trackId).getLocalPorts();
+        destination = session.getDestination();
 
-        requestSession.getTrack(trackId).setDestinationPorts(p1, p2);
+        session.getTrack(trackId).setDestinationPorts(p1, p2);
 
-        requestSession.syncStart(trackId);
+        session.syncStart(trackId);
 
         response.attributes = "Transport: RTP/AVP/UDP;" + (InetAddress.getByName(destination).isMulticastAddress() ? "multicast" : "unicast") +
-                ";destination=" + requestSession.getDestination() +
+                ";destination=" + session.getDestination() +
                 ";client_port=" + p1 + "-" + p2 +
                 ";server_port=" + src[0] + "-" + src[1] +
                 ";ssrc=" + Integer.toHexString(ssrc) +
                 ";mode=play\r\n" +
-                "Session: " + requestSession.getSessionID() + "\r\n" +
+                "Session: " + session.getSessionID() + "\r\n" +
                 "Cache-Control: no-cache\r\n";
         response.status = RtspResponse.STATUS_OK;
 
@@ -262,7 +280,6 @@ Session: 902878796;timeout=60
 
         return response;
     }
-
     /* todo setup para las sessiones de recibir
 SETUP rtsp://192.169.6.151:1935/live/android_test/trackID=1 RTSP/1.0
 Transport: RTP/AVP/UDP;unicast;client_port=5002-5003;mode=receive
@@ -279,9 +296,129 @@ Expires: Fri, 4 Mar 2016 11:31:22 IST
 Transport: RTP/AVP/UDP;unicast;client_port=5002-5003;mode=receive;source=192.169.6.151;server_port=6974-6975
 Date: Fri, 4 Mar 2016 11:31:22 IST
 Session: 902878796;timeout=60
-    * */
-    private RtspResponse SETUP_SERVER(RtspRequest request, ServerSession requestSession) throws IOException {
+* */
+    private RtspResponse SETUP_RECEIVE(RtspRequest request, ServerSession session) throws IOException {
         RtspResponse response = new RtspResponse();
+        Pattern p;
+        Matcher m;
+        int p2, p1, ssrc, trackId, src[];
+        String destination;
+
+        if (session== null) {
+            response.status = RtspResponse.STATUS_BAD_REQUEST;
+            return response;
+        }
+
+        p = Pattern.compile("trackID=(\\w+)", Pattern.CASE_INSENSITIVE);
+        m = p.matcher(request.uri);
+
+        if (!m.find()) {
+            response.status = RtspResponse.STATUS_BAD_REQUEST;
+            return response;
+        }
+
+        trackId = Integer.parseInt(m.group(1));
+
+        p = Pattern.compile("client_port=(\\d+)(?:-(\\d+))?", Pattern.CASE_INSENSITIVE);
+        m = p.matcher(request.headers.get("transport"));
+
+        if (!m.find()) {
+            int[] ports = session.getTrack(trackId).getRemotePorts();
+            p1 = ports[0];
+            p2 = ports[1];
+        } else {
+            p1 = Integer.parseInt(m.group(1));
+            if (m.group(2) == null) {
+                p2 = p1+1;
+            } else {
+                p2 = Integer.parseInt(m.group(2));
+            }
+        }
+
+        //ssrc = session.getTrack(trackId).getSSRC();
+        src = session.getTrack(trackId).getLocalPorts();
+        destination = session.getDestination();
+
+        //session.getTrack(trackId).setDestinationPorts(p1, p2);
+
+        //session.syncStart(trackId);
+
+        response.attributes = "Transport: RTP/AVP/UDP;" + (InetAddress.getByName(destination).isMulticastAddress() ? "multicast" : "unicast") +
+                ";destination=" + session.getDestination() +
+                ";client_port=" + p1 + "-" + p2 +
+                ";server_port=" + src[0] + "-" + src[1] +
+                ";mode=play\r\n" +
+                "Session: " + session.getSessionID() + "\r\n" +
+                "Cache-Control: no-cache\r\n";
+        response.status = RtspResponse.STATUS_OK;
+
+        // If no exception has been thrown, we reply with OK
+        response.status = RtspResponse.STATUS_OK;
+
+        return response;
+        return response;
+    }
+
+    private RtspResponse SETUP_REBROADCAST(RtspRequest request, RebroadcastSession session) throws IOException {
+        RtspResponse response = new RtspResponse();
+        Pattern p;
+        Matcher m;
+        int p2, p1, ssrc, trackId, src[];
+        String destination;
+
+        if (session== null) {
+            response.status = RtspResponse.STATUS_BAD_REQUEST;
+            return response;
+        }
+
+        p = Pattern.compile("trackID=(\\w+)", Pattern.CASE_INSENSITIVE);
+        m = p.matcher(request.uri);
+
+        if (!m.find()) {
+            response.status = RtspResponse.STATUS_BAD_REQUEST;
+            return response;
+        }
+
+        trackId = Integer.parseInt(m.group(1));
+
+        p = Pattern.compile("client_port=(\\d+)(?:-(\\d+))?", Pattern.CASE_INSENSITIVE);
+        m = p.matcher(request.headers.get("transport"));
+
+        if (!m.find()) {
+            int[] ports = session.getTrack(trackId).getRemotePorts();
+            p1 = ports[0];
+            p2 = ports[1];
+        } else {
+            p1 = Integer.parseInt(m.group(1));
+            if (m.group(2) == null) {
+                p2 = p1+1;
+            } else {
+                p2 = Integer.parseInt(m.group(2));
+            }
+        }
+
+        //ssrc = session.getTrack(trackId).getSSRC();
+        src = session.getTrack(trackId).getLocalPorts();
+        destination = session.getDestination();
+
+        //session.getTrack(trackId).setDestinationPorts(p1, p2);
+
+        //session.syncStart(trackId);
+
+        response.attributes = "Transport: RTP/AVP/UDP;" + (InetAddress.getByName(destination).isMulticastAddress() ? "multicast" : "unicast") +
+                ";destination=" + session.getDestination() +
+                ";client_port=" + p1 + "-" + p2 +
+                ";server_port=" + src[0] + "-" + src[1] +
+                //";ssrc=" + Integer.toHexString(ssrc) +
+                ";mode=play\r\n" +
+                "Session: " + session.getSessionID() + "\r\n" +
+                "Cache-Control: no-cache\r\n";
+        response.status = RtspResponse.STATUS_OK;
+
+        // If no exception has been thrown, we reply with OK
+        response.status = RtspResponse.STATUS_OK;
+
+        return response;
         return response;
     }
 

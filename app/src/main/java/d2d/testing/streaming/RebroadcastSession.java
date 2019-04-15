@@ -1,15 +1,13 @@
 package d2d.testing.streaming;
 
-import android.os.Handler;
 import android.os.HandlerThread;
-import android.os.Looper;
 
 import d2d.testing.net.threads.selectors.RTSPServerSelector;
 import d2d.testing.streaming.video.VideoStream;
 
 import static java.util.UUID.randomUUID;
 
-public class ServerSession {
+public class RebroadcastSession {
 
     public final static String TAG = "ServerSession";
 
@@ -21,11 +19,10 @@ public class ServerSession {
     private TrackInfo mVideoTrackInfo;
     private TrackInfo mAudioTrackInfo;
 
-
     /**
      * Creates a streaming session that can be customized by adding tracks.
      */
-    public ServerSession() {
+    public RebroadcastSession() {
         long uptime = System.currentTimeMillis();
 
         HandlerThread thread = new HandlerThread("d2d.testing.streaming.Session");
@@ -156,7 +153,8 @@ public class ServerSession {
             return mAudioStream!=null;
         else
             return mVideoStream!=null;
-    }*/
+    }
+    */
 
     public TrackInfo getTrack(int id) {
         if (id==0)
