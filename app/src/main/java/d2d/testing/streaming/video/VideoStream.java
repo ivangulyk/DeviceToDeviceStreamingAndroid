@@ -73,7 +73,7 @@ public abstract class VideoStream extends MediaStream {
 	protected boolean mSurfaceReady = false;
 	protected boolean mUnlocked = false;
 	protected boolean mPreviewStarted = false;
-	protected boolean mUpdated = false;
+	protected static boolean mUpdated = false;
 	
 	protected String mMimeType;
 	protected String mEncoderName;
@@ -310,7 +310,7 @@ public abstract class VideoStream extends MediaStream {
 		mCameraOpenedManually = true;
 		if (!mPreviewStarted) {
 			createCamera();
-			updateCamera();
+			//updateCamera();
 		}
 	}
 
@@ -424,20 +424,22 @@ public abstract class VideoStream extends MediaStream {
 		Log.d(TAG,"Video encoded using the MediaCodec API with a buffer");
 
 		// Updates the parameters of the camera if needed
-		createCamera();
-		updateCamera();
+		if(!VideoPacketizerDispatcher.isRunning()) {
+			createCamera();
+			updateCamera();
 
-		// Estimates the frame rate of the camera
-		measureFramerate();
+			// Estimates the frame rate of the camera
+			measureFramerate();
 
-		// Starts the preview if needed
-		if (!mPreviewStarted) {
-			try {
-				mCamera.startPreview();
-				mPreviewStarted = true;
-			} catch (RuntimeException e) {
-				destroyCamera();
-				throw e;
+			// Starts the preview if needed
+			if (!mPreviewStarted) {
+				try {
+					mCamera.startPreview();
+					mPreviewStarted = true;
+				} catch (RuntimeException e) {
+					destroyCamera();
+					throw e;
+				}
 			}
 		}
 

@@ -92,7 +92,7 @@ public class VideoPacketizerDispatcher {
         mCamera.setPreviewCallbackWithBuffer(callback);
 
         mMediaCodecInputStream = new MediaCodecInputStream(mMediaCodec);
-        mReaderThread = new Thread(new MediaCodecBufferReader(6400000, mMediaCodecInputStream, mPacketizersInputsMap));
+        mReaderThread = new Thread(new MediaCodecBufferReader(64000, mMediaCodecInputStream, mPacketizersInputsMap));
         mReaderThread.start();
 
         Log.e(TAG, "Constructor finished");

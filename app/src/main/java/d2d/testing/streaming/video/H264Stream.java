@@ -120,7 +120,7 @@ public class H264Stream extends VideoStream {
 	@SuppressLint("NewApi")
 	private MP4Config testMediaCodecAPI() throws RuntimeException, IOException {
 		createCamera();
-		updateCamera();
+		//updateCamera();
 		try {
 			if (mQuality.resX>=640) {
 				// Using the MediaCodec API with the buffer method for high resolutions is too slow
