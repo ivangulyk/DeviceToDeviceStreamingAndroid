@@ -41,7 +41,6 @@ public class MediaCodecInputStream extends BufferInfoInputStream {
 	private ByteBuffer[] mBuffers;
 	private ByteBuffer mBuffer = null;
 	private int mIndex = -1;
-	private int mCounter = 0;
 	private boolean mClosed = false;
 	
 	public MediaFormat mMediaFormat;
@@ -81,9 +80,6 @@ public class MediaCodecInputStream extends BufferInfoInputStream {
 						Log.i(TAG,mMediaFormat.toString());
 					} else if (mIndex == MediaCodec.INFO_TRY_AGAIN_LATER) {
 						Log.v(TAG,"No buffer available...");
-
-						if(++mCounter > 50)
-							throw new IOException();
 						//return 0;
 					} else {
 						Log.e(TAG,"Message: "+mIndex);
