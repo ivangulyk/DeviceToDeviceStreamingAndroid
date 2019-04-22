@@ -34,7 +34,7 @@ public class VideoPacketizerDispatcher {
     private static Camera mCamera;
 
     private final int SAMPLING_RATE = 8000;
-    private final VideoQuality mQuality = new VideoQuality(640, 480, 15, 5000);
+    private final VideoQuality mQuality;
 
     protected SharedPreferences mSettings = null;
 
@@ -43,8 +43,9 @@ public class VideoPacketizerDispatcher {
     private final Map<AbstractPacketizer, InputStream> mPacketizersInputsMap = new HashMap<>();
 
     @SuppressLint("NewApi")
-    private VideoPacketizerDispatcher(Camera camera, SharedPreferences settings) throws IOException {
+    private VideoPacketizerDispatcher(Camera camera, SharedPreferences settings, VideoQuality quality) throws IOException {
 
+        this.mQuality = quality;
         this.mCamera = camera;
         this.mSettings = settings;
 
@@ -91,7 +92,7 @@ public class VideoPacketizerDispatcher {
         mCamera.setPreviewCallbackWithBuffer(callback);
 
         mMediaCodecInputStream = new MediaCodecInputStream(mMediaCodec);
-        mReaderThread = new Thread(new MediaCodecBufferReader(1300, mMediaCodecInputStream, mPacketizersInputsMap));
+        mReaderThread = new Thread(new MediaCodecBufferReader(6400000, mMediaCodecInputStream, mPacketizersInputsMap));
         mReaderThread.start();
 
         Log.e(TAG, "Constructor finished");
@@ -101,9 +102,9 @@ public class VideoPacketizerDispatcher {
         return mInstance != null;
     }
 
-    public static VideoPacketizerDispatcher start(Camera camera, SharedPreferences settings) throws IOException {
+    public static VideoPacketizerDispatcher start(Camera camera, SharedPreferences settings, VideoQuality quality) throws IOException {
         if (mInstance == null) {
-            mInstance = new VideoPacketizerDispatcher(camera, settings);
+            mInstance = new VideoPacketizerDispatcher(camera, settings, quality);
 
             Log.e(TAG, "Thread started!");
         }
@@ -121,8 +122,8 @@ public class VideoPacketizerDispatcher {
         }
     }
 
-    public static void subscribe(Camera camera, SharedPreferences settings, AbstractPacketizer packetizer) throws IOException {
-        VideoPacketizerDispatcher.start(camera, settings).addInternalPacketizer(packetizer);
+    public static void subscribe(Camera camera, SharedPreferences settings, AbstractPacketizer packetizer, VideoQuality quality) throws IOException {
+        VideoPacketizerDispatcher.start(camera, settings, quality).addInternalPacketizer(packetizer);
     }
 
     public static void unsubscribe(AbstractPacketizer packetizer) {

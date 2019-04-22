@@ -487,7 +487,7 @@ public abstract class VideoStream extends MediaStream {
 		//mPacketizer.setInputStream(new MediaCodecInputStream(mMediaCodec));
 		*/
 
-		VideoPacketizerDispatcher.subscribe(mCamera, mSettings, mPacketizer);
+		VideoPacketizerDispatcher.subscribe(mCamera, mSettings, mPacketizer, mQuality);
 
 		mPacketizer.start();
 

@@ -29,8 +29,7 @@ public class AudioPacketizerDispatcher {
     private static Thread mWriterThread;
     private static AudioPacketizerDispatcher mInstance;
 
-    private final int SAMPLING_RATE = 8000;
-    private final VideoQuality mQuality = new VideoQuality(640,480,15,5000);
+    private final AudioQuality mQuality = new AudioQuality(8000,32000);
 
     private final int mBufferSize;
 
@@ -42,8 +41,8 @@ public class AudioPacketizerDispatcher {
 
     @SuppressLint("NewApi")
     private AudioPacketizerDispatcher() throws IOException {
-        this.mBufferSize = AudioRecord.getMinBufferSize(SAMPLING_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)*2;
-        this.mAudioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC, SAMPLING_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, mBufferSize);
+        this.mBufferSize = AudioRecord.getMinBufferSize(mQuality.samplingRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)*2;
+        this.mAudioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC, mQuality.samplingRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, mBufferSize);
 
         if(this.mAudioRecord.getState() != AudioRecord.STATE_INITIALIZED) {
             Log.e(TAG,"An error occurred with the AudioRecord API while initialization!");
@@ -51,9 +50,9 @@ public class AudioPacketizerDispatcher {
 
         MediaFormat format = new MediaFormat();
         format.setString(MediaFormat.KEY_MIME, "audio/mp4a-latm");
-        format.setInteger(MediaFormat.KEY_BIT_RATE, mQuality.bitrate);
+        format.setInteger(MediaFormat.KEY_BIT_RATE, mQuality.bitRate);
         format.setInteger(MediaFormat.KEY_CHANNEL_COUNT, 1);
-        format.setInteger(MediaFormat.KEY_SAMPLE_RATE, SAMPLING_RATE);
+        format.setInteger(MediaFormat.KEY_SAMPLE_RATE, mQuality.samplingRate);
         format.setInteger(MediaFormat.KEY_AAC_PROFILE, MediaCodecInfo.CodecProfileLevel.AACObjectLC);
         format.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, mBufferSize);
 
@@ -154,7 +153,7 @@ public class AudioPacketizerDispatcher {
                     if (len == AudioRecord.ERROR_INVALID_OPERATION || len == AudioRecord.ERROR_BAD_VALUE) {
                         Log.e(TAG, "An error occurred with the AudioRecord API !");
                     } else {
-                        Log.v(TAG, "pushing raw data to media encoder");
+                        //Log.v(TAG, "pushing raw data to media encoder");
                         mMediaCodec.queueInputBuffer(bufferIndex, 0, len, System.nanoTime() / 1000, 0);
 
                     }
