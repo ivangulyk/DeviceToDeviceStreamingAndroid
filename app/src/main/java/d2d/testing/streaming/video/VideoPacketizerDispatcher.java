@@ -1,6 +1,7 @@
 package d2d.testing.streaming.video;
 
 import android.annotation.SuppressLint;
+import android.content.SharedPreferences;
 import android.hardware.Camera;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
@@ -35,14 +36,17 @@ public class VideoPacketizerDispatcher {
     private final int SAMPLING_RATE = 8000;
     private final VideoQuality mQuality = new VideoQuality(640, 480, 15, 5000);
 
-    private final int mBufferSize;
+    protected SharedPreferences mSettings = null;
 
     private final MediaCodec mMediaCodec;
     private final MediaCodecInputStream mMediaCodecInputStream;
     private final Map<AbstractPacketizer, InputStream> mPacketizersInputsMap = new HashMap<>();
 
     @SuppressLint("NewApi")
-    private VideoPacketizerDispatcher() throws IOException {
+    private VideoPacketizerDispatcher(Camera camera, SharedPreferences settings) throws IOException {
+
+        this.mCamera = camera;
+        this.mSettings = settings;
 
         EncoderDebugger debugger = EncoderDebugger.debug(mSettings, mQuality.resX, mQuality.resY);
         final NV21Convertor convertor = debugger.getNV21Convertor();
@@ -87,7 +91,7 @@ public class VideoPacketizerDispatcher {
         mCamera.setPreviewCallbackWithBuffer(callback);
 
         mMediaCodecInputStream = new MediaCodecInputStream(mMediaCodec);
-        mReaderThread = new Thread(new MediaCodecBufferReader(mBufferSize, mMediaCodecInputStream, mPacketizersInputsMap));
+        mReaderThread = new Thread(new MediaCodecBufferReader(1300, mMediaCodecInputStream, mPacketizersInputsMap));
         mReaderThread.start();
 
         Log.e(TAG, "Constructor finished");
@@ -97,13 +101,9 @@ public class VideoPacketizerDispatcher {
         return mInstance != null;
     }
 
-    public static void setCamera(Camera camera){
-        if(!isRunning())  mCamera = camera;
-    }
-
-    public static VideoPacketizerDispatcher start() throws IOException {
+    public static VideoPacketizerDispatcher start(Camera camera, SharedPreferences settings) throws IOException {
         if (mInstance == null) {
-            mInstance = new VideoPacketizerDispatcher();
+            mInstance = new VideoPacketizerDispatcher(camera, settings);
 
             Log.e(TAG, "Thread started!");
         }
@@ -121,8 +121,8 @@ public class VideoPacketizerDispatcher {
         }
     }
 
-    public static void subscribe(AbstractPacketizer packetizer) throws IOException {
-        VideoPacketizerDispatcher.start().addInternalPacketizer(packetizer);
+    public static void subscribe(Camera camera, SharedPreferences settings, AbstractPacketizer packetizer) throws IOException {
+        VideoPacketizerDispatcher.start(camera, settings).addInternalPacketizer(packetizer);
     }
 
     public static void unsubscribe(AbstractPacketizer packetizer) {

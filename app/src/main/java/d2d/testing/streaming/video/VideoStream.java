@@ -441,7 +441,7 @@ public abstract class VideoStream extends MediaStream {
 			}
 		}
 
-		EncoderDebugger debugger = EncoderDebugger.debug(mSettings, mQuality.resX, mQuality.resY);
+		/*EncoderDebugger debugger = EncoderDebugger.debug(mSettings, mQuality.resX, mQuality.resY);
 		final NV21Convertor convertor = debugger.getNV21Convertor();
 
 		mMediaCodec = MediaCodec.createByCodecName(debugger.getEncoderName());
@@ -482,9 +482,11 @@ public abstract class VideoStream extends MediaStream {
 		
 		for (int i=0;i<10;i++) mCamera.addCallbackBuffer(new byte[convertor.getBufferSize()]);
 		mCamera.setPreviewCallbackWithBuffer(callback);
+		VideoPacketizerDispatcher.subscribe(mCamera, mSettings, mPacketizer);
 
 		// The packetizer encapsulates the bit stream in an RTP stream and send it over the network
-		mPacketizer.setInputStream(new MediaCodecInputStream(mMediaCodec));
+		//mPacketizer.setInputStream(new MediaCodecInputStream(mMediaCodec));
+		*/
 		mPacketizer.start();
 
 		mStreaming = true;

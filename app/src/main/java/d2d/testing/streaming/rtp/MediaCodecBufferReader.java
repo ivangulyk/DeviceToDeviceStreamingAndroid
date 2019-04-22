@@ -28,11 +28,11 @@ public class MediaCodecBufferReader implements Runnable {
         while (!Thread.interrupted()) {
             try {
                 read += mMediaCodecInputStream.read(buffer, read, mBufferSize - read);
-                Log.v(TAG, "readen from MediaCodecInputStream: " + read);
-                Log.v(TAG, "readen from MediaCodecInputStream: " + mMediaCodecInputStream.getLastBufferInfo().presentationTimeUs);
+                //Log.v(TAG, "readen from MediaCodecInputStream: " + read);
+                //Log.v(TAG, "readen from MediaCodecInputStream: " + mMediaCodecInputStream.getLastBufferInfo().presentationTimeUs);
 
                 if(read > 0) {
-                    Log.v(TAG, "readen from MediaCodecInputStream >= bufferSize: " + read);
+                    //Log.v(TAG, "readen from MediaCodecInputStream >= bufferSize: " + read);
                     synchronized (mPacketizersInputsMap) {
                         for(Map.Entry<AbstractPacketizer, InputStream> entry : mPacketizersInputsMap.entrySet()) {
                             ((ByteBufferInputStream) entry.getValue())

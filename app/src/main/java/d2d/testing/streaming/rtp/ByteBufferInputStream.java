@@ -40,7 +40,7 @@ public class ByteBufferInputStream extends BufferInfoInputStream {
                 throw new IOException("This InputStream was closed");
 
             if(mByteBuffer == null && !mByteBufferInfos.isEmpty()) {
-                Log.v(TAG,"mByteBufferInfos not empty...!");
+                //Log.v(TAG,"mByteBufferInfos not empty...!");
 
                 ByteBufferInfo byteBufferInfo = mByteBufferInfos.removeFirst();
                 mByteBuffer = byteBufferInfo.getByteBuffer();
@@ -50,11 +50,11 @@ public class ByteBufferInputStream extends BufferInfoInputStream {
             if(mByteBuffer != null){
                 if(mByteBuffer.hasRemaining()) {
                     min = Math.min(len, mByteBuffer.remaining());
-                    Log.v(TAG,"byteBuffer has remaining..." + mByteBuffer.remaining() + " reading..." + min + "with offset" + off);
+                    //Log.v(TAG,"byteBuffer has remaining..." + mByteBuffer.remaining() + " reading..." + min + "with offset" + off);
                     mByteBuffer.get(bytes, off, min);
                 }
                 if(!mByteBuffer.hasRemaining()) {
-                    Log.v(TAG,"byteBuffer doesnt have remaining... nullifying...!");
+                    //Log.v(TAG,"byteBuffer doesnt have remaining... nullifying...!");
                     mByteBuffer = null;
                 }
             }
