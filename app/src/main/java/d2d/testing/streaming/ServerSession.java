@@ -142,4 +142,8 @@ public class ServerSession {
         else
             return mVideoTrackInfo;
     }
+
+    public void release(){
+
+    }
 }

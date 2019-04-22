@@ -20,6 +20,7 @@ import d2d.testing.streaming.rtp.AbstractPacketizer;
 import d2d.testing.streaming.rtp.ByteBufferInputStream;
 import d2d.testing.streaming.rtp.MediaCodecInputStream;
 import d2d.testing.streaming.video.VideoQuality;
+import d2d.testing.streaming.rtp.MediaCodecBufferReader;
 
 public class AudioPacketizerDispatcher {
 
@@ -67,7 +68,7 @@ public class AudioPacketizerDispatcher {
         mMediaCodec.start();
         mMediaCodecInputStream = new MediaCodecInputStream(mMediaCodec);
         mMediaCodecsBuffers = mMediaCodec.getInputBuffers();
-        mReaderThread = new Thread(new AudioPacketizerDispatcher.MediaCodecBufferReader());
+        mReaderThread = new Thread(new MediaCodecBufferReader(mBufferSize,mMediaCodecInputStream,mPacketizersInputsMap));
         mWriterThread = new Thread(new AudioPacketizerDispatcher.MediaCodecBufferWriter());
         mReaderThread.start();
         mWriterThread.start();
@@ -165,37 +166,6 @@ public class AudioPacketizerDispatcher {
                 mAudioRecord.release();
             } catch (Exception e) {
                 e.printStackTrace();
-            }
-        }
-    }
-
-    class MediaCodecBufferReader implements Runnable {
-        private String TAG = "MediaCodecBufferReader";
-
-        @SuppressLint("NewApi")
-        @Override
-        public void run() {
-            byte[] buffer = new byte[mBufferSize];
-            int read = 0;
-            while (!Thread.interrupted()) {
-                try {
-                    read += mMediaCodecInputStream.read(buffer, read, mBufferSize - read);
-                    Log.v(TAG, "readen from MediaCodecInputStream: " + read);
-                    Log.v(TAG, "readen from MediaCodecInputStream: " + mMediaCodecInputStream.getLastBufferInfo().presentationTimeUs);
-
-                    if(read > 0) {
-                        Log.v(TAG, "readen from MediaCodecInputStream >= bufferSize: " + read);
-                        synchronized (mPacketizersInputsMap) {
-                            for(Map.Entry<AbstractPacketizer, InputStream> entry : mPacketizersInputsMap.entrySet()) {
-                                ((ByteBufferInputStream) entry.getValue())
-                                        .addBufferInput(Arrays.copyOfRange(buffer,0, read), mMediaCodecInputStream.getLastBufferInfo().presentationTimeUs);
-                            }
-                        }
-                        read = 0;
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
             }
         }
     }

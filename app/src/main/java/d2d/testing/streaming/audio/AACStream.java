@@ -189,28 +189,11 @@ public class AACStream extends AudioStream {
 	@SuppressLint({ "InlinedApi", "NewApi" })
 	protected void encodeWithMediaCodec() throws IOException {
 
-		final int bufferSize = AudioRecord.getMinBufferSize(mQuality.samplingRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)*2;
 
-		((AACLATMPacketizer)mPacketizer).setSamplingRate(mQuality.samplingRate);
 
-		mMediaCodec = MediaCodec.createEncoderByType("audio/mp4a-latm");
-		MediaFormat format = new MediaFormat();
-		format.setString(MediaFormat.KEY_MIME, "audio/mp4a-latm");
-		format.setInteger(MediaFormat.KEY_BIT_RATE, mQuality.bitRate);
-		format.setInteger(MediaFormat.KEY_CHANNEL_COUNT, 1);
-		format.setInteger(MediaFormat.KEY_SAMPLE_RATE, mQuality.samplingRate);
-		format.setInteger(MediaFormat.KEY_AAC_PROFILE, MediaCodecInfo.CodecProfileLevel.AACObjectLC);
-		format.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, bufferSize);
-		mMediaCodec.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
-
-		mMediaCodec.start();
-
-		final MediaCodecInputStream inputStream = new MediaCodecInputStream(mMediaCodec);
-
-		AudioMediaCodecDispatcher.subscribe(mMediaCodec);
+		AudioPacketizerDispatcher.subscribe(mPacketizer);
 
 		// The packetizer encapsulates this stream in an RTP stream and send it over the network
-		mPacketizer.setInputStream(inputStream);
 		mPacketizer.start();
 
 		mStreaming = true;
@@ -222,7 +205,7 @@ public class AACStream extends AudioStream {
 		if (mStreaming) {
 			if (mMode==MODE_MEDIACODEC_API) {
 				Log.d(TAG, "Interrupting threads...");
-				AudioMediaCodecDispatcher.unsubscribe(mMediaCodec);
+				AudioPacketizerDispatcher.unsubscribe(mPacketizer);
 			}
 			super.stop();
 		}

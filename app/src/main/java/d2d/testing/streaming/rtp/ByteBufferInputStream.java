@@ -28,7 +28,7 @@ public class ByteBufferInputStream extends BufferInfoInputStream {
         int min = 0;
 
         try {
-            while (!Thread.interrupted() && !mClosed && mByteBufferInfos.isEmpty() && mByteBuffer != null) {
+            while (!Thread.interrupted() && !mClosed && mByteBufferInfos.isEmpty() && mByteBuffer == null) {
                 try {
                     wait();
                 } catch (InterruptedException e) {

@@ -292,9 +292,11 @@ public abstract class MediaStream implements Stream {
 					mPacketizer.stop();
 				} else {
 					mPacketizer.stop();
+					/*
 					mMediaCodec.stop();
 					mMediaCodec.release();
 					mMediaCodec = null;
+					*/
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
