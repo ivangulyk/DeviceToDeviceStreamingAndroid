@@ -31,7 +31,7 @@ public class ViewStreamActivity extends AppCompatActivity {
 
 
         String ip = "192.168.49.1";
-        String port = "1234";
+        String port = "12345";
 
         String path= "rtsp://" + ip + ":" + port;
 
@@ -41,5 +41,13 @@ public class ViewStreamActivity extends AppCompatActivity {
         //Set the focus
         videoView.requestFocus();
         videoView.start();
+    }
+
+    public void onDestroy(){
+        super.onDestroy();
+        if(videoView != null){
+            videoView.stopPlayback();
+            videoView.resume();
+        }
     }
 }

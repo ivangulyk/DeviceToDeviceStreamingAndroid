@@ -139,6 +139,7 @@ public class VideoPacketizerDispatcher {
             packetizer.setInputStream(packetizerInput);
 
             mPacketizersInputsMap.put(packetizer, packetizerInput);
+            packetizer.start();
             Log.e(TAG, "Added internal packetizer to inputStreamMap!");
         }
     }

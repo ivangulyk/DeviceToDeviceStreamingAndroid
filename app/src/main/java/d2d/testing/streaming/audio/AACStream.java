@@ -194,7 +194,7 @@ public class AACStream extends AudioStream {
 		AudioPacketizerDispatcher.subscribe(mPacketizer);
 
 		// The packetizer encapsulates this stream in an RTP stream and send it over the network
-		mPacketizer.start();
+		//mPacketizer.start();
 
 		mStreaming = true;
 

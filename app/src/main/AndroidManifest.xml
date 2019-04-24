@@ -46,6 +46,7 @@
 
         <activity android:name=".MediaActivity" />
         <activity android:name=".StreamActivity" />
+        <activity android:name=".ViewStreamActivity" />
 
         <service android:name=".streaming.rtsp.RtspServer" />
     </application>

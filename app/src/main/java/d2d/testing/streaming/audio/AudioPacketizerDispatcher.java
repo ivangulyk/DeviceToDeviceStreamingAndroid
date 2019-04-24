@@ -118,6 +118,7 @@ public class AudioPacketizerDispatcher {
             packetizer.setInputStream(packetizerInput);
 
             mPacketizersInputsMap.put(packetizer, packetizerInput);
+            packetizer.start();
             Log.e(TAG,"Added internal packetizer to inputStreamMap!");
         }
     }
@@ -126,11 +127,12 @@ public class AudioPacketizerDispatcher {
     private void removeInternalMediaCodec(AbstractPacketizer packetizer){
         synchronized (mPacketizersInputsMap) {
             mPacketizersInputsMap.remove(packetizer);
+            packetizer.stop();
             Log.e(TAG,"Removed internal media codec from map!");
             if(mPacketizersInputsMap.size() == 0) {
                 Log.e(TAG,"No more elements in map lets finish this!");
 
-                stop();
+                //stop();
             }
         }
     }
