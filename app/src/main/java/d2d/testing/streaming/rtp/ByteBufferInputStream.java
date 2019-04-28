@@ -24,6 +24,11 @@ public class ByteBufferInputStream extends BufferInfoInputStream {
         return 0;
     }
 
+    @Override
+    public void close() {
+        mClosed = true;
+    }
+
     public synchronized int read(byte[] bytes, int off, int len) throws IOException {
         int min = 0;
 

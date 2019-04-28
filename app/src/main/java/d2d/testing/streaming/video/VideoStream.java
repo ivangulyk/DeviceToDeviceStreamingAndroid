@@ -283,7 +283,9 @@ public abstract class VideoStream extends MediaStream {
 	public synchronized void stop() {
 		if (mCamera != null) {
 			if (mMode == MODE_MEDIACODEC_API) {
-				mCamera.setPreviewCallbackWithBuffer(null);
+				// lo cerramos en el dispatcher
+				VideoPacketizerDispatcher.unsubscribe(mPacketizer);
+				//mCamera.setPreviewCallbackWithBuffer(null);
 			}
 			if (mMode == MODE_MEDIACODEC_API_2) {
 				((SurfaceView)mSurfaceView).removeMediaCodecSurface();

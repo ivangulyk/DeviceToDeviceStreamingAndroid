@@ -45,5 +45,7 @@ public class MediaCodecBufferReader implements Runnable {
                 e.printStackTrace();
             }
         }
+
+        Log.v(TAG, "Thread has been interrupted and its stopping...");
     }
 }

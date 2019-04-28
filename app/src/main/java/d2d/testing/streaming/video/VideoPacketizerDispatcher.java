@@ -29,9 +29,9 @@ import d2d.testing.streaming.rtp.MediaCodecBufferReader;
 public class VideoPacketizerDispatcher {
 
     private static String TAG = "VideoPacketizerDispatcher";
-    private static Thread mReaderThread;
+    private Thread mReaderThread;
     private static VideoPacketizerDispatcher mInstance;
-    private static Camera mCamera;
+    private Camera mCamera;
 
     private final int SAMPLING_RATE = 8000;
     private final VideoQuality mQuality;
@@ -111,15 +111,29 @@ public class VideoPacketizerDispatcher {
         return mInstance;
     }
 
-    public static void stop() {
-        if (mInstance == null) {
-            Log.e(TAG, "Stopping dispatcher...");
+    @SuppressLint("NewApi")
+    public void internalStop() {
+        Log.e(TAG,"Stopping dispatcher...");
+
+        if (mReaderThread != null) {
+            try {
+                mMediaCodecInputStream.close();
+            } catch (IOException ignore) {}
             mReaderThread.interrupt();
-
+            try {
+                mReaderThread.join();
+            } catch (InterruptedException e) {}
+            Log.e(TAG, "Reader Thread interrupted!");
             mReaderThread = null;
-
-            mInstance = null;
         }
+
+        Log.e(TAG, "Disabling PreviewCallback!");
+        mCamera.setPreviewCallbackWithBuffer(null);
+
+        mMediaCodec.stop();
+        mMediaCodec.release();
+
+        mInstance = null;
     }
 
     public static void subscribe(Camera camera, SharedPreferences settings, AbstractPacketizer packetizer, VideoQuality quality) throws IOException {
@@ -134,26 +148,22 @@ public class VideoPacketizerDispatcher {
 
     @SuppressLint("NewApi")
     private void addInternalPacketizer(AbstractPacketizer packetizer) {
-        synchronized (mPacketizersInputsMap) {
-            InputStream packetizerInput = new ByteBufferInputStream();
-            packetizer.setInputStream(packetizerInput);
+        InputStream packetizerInput = new ByteBufferInputStream();
+        packetizer.setInputStream(packetizerInput);
 
-            mPacketizersInputsMap.put(packetizer, packetizerInput);
-            packetizer.start();
-            Log.e(TAG, "Added internal packetizer to inputStreamMap!");
-        }
+        mPacketizersInputsMap.put(packetizer, packetizerInput);
+        packetizer.start();
+        Log.e(TAG, "Added internal packetizer to inputStreamMap!");
     }
 
     @SuppressLint("NewApi")
     private void removeInternalMediaCodec(AbstractPacketizer packetizer) {
-        synchronized (mPacketizersInputsMap) {
-            mPacketizersInputsMap.remove(packetizer);
-            Log.e(TAG, "Removed internal media codec from map!");
-            if (mPacketizersInputsMap.size() == 0) {
-                Log.e(TAG, "No more elements in map lets finish this!");
+        mPacketizersInputsMap.remove(packetizer);
+        Log.e(TAG, "Removed internal media codec from map!");
+        if (mPacketizersInputsMap.size() == 0) {
+            Log.e(TAG, "No more elements in map lets finish this!");
 
-                stop();
-            }
+            internalStop();
         }
     }
 }

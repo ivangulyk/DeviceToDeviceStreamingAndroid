@@ -51,7 +51,7 @@ public class MediaCodecInputStream extends BufferInfoInputStream {
 	}
 
 	@Override
-	public void close() {
+	public void close() throws IOException  {
 		mClosed = true;
 	}
 
