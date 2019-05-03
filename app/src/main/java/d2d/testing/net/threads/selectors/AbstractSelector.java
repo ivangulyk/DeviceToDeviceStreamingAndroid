@@ -171,6 +171,7 @@ public abstract class AbstractSelector implements Runnable{
                 this.mStatusTCP = STATUS_CONNECTED;
                 key.interestOps(SelectionKey.OP_READ);  // Register an interest in reading till send
                 Logger.d("AbstractSelector: client (" + socketChannel.socket().getLocalAddress() + ") finished connecting...");
+                mMainActivity.setDefaultP2PIp(socketChannel.socket().getLocalAddress().toString().substring(1));
             }
         } catch (IOException e) {
             this.mStatusTCP = STATUS_DISCONNECTED;

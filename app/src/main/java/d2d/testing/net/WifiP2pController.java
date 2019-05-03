@@ -18,6 +18,8 @@ import android.widget.Toast;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.nio.channels.SelectableChannel;
+import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -118,6 +120,8 @@ public class WifiP2pController {
         send(dataPacket.getData());
     }
 
+
+
     public void send(byte[] data) {
         if(mClientSelectorThread != null) {
             mClientSelectorThread.send(data);
@@ -178,6 +182,7 @@ public class WifiP2pController {
                 {
                     try {
                         mServerSelectorThread = new ServerSelector(mContext);
+                        mContext.setDefaultP2PIp(groupOwnerAddress.toString().substring(1));
                         new Thread(mServerSelectorThread).start();
                     } catch (Exception e) {
                         e.printStackTrace();

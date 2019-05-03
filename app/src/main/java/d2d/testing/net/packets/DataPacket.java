@@ -25,7 +25,9 @@ public class DataPacket {
     public static final byte    TYPE_MSG  = 0x15;
     public static final byte    TYPE_FILE = 0x17;
     public static final byte    TYPE_VIDEO_STREAM = 0x19;
-    public static final byte[]  TYPE_LIST = {TYPE_MSG, TYPE_FILE, TYPE_VIDEO_STREAM};
+    public static final byte    STREAM_ON = 0x13;
+    public static final byte    STREAM_OFF = 0x14;
+    public static final byte[]  TYPE_LIST = {TYPE_MSG, TYPE_FILE, TYPE_VIDEO_STREAM,STREAM_ON,STREAM_OFF};
 
     public static final int STATUS_INVALID   = -1;
     public static final int STATUS_OPEN      = 0;

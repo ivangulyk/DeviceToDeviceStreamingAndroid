@@ -13,6 +13,8 @@ import android.view.WindowManager;
 import java.io.IOException;
 
 import d2d.testing.helpers.Logger;
+import d2d.testing.net.WifiP2pController;
+import d2d.testing.net.packets.DataPacketBuilder;
 import d2d.testing.net.threads.selectors.RTSPServerSelector;
 import d2d.testing.streaming.Session;
 import d2d.testing.streaming.SessionBuilder;
@@ -32,6 +34,7 @@ public class StreamActivity extends AppCompatActivity implements SurfaceHolder.C
     private Intent mIntent;
 
     public Session mSesion;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,6 +93,7 @@ public class StreamActivity extends AppCompatActivity implements SurfaceHolder.C
     }
 
     public void onDestroy(){
+        WifiP2pController.getInstance().send(DataPacketBuilder.buildStreamNotifier(false,getIntent().getExtras().getString("IP")));
         super.onDestroy();
         mSesion.stopPreview();
         mSesion.stop();

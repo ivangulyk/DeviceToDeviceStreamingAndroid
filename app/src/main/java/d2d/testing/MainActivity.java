@@ -3,16 +3,24 @@ package d2d.testing;
 import android.Manifest;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.hardware.Camera;
+import android.net.wifi.WifiManager;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
+import android.support.design.widget.AppBarLayout;
+import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
+import android.text.format.Formatter;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -24,6 +32,13 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.nio.channels.SelectableChannel;
+import java.nio.channels.SocketChannel;
+import java.util.Enumeration;
+
 import d2d.testing.gui.DeviceListAdapter;
 import d2d.testing.helpers.Logger;
 import d2d.testing.net.WifiP2pController;
@@ -34,39 +49,41 @@ import d2d.testing.net.packets.DataPacketBuilder;
 public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_COARSE_LOCATION_CODE = 101;
     private static final int MY_CAMERA_REQUEST_CODE = 100;
+    private static final int MY_AUDIO_REQUEST_CODE = 104;
     private static final int MY_WRITE_EXTERNAL_STORAGE_CODE = 103;
     private static final int CHOOSE_FILE_CODE = 102;
     private boolean camera_has_perm = false;
+    private boolean audio_has_perm = false;
     private boolean location_has_perm = false;
     private boolean storage_has_perm = false;
     private Camera mCamera;
+    private String defaultP2PIp = "192.168.49.1";
 
-    Button btnSend;
-    ListView listView;
-    TextView textView;
-    EditText editTextMsg;
-    TextView redMsg;
-    TextView myName;
-    TextView myAdd;
-    TextView myStatus;
+
+    private TabLayout tabLayout;
+    private ViewPager viewPager;
+    private FragmentDevices devices_fragment;
+    private FragmentStreams streams_fragment;
 
     WifiP2pController mWifiP2pController;
     WiFiP2pPermissions wiFiP2pPermissions;
 
 
     IntentFilter mIntentFilter;
-    WifiP2pDevice[] mDeviceArray;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         initialWork();
-        execListener();
     }
 
     public void set_camera_has_perm(boolean camera){
         this.camera_has_perm = camera;
+    }
+    public void set_audio_has_perm(boolean audio){
+        this.audio_has_perm = audio;
     }
     public void set_location_has_perm(boolean location){
         this.location_has_perm = location;
@@ -82,43 +99,31 @@ public class MainActivity extends AppCompatActivity {
         return storage_has_perm;
     }
 
-    private void execListener() {
-        btnSend.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mWifiP2pController.send(DataPacketBuilder.buildMsgPacket(editTextMsg.getText().toString()));
-            }
-        });
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener(){
-
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                mWifiP2pController.connectToPeer(mDeviceArray[position], new WifiP2pManager.ActionListener() {
-
-                    @Override
-                    public void onSuccess() {
-                        Toast.makeText(getApplicationContext(), "Connecting to peer ...", Toast.LENGTH_SHORT).show();
-                    }
-                    @Override
-                    public void onFailure(int reason) {
-                        Toast.makeText(getApplicationContext(), "Peer connection failed with code " + Integer.toString(reason), Toast.LENGTH_SHORT).show();
-                    }
-                });
-            }
-        });
-    }
 
     private void initialWork() {
-        btnSend = findViewById(R.id.sendButton);
-        listView = findViewById(R.id.peerListView);
-        textView = findViewById(R.id.connectionStatus);
-        editTextMsg = findViewById(R.id.writeMsg);
-        redMsg = findViewById(R.id.readMsg);
-        myAdd = findViewById(R.id.my_address);
-        myName = findViewById(R.id.my_name);
-        myStatus = findViewById(R.id.my_status);
+
+        defaultP2PIp = getMyIpAddress();
+
+        tabLayout = findViewById(R.id.tablayout);
+        viewPager = findViewById(R.id.viewpager);
+
+        devices_fragment = new FragmentDevices();
+        streams_fragment = new FragmentStreams();
+
+        streams_fragment.setMainActivity(this);
+        devices_fragment.setMainActivity(this);
+
+        ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
+        adapter.AddFragment(devices_fragment,"WiFi Devices");
+        adapter.AddFragment(streams_fragment, "Streams Available");
+
+        viewPager.setAdapter(adapter);
+
+        tabLayout.setupWithViewPager(viewPager);
 
         mWifiP2pController = WifiP2pController.getInstance(this);
+        devices_fragment.setmWifiP2pController(mWifiP2pController);
+
         mIntentFilter = new IntentFilter();
         wiFiP2pPermissions = new WiFiP2pPermissions(this,this);
         // Indicates a change in the Wi-Fi P2P status.
@@ -130,18 +135,19 @@ public class MainActivity extends AppCompatActivity {
         // Indicates this device's details have changed.
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
 
+
     }
 
     private void DiscoverPeers(){
         mWifiP2pController.discoverPeers(new WifiP2pManager.ActionListener() {
             @Override
             public void onSuccess() {
-                textView.setText("Discovery Started");
-            }
+                devices_fragment.setTextView("Discovery Started");
+        }
 
             @Override
             public void onFailure(int reason) {
-                textView.setText("Discovery Starting Failed");
+                devices_fragment.setTextView("Discovery Starting Failed");
             }
         });
     }
@@ -151,6 +157,7 @@ public class MainActivity extends AppCompatActivity {
         //openCameraActivity();
         openStreamActivity();
     }
+
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.action_items, menu);
@@ -177,15 +184,15 @@ public class MainActivity extends AppCompatActivity {
             case R.id.atn_direct_camera:
                 if(checkCameraHardware()) {
                     wiFiP2pPermissions.camera();
-                    if(camera_has_perm) {
+                    wiFiP2pPermissions.audio();
+                    if(camera_has_perm && audio_has_perm) {
                         //TODO here goes all the functionality
                         handleCamera();
                     }
                 }
                 return true;
             case R.id.atn_direct_file_transfer:
-                    //onBrowse();
-                openViewStreamActivity();
+                    onBrowse();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -212,29 +219,37 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void updateThisDevice(WifiP2pDevice device) {
-         myName.setText(device.deviceName);
-         myStatus.setText(getDeviceStatus(device.status));
-         myAdd.setText(device.deviceAddress);
+         devices_fragment.updateMyDeviceStatus(device);
     }
 
     public void updateMsg(final String str){
         runOnUiThread(new Runnable() {
             public void run() {
-                redMsg.setText(str);
+               devices_fragment.updateMsg(str);
+            }
+        });
+    }
+
+    public void updateStreamList(final boolean on_off,final String ip){
+        runOnUiThread(new Runnable() {
+            public void run() {
+                streams_fragment.updateList(on_off,ip);
             }
         });
     }
 
     public void updatePeers(WifiP2pDevice[] deviceArray)
     {
-        this.mDeviceArray = deviceArray;
+       devices_fragment.updateDeviceArray(deviceArray);
         if (deviceArray.length == 0) {
             Toast.makeText(getApplicationContext(), "No Devices Found", Toast.LENGTH_SHORT).show();
+            devices_fragment.setTextView("Discovery Finished");
         }
         else
         {
             DeviceListAdapter deviceListAdapter = new DeviceListAdapter(this, deviceArray);
-            listView.setAdapter(deviceListAdapter);
+            //listView.setAdapter(deviceListAdapter);
+            devices_fragment.updateList(deviceListAdapter);
         }
 
     }
@@ -271,6 +286,7 @@ public class MainActivity extends AppCompatActivity {
         super.onPause();
         unregisterReceiver(this.mWifiP2pController.getWiFiP2pBroadcastReceiver());
     }
+
     public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
         switch (requestCode) {
             case REQUEST_COARSE_LOCATION_CODE: {
@@ -300,7 +316,12 @@ public class MainActivity extends AppCompatActivity {
                     this.camera_has_perm = true;
                     // permission was granted,
                     Toast.makeText(getApplicationContext(), "CAMERA PERMISSION GRANTED", Toast.LENGTH_SHORT).show();
-                    handleCamera();
+                    if(audio_has_perm) {
+                        handleCamera();
+                    }
+                    else {
+                        wiFiP2pPermissions.audio();
+                    }
                 } else {
 
                     // permission denied, wifi direct wont work under version ??? maybe we dont need it...
@@ -310,6 +331,31 @@ public class MainActivity extends AppCompatActivity {
                     }
                     else{
                         Toast.makeText(getApplicationContext(), "CAMERA PERMISSION NOT GRANTED, YOU WONT BE ABLE TO USE THIS", Toast.LENGTH_SHORT).show();
+                    }
+                }
+                break;
+            }
+            case MY_AUDIO_REQUEST_CODE: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    this.audio_has_perm = true;
+                    // permission was granted,
+                    Toast.makeText(getApplicationContext(), "AUDIO RECORD PERMISSION GRANTED", Toast.LENGTH_SHORT).show();
+                    if(camera_has_perm) {
+                        handleCamera();
+                    }
+                    else {
+                        wiFiP2pPermissions.camera();
+                    }
+                } else {
+
+                    // permission denied, wifi direct wont work under version ??? maybe we dont need it...
+                    if (!ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.RECORD_AUDIO)) {
+                        //Show permission explanation dialog...
+                        Toast.makeText(getApplicationContext(), "YOU DENIED PERMISSION AND CHECKED TO NEVER ASK AGAIN, GO SETTING AND ADD AUDIO PERMISSION MANUALLY TO USE THIS", Toast.LENGTH_SHORT).show();
+                    }
+                    else{
+                        Toast.makeText(getApplicationContext(), "AUDIO RECORD PERMISSION NOT GRANTED, YOU WONT BE ABLE TO USE THIS", Toast.LENGTH_SHORT).show();
                     }
                 }
                 break;
@@ -365,7 +411,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void openStreamActivity() {
+        mWifiP2pController.send(DataPacketBuilder.buildStreamNotifier(true,defaultP2PIp));
         Intent streamActivityIntent = new Intent(this, StreamActivity.class);
+        streamActivityIntent.putExtra("IP", defaultP2PIp);
         this.startActivity(streamActivityIntent);
     }
 
@@ -375,8 +423,23 @@ public class MainActivity extends AppCompatActivity {
         this.startActivity(mediaActivityIntent);
     }
 
-    private void openViewStreamActivity() {
+    public void openViewStreamActivity(String ip) {
         Intent streamActivityIntent = new Intent(this, ViewStreamActivity.class);
+        streamActivityIntent.putExtra("IP",ip);
         this.startActivity(streamActivityIntent);
+    }
+
+    public String getMyIpAddress(){
+        WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+        String ip = Formatter.formatIpAddress(wm.getConnectionInfo().getIpAddress());
+        return ip;
+    }
+
+    public void setDefaultP2PIp(final String ip){
+        runOnUiThread(new Runnable() {
+            public void run() {
+                defaultP2PIp = ip;
+            }
+        });
     }
 }

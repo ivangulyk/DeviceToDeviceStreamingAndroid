@@ -21,6 +21,23 @@ public class DataPacketBuilder {
         return packet;
     }
 
+    public static DataPacket buildStreamNotifier(boolean on_off, String notifier){
+        DataPacket packet = new DataPacket();
+        if (on_off)
+            packet.setType(DataPacket.STREAM_ON);
+        else packet.setType(DataPacket.STREAM_OFF);
+
+        try {
+            //CREATE THE MSG WITH JUST THE MSG
+            packet.createPacket(notifier.getBytes());
+        } catch (IOException e) {
+            e.printStackTrace();
+            packet = null;
+        }
+
+        return packet;
+    }
+
     public static DataPacket buildFilePacket(byte[] file, String fileName){
         DataPacket packet = new DataPacket();
         packet.setType(DataPacket.TYPE_FILE);

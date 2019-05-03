@@ -22,7 +22,20 @@ public class ServerWorker extends AbstractWorker {
                 Logger.d("ServerWorker echoing the MSG");
                 selector.send(dataPacket.getData());
                 break;
+            case DataPacket.STREAM_ON:
+                selector.getMainActivity().updateStreamList(true, new String(dataPacket.getBodyData()));
+                Logger.d("ServerWorker received STREAM_ON command");
 
+                selector.send(dataPacket.getData());
+                Logger.d("ServerWorker echoing the STREAM_ON");
+                break;
+            case DataPacket.STREAM_OFF:
+                selector.getMainActivity().updateStreamList(false, new String(dataPacket.getBodyData()));
+                Logger.d("ServerWorker received STREAM_OFF command");
+
+                selector.send(dataPacket.getData());
+                Logger.d("ServerWorker echoing the STREAM_OFF");
+                break;
             case DataPacket.TYPE_FILE:
                 selector.getMainActivity().getWiFiP2pPermissions().memory();
                 if(selector.getMainActivity().get_storage_has_perm()) {

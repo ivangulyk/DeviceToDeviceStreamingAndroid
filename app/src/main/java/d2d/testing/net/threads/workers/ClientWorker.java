@@ -22,7 +22,15 @@ public class ClientWorker extends AbstractWorker {
                 selector.getMainActivity().updateMsg(new String(dataPacket.getBodyData()));
                 Logger.d("ClientWorker received TYPE_MSG command");
                 break;
+            case DataPacket.STREAM_ON:
+                selector.getMainActivity().updateStreamList(true, new String(dataPacket.getBodyData()));
+                Logger.d("ClientWorker received STREAM_ON command");
+                break;
 
+            case DataPacket.STREAM_OFF:
+                selector.getMainActivity().updateStreamList(false, new String(dataPacket.getBodyData()));
+                Logger.d("ClientWorker received STREAM_OFF command");
+                break;
             case DataPacket.TYPE_FILE:
                 selector.getMainActivity().getWiFiP2pPermissions().memory();
                 if(selector.getMainActivity().get_storage_has_perm()) {
