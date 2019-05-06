@@ -102,8 +102,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void initialWork() {
 
-        defaultP2PIp = getMyIpAddress();
-
         tabLayout = findViewById(R.id.tablayout);
         viewPager = findViewById(R.id.viewpager);
 

@@ -46,7 +46,9 @@
 
         <activity android:name=".MediaActivity" />
         <activity android:name=".StreamActivity" />
-        <activity android:name=".ViewStreamActivity" />
+        <activity android:name=".ViewStreamActivity"
+            android:screenOrientation="landscape"
+            android:theme="@style/CameraFullScreenTheme" />
 
         <service android:name=".streaming.rtsp.RtspServer" />
     </application>
