@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.util.Random;
+
+import d2d.testing.streaming.audio.AudioPacketizerDispatcher;
 import d2d.testing.streaming.audio.AudioStream;
 import d2d.testing.streaming.rtp.AbstractPacketizer;
 import d2d.testing.streaming.video.VideoStream;
@@ -291,7 +293,7 @@ public abstract class MediaStream implements Stream {
 					closeSockets();
 					mPacketizer.stop();
 				} else {
-					mPacketizer.stop();
+					//mPacketizer.stop();
 					/*
 					mMediaCodec.stop();
 					mMediaCodec.release();
@@ -300,7 +302,7 @@ public abstract class MediaStream implements Stream {
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
-			}	
+			}
 			mStreaming = false;
 		}
 	}

@@ -95,8 +95,8 @@ public class StreamActivity extends AppCompatActivity implements SurfaceHolder.C
     public void onDestroy(){
         WifiP2pController.getInstance().send(DataPacketBuilder.buildStreamNotifier(false,getIntent().getExtras().getString("IP")));
         super.onDestroy();
-        mSesion.stopPreview();
-        mSesion.stop();
+        //mSesion.stop();
         this.stopService(mIntent);
+        mSesion.stopPreview();
     }
 }

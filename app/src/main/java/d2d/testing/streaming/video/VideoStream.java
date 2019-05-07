@@ -324,6 +324,10 @@ public abstract class VideoStream extends MediaStream {
 		stop();
 	}
 
+	public synchronized void stopCamera(){
+		destroyCamera();
+	}
+
 	/**
 	 * Video encoding is done by a MediaRecorder.
 	 */

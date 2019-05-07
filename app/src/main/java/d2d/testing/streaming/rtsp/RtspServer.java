@@ -36,6 +36,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import d2d.testing.streaming.Session;
 import d2d.testing.streaming.SessionBuilder;
+import d2d.testing.streaming.audio.AudioPacketizerDispatcher;
+
 import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -184,15 +186,16 @@ public class RtspServer extends Service {
 	 * Stops the RTSP server but not the Android Service. 
 	 * To stop the Android Service you need to call {@link android.content.Context#stopService(Intent)}; 
 	 */
-	public void stop() {
+	public synchronized void stop() {
 		if (mListenerThread != null) {
 			try {
 				mListenerThread.kill();
 				for ( Session session : mSessions.keySet() ) {
 				    if ( session != null && session.isStreaming() ) {
 						session.stop();
-				    } 
+				    }
 				}
+				//AudioPacketizerDispatcher.stopAudioPaketizer();
 			} catch (Exception e) {
 			} finally {
 				mListenerThread = null;

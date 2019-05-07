@@ -160,7 +160,7 @@ public class VideoPacketizerDispatcher {
     private void removeInternalMediaCodec(AbstractPacketizer packetizer) {
         mPacketizersInputsMap.remove(packetizer);
         Log.e(TAG, "Removed internal media codec from map!");
-        if (mPacketizersInputsMap.size() == 0) {
+        if (mPacketizersInputsMap.isEmpty()) {
             Log.e(TAG, "No more elements in map lets finish this!");
 
             internalStop();

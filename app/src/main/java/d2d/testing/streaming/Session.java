@@ -580,7 +580,7 @@ public class Session {
 			@Override
 			public void run() {
 				if (mVideoStream != null) {
-					mVideoStream.stopPreview();
+					mVideoStream.stopCamera();
 				}
 			}
 		});
