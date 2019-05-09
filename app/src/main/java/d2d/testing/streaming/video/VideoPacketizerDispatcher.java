@@ -45,9 +45,9 @@ public class VideoPacketizerDispatcher {
     @SuppressLint("NewApi")
     private VideoPacketizerDispatcher(Camera camera, SharedPreferences settings, VideoQuality quality) throws IOException {
 
-        this.mQuality = quality;
         this.mCamera = camera;
         this.mSettings = settings;
+        this.mQuality = VideoQuality.determineClosestSupportedResolution(mCamera.getParameters(), quality);
 
         EncoderDebugger debugger = EncoderDebugger.debug(mSettings, mQuality.resX, mQuality.resY);
         final NV21Convertor convertor = debugger.getNV21Convertor();
