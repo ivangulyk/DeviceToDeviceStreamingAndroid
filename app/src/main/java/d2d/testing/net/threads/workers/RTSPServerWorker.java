@@ -52,12 +52,6 @@ public class RTSPServerWorker extends AbstractWorker {
     private String mUsername;
     private String mPassword;
 
-    @Override
-    protected void processData(DataPacket dataPacket, AbstractSelector selector, SelectableChannel channel) {
-
-
-    }
-
     public RtspResponse processRequest(RtspRequest request, SelectableChannel channel) throws IllegalStateException, IOException {
         Session requestSession = mSessions.get(channel);
         ServerSession serverSession = mServerSessions.get(channel);
@@ -132,37 +126,29 @@ Session: 902878796;timeout=60
 
     private RtspResponse DESCRIBE(RtspRequest request, SelectableChannel channel) throws IOException {
         RtspResponse response = new RtspResponse();
+        Socket socket = ((SocketChannel) channel).socket();
         // Parse the requested URI and configure the session
-
-        //todo hay que mirar en la uri si es /sessionID para REDIRIGIR LOS PUERTOS EN VEZ DE CREAR UN STREAM
-        //todo creamos una session differente RebroadCastSession
 
         // si no hay un path y no es el de nuestro stream es rebroadcast
         if(!request.path.equals("") && !request.path.equals("live")) {
             //if es una session para hacer play a un stream de rebroadcast entonces
+            RebroadcastSession session = handleRebroadcastRequest(request.path, socket);
+            mRebroadcastSessions.put(channel, session);
 
-            //Buscar la serverSession que corresponde al path
-
-            //RebroadcastSession session = new RebroadcastSession()
-            //session.setDestination()
-            //session.setSourceSession()
-            //session.addServerSession()
-            //mRebroadcastSessions.put(channel, session);
+            // If no exception has been thrown, we reply with OK
+            response.content = session.getSessionDescription();
+            response.attributes = "Content-Base: " + socket.getLocalAddress().getHostAddress() + ":" + socket.getLocalPort() + "/\r\n" +
+                                  "Content-Type: application/sdp\r\n";
 
             response.status = RtspResponse.STATUS_OK;
         } else {
-            Session requestSession = handleRequest(request.uri, ((SocketChannel) channel).socket());
-            mSessions.put(channel, requestSession);
-            requestSession.syncConfigure();
+            Session session = handleRequest(request.uri, ((SocketChannel) channel).socket());
+            mSessions.put(channel, session);
+            session.syncConfigure();
 
-            String requestContent = requestSession.getSessionDescription();
-            String requestAttributes =
-                    "Content-Base: " + (((SocketChannel) channel).socket()).getLocalAddress().getHostAddress()
-                            + ":" + ((SocketChannel) channel).socket().getLocalPort() + "/\r\n" +
-                            "Content-Type: application/sdp\r\n";
-
-            response.attributes = requestAttributes;
-            response.content = requestContent;
+            response.content = session.getSessionDescription();
+            response.attributes = "Content-Base: " + socket.getLocalAddress().getHostAddress() + ":" + socket.getLocalPort() + "/\r\n" +
+                                  "Content-Type: application/sdp\r\n";
 
             // If no exception has been thrown, we reply with OK
             response.status = RtspResponse.STATUS_OK;
@@ -201,22 +187,18 @@ Session: 902878796;timeout=60
 */
     private RtspResponse ANNOUNCE(RtspRequest request, SelectableChannel channel) throws IOException {
         RtspResponse response = new RtspResponse();
+        Socket socket = ((SocketChannel) channel).socket();
+
         // Parse the requested URI and configure the session
-        //Session requestSession = handleRequest(request.uri, ((SocketChannel) channel).socket());
-        //mSessions.put(channel, requestSession);
+        ServerSession session = handleServerRequest(request, socket);
+        mServerSessions.put(channel, session);
 
         //todo cambios en la session, es de modo recibir y no enviar...
         //ponerle el origen
-        ServerSession requestSession = new ServerSession();
 
-        // local IP + PORT
-        String baseUrl = (((SocketChannel) channel).socket()).getLocalAddress().getHostAddress()
-                + ":" + ((SocketChannel) channel).socket().getLocalPort();
-        String requestAttributes = "Content-Base: " + baseUrl + "/\r\n" +
-                                    "Content-Type: application/sdp\r\n" +
-                                    "Session: " + requestSession.getSessionID() + ";timeout=60\r\n";
-
-        response.attributes = requestAttributes;
+        response.attributes = "Content-Base: " + socket.getLocalAddress().getHostAddress() + ":" + socket.getLocalPort() + "/\r\n" +
+                              "Content-Type: application/sdp\r\n" +
+                              "Session: " + session.getSessionID() + ";timeout=" + session.getTimeout() +"\r\n";
 
         // If no exception has been thrown, we reply with OK
         response.status = RtspResponse.STATUS_OK;
@@ -542,7 +524,7 @@ Session: 902878796;timeout=60
         }
 
         try {
-            dataReceived.getSelector().send((SocketChannel) dataReceived.getSocket(), response.build().getBytes());
+            dataReceived.getSelector().send(dataReceived.getSocket(), response.build().getBytes());
         } catch (IOException e1) {
             e1.printStackTrace();
         }
@@ -579,12 +561,109 @@ Session: 902878796;timeout=60
      */
     protected Session handleRequest(String uri, Socket client) throws IllegalStateException, IOException {
         Session session = UriParser.parse(uri);
-        Log.d(TAG,"handlerequest: Origin" + client.getLocalAddress().getHostAddress());
+        Log.d(TAG,"handleRequest: Origin" + client.getLocalAddress().getHostAddress());
         session.setOrigin(client.getLocalAddress().getHostAddress());
         if (session.getDestination()==null) {
-            Log.d(TAG,"handlerequest: Destination" + client.getInetAddress().getHostAddress());
+            Log.d(TAG,"handleRequest: Destination" + client.getInetAddress().getHostAddress());
             session.setDestination(client.getInetAddress().getHostAddress());
         }
+        return session;
+    }
+
+    /**
+     * By default the RTSP uses {@link UriParser} to parse the URI requested by the client
+     * but you can change that behavior by override this method.
+     * @param uri The uri that the client has requested
+     * @param client The socket associated to the client
+     * @return A proper session
+     */
+      /*
+    ANNOUNCE
+
+    The ANNOUNCE method serves two purposes:
+    When sent from client to server, ANNOUNCE posts the description of a presentation or media object identified by the request URL to a server. When sent from server to client, ANNOUNCE updates the session description in real-time. If a new media stream is added to a presentation (e.g., during a live presentation), the whole presentation description should be sent again, rather than just the additional components, so that components can be deleted.
+
+    C->S: ANNOUNCE rtsp://example.com/media.mp4 RTSP/1.0
+        CSeq: 7
+        Date: 23 Jan 1997 15:35:06 GMT
+        Session: 12345678
+        Content-Type: application/sdp
+        Content-Length: 332
+
+        v=0
+        o=mhandley 2890844526 2890845468 IN IP4 126.16.64.4
+        s=SDP Seminar
+                i=A Seminar on the session description protocol
+        u=http://www.cs.ucl.ac.uk/staff/M.Handley/sdp.03.ps
+        e=mjh@isi.edu (Mark Handley)
+                c=IN IP4 224.2.17.12/127
+        t=2873397496 2873404696
+        a=recvonly
+        m=audio 3456 RTP/AVP 0
+        m=video 2232 RTP/AVP 31
+
+    S->C: RTSP/1.0 200 OK
+        CSeq: 7
+*/
+
+    protected ServerSession handleServerRequest(RtspRequest request, Socket client) throws IllegalStateException, IOException {
+        ServerSession session = new ServerSession();
+        BufferedReader reader = new BufferedReader(new StringReader(request.body));
+        String line;
+/*
+        while(line = reader.readLine() != null && line.length()>3 && (matcher = rexegHeader.matcher(line)).find()) {
+
+        }
+*/
+        /*
+        sessionDescription.append("v=0\r\n");
+		// TODO: Add IPV6 support
+		sessionDescription.append("o=- "+mTimestamp+" "+mTimestamp+" IN IP4 "+mOrigin+"\r\n");
+		sessionDescription.append("s=Unnamed\r\n");
+		sessionDescription.append("i=N/A\r\n");
+		sessionDescription.append("c=IN IP4 "+mDestination+"\r\n");
+		// t=0 0 means the session is permanent (we don't know when it will stop)
+		sessionDescription.append("t=0 0\r\n");
+		sessionDescription.append("a=recvonly\r\n");
+
+         */
+/*        mSessionDescription = "m=audio "+String.valueOf(getDestinationPorts()[0])+" RTP/AVP 96\r\n" +
+                "a=rtpmap:96 mpeg4-generic/"+mQuality.samplingRate+"\r\n"+
+                "a=fmtp:96 streamtype=5; profile-level-id=15; mode=AAC-hbr; config="+Integer.toHexString(mConfig)+"; SizeLength=13; IndexLength=3; IndexDeltaLength=3;\r\n";
+*/
+/*
+return "m=video "+String.valueOf(getDestinationPorts()[0])+" RTP/AVP 96\r\n" +
+		"a=rtpmap:96 H264/90000\r\n" +
+		"a=fmtp:96 packetization-mode=1;profile-level-id="+mConfig.getProfileLevel()+";sprop-parameter-sets="+mConfig.getB64SPS()+","+mConfig.getB64PPS()+";\r\n";
+ */
+        Log.d(TAG,"handleServerRequest: Origin" + client.getInetAddress().getHostAddress());
+        session.setOrigin(client.getInetAddress().getHostAddress());
+        Log.d(TAG,"handleRequest: Destination" + client.getLocalAddress().getHostAddress());
+        session.setDestination(client.getLocalAddress().getHostAddress());
+
+        return session;
+    }
+
+    protected RebroadcastSession handleRebroadcastRequest(String path, Socket client) {
+        //Buscar la serverSession que corresponde al path
+        RebroadcastSession session = new RebroadcastSession();
+
+        for(ServerSession serverSession : mServerSessions.values()) {
+            if(serverSession.mSessionID.equalsIgnoreCase(path)) {
+                session.setServerSession(serverSession);
+            }
+        }
+
+        if(session.getServerSession() == null) {
+            throw new IllegalArgumentException();
+        }
+
+        Log.d(TAG,"handleRequest: Origin" + client.getLocalAddress().getHostAddress());
+        session.setOrigin(client.getInetAddress().getHostAddress());
+
+        Log.d(TAG,"handleRebroadcastRequest: Destination" + client.getLocalAddress().getHostAddress());
+        session.setDestination(client.getInetAddress().getHostAddress());
+
         return session;
     }
 

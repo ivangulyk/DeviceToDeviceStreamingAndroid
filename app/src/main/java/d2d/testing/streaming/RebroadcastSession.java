@@ -18,6 +18,7 @@ public class RebroadcastSession {
     public final String mSessionID;
     private TrackInfo mVideoTrackInfo;
     private TrackInfo mAudioTrackInfo;
+    private ServerSession mServerSession;
 
     /**
      * Creates a streaming session that can be customized by adding tracks.
@@ -89,9 +90,8 @@ public class RebroadcastSession {
      */
     public String getSessionDescription() {
         StringBuilder sessionDescription = new StringBuilder();
-        if (mDestination==null) {
-            throw new IllegalStateException("setDestination() has not been called !");
-        }
+
+        mServerSession.getSessionDescription();
         sessionDescription.append("v=0\r\n");
         // TODO: Add IPV6 support
         sessionDescription.append("o=- "+mTimestamp+" "+mTimestamp+" IN IP4 "+mOrigin+"\r\n");
@@ -161,5 +161,13 @@ public class RebroadcastSession {
             return mAudioTrackInfo;
         else
             return mVideoTrackInfo;
+    }
+
+    public void setServerSession(ServerSession serverSession) {
+        this.mServerSession = serverSession;
+    }
+
+    public ServerSession getServerSession() {
+        return mServerSession;
     }
 }
