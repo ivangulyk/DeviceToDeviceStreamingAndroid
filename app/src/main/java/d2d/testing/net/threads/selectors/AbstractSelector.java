@@ -248,7 +248,7 @@ public abstract class AbstractSelector implements Runnable{
     protected abstract void onClientDisconnected(SelectableChannel socketChannel);
 
     private void write(SelectionKey key) throws IOException {
-        SocketChannel socketChannel = (SocketChannel) key.channel();
+        SelectableChannel socketChannel = key.channel();
 
         synchronized (mPendingData) {
             List queue = mPendingData.get(socketChannel);
@@ -262,7 +262,7 @@ public abstract class AbstractSelector implements Runnable{
 
             while (!queue.isEmpty()) {                  // Write until there's not more data ...
                 ByteBuffer buf = (ByteBuffer) queue.get(0);
-                int written = socketChannel.write(buf);
+                int written = ((ByteChannel) socketChannel).write(buf);
                 Logger.e("AbstractSelector: Wrote " + written + " bytes in " + this.getClass());
                 if (buf.remaining() > 0) {              // ... or the socket's buffer fills up
                     break;

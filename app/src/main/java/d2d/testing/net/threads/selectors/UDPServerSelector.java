@@ -34,7 +34,6 @@ public class UDPServerSelector extends AbstractSelector {
         try {
             mDatagramChannel = (DatagramChannel) DatagramChannel.open().configureBlocking(false);
             mDatagramChannel.socket().bind(new InetSocketAddress(mPortUDP));
-
             mStatusUDP = STATUS_LISTENING;
             this.addChangeRequest(new ChangeRequest(mDatagramChannel, ChangeRequest.REGISTER, SelectionKey.OP_READ));
             Logger.d("ClientSelector: initiateConnection as server listening UDP on port " + InetAddress.getLocalHost().getHostAddress() + ":" + mPortUDP);

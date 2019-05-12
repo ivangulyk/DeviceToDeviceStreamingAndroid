@@ -87,7 +87,13 @@ public class RTSPServerWorker extends AbstractWorker {
                 case "REDIRECT":
                     return REDIRECT();
                 case "PLAY":
-                    return PLAY(requestSession, channel);
+                    if(requestSession != null)
+                        return PLAY(requestSession, channel);
+                    else if(rebroadcastSession != null)
+                        return PLAY_REBROADCAST(rebroadcastSession, channel);
+                    else
+                        response.status = RtspResponse.STATUS_BAD_REQUEST;
+                    break;
                 case "RECORD":
                     return RECORD(serverSession, channel);
                 case "PAUSE":
@@ -366,13 +372,13 @@ Session: 902878796;timeout=60
             response.status = RtspResponse.STATUS_BAD_REQUEST;
             return response;
         }
-        TrackInfo trackInfo = session.getServerTrack(trackId);
+        RebroadcastSession.RebroadcastTrackInfo rebroadcastTrackInfo = new RebroadcastSession.RebroadcastTrackInfo();
 
         p = Pattern.compile("client_port=(\\d+)(?:-(\\d+))?", Pattern.CASE_INSENSITIVE);
         m = p.matcher(request.headers.get("transport"));
 
         if (!m.find()) {
-            int[] ports = session.getRebroadcastTrack(trackId).getRemotePorts();
+            int[] ports = rebroadcastTrackInfo.getRemotePorts();
             p1 = ports[0];
             p2 = ports[1];
         } else {
@@ -382,12 +388,13 @@ Session: 902878796;timeout=60
             } else {
                 p2 = Integer.parseInt(m.group(2));
             }
-            session.getRebroadcastTrack(trackId).setRemotePorts(p1, p2);
+            rebroadcastTrackInfo.setRemotePorts(p1, p2);
         }
 
-        srcPorts = trackInfo.getLocalPorts();
+        srcPorts = session.getServerTrack(trackId).getLocalPorts();
 
         //TODO ADD TO THE UDP SERVERS
+        session.addRebroadcastTrack(rebroadcastTrackInfo, trackId);
         session.startTrack(trackId);
 
         response.attributes = "Transport: RTP/AVP/UDP;" + (InetAddress.getByName(session.getDestination()).isMulticastAddress() ? "multicast" : "unicast") +
@@ -400,6 +407,25 @@ Session: 902878796;timeout=60
                 ";mode=play\r\n" +
                 "Session: " + session.getSessionID() + "\r\n" +
                 "Cache-Control: no-cache\r\n";
+
+        // If no exception has been thrown, we reply with OK
+        response.status = RtspResponse.STATUS_OK;
+
+        return response;
+    }
+
+    private RtspResponse PLAY_REBROADCAST(RebroadcastSession rebroadcastSession, SelectableChannel channel) {
+        RtspResponse response = new RtspResponse();
+        Socket requestSocket = ((SocketChannel) channel).socket();
+        String url = requestSocket.getLocalAddress().getHostAddress() + ":" + requestSocket.getLocalPort();
+
+        String requestAttributes = "RTP-Info: ";
+        if (rebroadcastSession.serverTrackExists(0))
+            requestAttributes += "url=rtsp://" + url + "/trackID=" + 0 + ";seq=0,";
+        if (rebroadcastSession.serverTrackExists(1))
+            requestAttributes += "url=rtsp://" + url + "/trackID=" + 1 + ";seq=0,";
+        response.attributes = requestAttributes.substring(0, requestAttributes.length() - 1)
+                + "\r\nSession: " + rebroadcastSession.getSessionID() +"\r\n";
 
         // If no exception has been thrown, we reply with OK
         response.status = RtspResponse.STATUS_OK;
@@ -615,13 +641,13 @@ Session: 902878796;timeout=60
         while((line = reader.readLine()) != null && line.length()>0) {
             if(regexAudioDescription.matcher(line).find()){
                 TrackInfo trackInfo = new TrackInfo();
-                trackInfo.setSessionDescription(line + reader.readLine() + reader.readLine());
+                trackInfo.setSessionDescription(line +"\r\n"+ reader.readLine() +"\r\n"+ reader.readLine() +"\r\n");
                 session.addAudioTrack(trackInfo);
             }
 
             if(regexVideoDescription.matcher(line).find()){
                 TrackInfo trackInfo = new TrackInfo();
-                trackInfo.setSessionDescription(line + reader.readLine() + reader.readLine());
+                trackInfo.setSessionDescription(line +"\r\n"+ reader.readLine() +"\r\n"+ reader.readLine() +"\r\n");
                 session.addVideoTrack(trackInfo);
             }
         }

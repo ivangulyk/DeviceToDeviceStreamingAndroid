@@ -143,12 +143,20 @@ public class RebroadcastSession {
         }
     }
 
-    public class RebroadcastTrackInfo {
+    public void addRebroadcastTrack(RebroadcastTrackInfo rebroadcastTrackInfo, int trackId) {
+        if (trackId==0)
+
+            mAudioRebroadcastTrackInfo = rebroadcastTrackInfo;
+        else
+            mVideoRebroadcastTrackInfo = rebroadcastTrackInfo;
+    }
+
+    public static class RebroadcastTrackInfo {
         private int mRemoteRtpPort;
         private int mRemoteRtcpPort;
 
         public RebroadcastTrackInfo() {
-            setRemotePorts(14000 * new Random().nextInt(1000));
+            setRemotePorts(18000 + new Random().nextInt(2000));
         }
 
         public int[] getRemotePorts() {
