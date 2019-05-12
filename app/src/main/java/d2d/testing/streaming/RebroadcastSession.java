@@ -2,7 +2,8 @@ package d2d.testing.streaming;
 
 import android.os.HandlerThread;
 
-import d2d.testing.net.threads.selectors.RTSPServerSelector;
+import java.util.Random;
+
 import d2d.testing.streaming.video.VideoStream;
 
 import static java.util.UUID.randomUUID;
@@ -16,8 +17,8 @@ public class RebroadcastSession {
     private int mTimeToLive = 64;
     private long mTimestamp;
     public final String mSessionID;
-    private TrackInfo mVideoTrackInfo;
-    private TrackInfo mAudioTrackInfo;
+    private RebroadcastTrackInfo mVideoRebroadcastTrackInfo;
+    private RebroadcastTrackInfo mAudioRebroadcastTrackInfo;
     private ServerSession mServerSession;
 
     /**
@@ -33,37 +34,6 @@ public class RebroadcastSession {
         mOrigin = "127.0.0.1";
         mSessionID = randomUUID().toString();
     }
-
-    /** You probably don't need to use that directly, use the {@link SessionBuilder}.
-     * todo funcion para guardar informacion del streaming de audio recibida en el announce para reenviarla
-     * todo funcion para guardar informacion del streaming de audio del setup (puertos y demas)
-    void addAudioTrack(AudioStream track) {
-        removeAudioTrack();
-        mAudioStream = track;
-    }
-     */
-
-    /** You probably don't need to use that directly, use the {@link SessionBuilder}.
-     * * todo funcion para guardar informacion del streaming de video recibida en el announce para reenviarla
-     * todo funcion para guardar informacion del streaming de video del setup (puertos y demas)
-    void addVideoTrack(VideoStream track) {
-        removeVideoTrack();
-        mVideoStream = track;
-    }
-     */
-
-    /** Returns the underlying {@link AudioStream} used by the {@link Session}.
-     * todo getters para la informacion recibida del announce
-    public AudioStream getAudioTrack() {
-        return mAudioStream;
-    }
-     */
-
-    /** Returns the underlying {@link VideoStream} used by the {@link Session}.
-    public VideoStream getVideoTrack() {
-        return mVideoStream;
-    }
-     */
 
     /**
      * The origin address of the session.
@@ -90,8 +60,6 @@ public class RebroadcastSession {
      */
     public String getSessionDescription() {
         StringBuilder sessionDescription = new StringBuilder();
-
-        mServerSession.getSessionDescription();
         sessionDescription.append("v=0\r\n");
         // TODO: Add IPV6 support
         sessionDescription.append("o=- "+mTimestamp+" "+mTimestamp+" IN IP4 "+mOrigin+"\r\n");
@@ -101,18 +69,16 @@ public class RebroadcastSession {
         // t=0 0 means the session is permanent (we don't know when it will stop)
         sessionDescription.append("t=0 0\r\n");
         sessionDescription.append("a=recvonly\r\n");
-        // Prevents two different sessions from using the same peripheral at the same time
-        /*
-        todo reenviamos la informacion que hemos guardado antes
-        if (mAudioStream != null) {
-            sessionDescription.append(mAudioStream.getSessionDescription());
+
+        if(serverTrackExists(0)) {
+            sessionDescription.append(getServerTrack(0).getSessionDescription());
             sessionDescription.append("a=control:trackID="+0+"\r\n");
         }
-        if (mVideoStream != null) {
-            sessionDescription.append(mVideoStream.getSessionDescription());
+
+        if(serverTrackExists(1)) {
+            sessionDescription.append(getServerTrack(1).getSessionDescription());
             sessionDescription.append("a=control:trackID="+1+"\r\n");
         }
-        */
         return sessionDescription.toString();
     }
 
@@ -140,34 +106,75 @@ public class RebroadcastSession {
         //........
     }
 
-
-    /** Deletes all existing tracks & release associated resources. */
-    public void release() {
-
-        //.........
+    public boolean serverTrackExists(int id) {
+        return mServerSession.trackExists(id);
     }
 
-    /*
-    public boolean trackExists(int id) {
-        if (id==0)
-            return mAudioStream!=null;
-        else
-            return mVideoStream!=null;
+    public TrackInfo getServerTrack(int id) {
+        return mServerSession.getTrack(id);
     }
-    */
 
-    public TrackInfo getTrack(int id) {
-        if (id==0)
-            return mAudioTrackInfo;
-        else
-            return mVideoTrackInfo;
+    public ServerSession getServerSession() {
+        return mServerSession;
     }
 
     public void setServerSession(ServerSession serverSession) {
         this.mServerSession = serverSession;
     }
 
-    public ServerSession getServerSession() {
-        return mServerSession;
+    public RebroadcastTrackInfo getRebroadcastTrack(int trackId) {
+        if (trackId==0)
+            return mAudioRebroadcastTrackInfo;
+        else
+            return mVideoRebroadcastTrackInfo;
+    }
+
+    public void startTrack(int trackId) {
+        if (serverTrackExists(trackId)){
+            getServerTrack(trackId).addRtcpEchoSession(
+                    getDestination(),
+                    getRebroadcastTrack(trackId).getRemoteRctpPort()
+            );
+
+            getServerTrack(trackId).addRtpEchoSession(
+                    getDestination(),
+                    getRebroadcastTrack(trackId).getRemoteRtpPort()
+            );
+        }
+    }
+
+    public class RebroadcastTrackInfo {
+        private int mRemoteRtpPort;
+        private int mRemoteRtcpPort;
+
+        public RebroadcastTrackInfo() {
+            setRemotePorts(14000 * new Random().nextInt(1000));
+        }
+
+        public int[] getRemotePorts() {
+            return new int[]{mRemoteRtpPort, mRemoteRtcpPort};
+        }
+
+        public int getRemoteRtpPort() {
+            return mRemoteRtpPort;
+        }
+
+        public int getRemoteRctpPort() {
+            return mRemoteRtcpPort;
+        }
+
+        public void setRemotePorts(int dport) {
+            if (dport % 2 == 1) {
+                mRemoteRtpPort = dport-1;
+                mRemoteRtcpPort = dport;
+            } else {
+                mRemoteRtpPort = dport;
+                mRemoteRtcpPort = dport+1;
+            }
+        }
+        public void setRemotePorts(int rtpPort, int rtcpPort) {
+            mRemoteRtpPort = rtpPort;
+            mRemoteRtcpPort = rtcpPort;
+        }
     }
 }

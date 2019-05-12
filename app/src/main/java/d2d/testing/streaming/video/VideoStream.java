@@ -449,52 +449,6 @@ public abstract class VideoStream extends MediaStream {
 			}
 		}
 
-		/*EncoderDebugger debugger = EncoderDebugger.debug(mSettings, mQuality.resX, mQuality.resY);
-		final NV21Convertor convertor = debugger.getNV21Convertor();
-
-		mMediaCodec = MediaCodec.createByCodecName(debugger.getEncoderName());
-		MediaFormat mediaFormat = MediaFormat.createVideoFormat("video/avc", mQuality.resX, mQuality.resY);
-		mediaFormat.setInteger(MediaFormat.KEY_BIT_RATE, mQuality.bitrate);
-		mediaFormat.setInteger(MediaFormat.KEY_FRAME_RATE, mQuality.framerate);	
-		mediaFormat.setInteger(MediaFormat.KEY_COLOR_FORMAT,debugger.getEncoderColorFormat());
-		mediaFormat.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 1);
-		mMediaCodec.configure(mediaFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
-		mMediaCodec.start();
-
-		Camera.PreviewCallback callback = new Camera.PreviewCallback() {
-			long now = System.nanoTime()/1000, oldnow = now, i=0;
-			ByteBuffer[] inputBuffers = mMediaCodec.getInputBuffers();
-			@Override
-			public void onPreviewFrame(byte[] data, Camera camera) {
-				oldnow = now;
-				now = System.nanoTime()/1000;
-				if (i++>3) {
-					i = 0;
-					//Log.d(TAG,"Measured: "+1000000L/(now-oldnow)+" fps.");
-				}
-				try {
-					int bufferIndex = mMediaCodec.dequeueInputBuffer(500000);
-					if (bufferIndex>=0) {
-						inputBuffers[bufferIndex].clear();
-						if (data == null) Log.e(TAG,"Symptom of the \"Callback buffer was to small\" problem...");
-						else convertor.convert(data, inputBuffers[bufferIndex]);
-						mMediaCodec.queueInputBuffer(bufferIndex, 0, inputBuffers[bufferIndex].position(), now, 0);
-					} else {
-						Log.e(TAG,"No buffer available !");
-					}
-				} finally {
-					mCamera.addCallbackBuffer(data);
-				}				
-			}
-		};
-		
-		for (int i=0;i<10;i++) mCamera.addCallbackBuffer(new byte[convertor.getBufferSize()]);
-		mCamera.setPreviewCallbackWithBuffer(callback);
-
-		// The packetizer encapsulates the bit stream in an RTP stream and send it over the network
-		//mPacketizer.setInputStream(new MediaCodecInputStream(mMediaCodec));
-		*/
-
 		VideoPacketizerDispatcher.subscribe(mCamera, mSettings, mPacketizer, mQuality);
 
 		//mPacketizer.start();

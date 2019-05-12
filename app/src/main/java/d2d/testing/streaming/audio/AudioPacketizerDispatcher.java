@@ -16,6 +16,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import d2d.testing.streaming.rtp.AACADTSPacketizer;
+import d2d.testing.streaming.rtp.AACLATMPacketizer;
 import d2d.testing.streaming.rtp.AbstractPacketizer;
 import d2d.testing.streaming.rtp.ByteBufferInputStream;
 import d2d.testing.streaming.rtp.MediaCodecInputStream;
@@ -143,6 +145,12 @@ public class AudioPacketizerDispatcher {
     private void addInternalPacketizer(AbstractPacketizer packetizer) {
         InputStream packetizerInput = new ByteBufferInputStream();
         packetizer.setInputStream(packetizerInput);
+
+        if(packetizer instanceof AACLATMPacketizer) {
+            ((AACLATMPacketizer) packetizer).setSamplingRate(mQuality.samplingRate);
+        } else if(packetizer instanceof AACADTSPacketizer) {
+            ((AACADTSPacketizer) packetizer).setSamplingRate(mQuality.samplingRate);
+        }
 
         mPacketizersInputsMap.put(packetizer, packetizerInput);
         packetizer.start();

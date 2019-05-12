@@ -13,6 +13,7 @@ public class MediaCodecBufferReader implements Runnable {
     private final int mBufferSize;
     private final MediaCodecInputStream mMediaCodecInputStream;
     private final Map<AbstractPacketizer, InputStream> mPacketizersInputsMap;
+    private boolean mRunning = true;
 
     public MediaCodecBufferReader(int BuffSize, MediaCodecInputStream mediaCodecInputStream, Map<AbstractPacketizer, InputStream> map){
         mBufferSize = BuffSize;
@@ -25,7 +26,7 @@ public class MediaCodecBufferReader implements Runnable {
     public void run() {
         byte[] buffer = new byte[mBufferSize];
         int read = 0;
-        while (!Thread.interrupted()) {
+        while (!Thread.interrupted() && mRunning) {
             try {
                 read += mMediaCodecInputStream.read(buffer, read, mBufferSize - read);
                 //Log.v(TAG, "readen from MediaCodecInputStream: " + read);
@@ -42,6 +43,7 @@ public class MediaCodecBufferReader implements Runnable {
                     read = 0;
                 }
             } catch (IOException e) {
+                mRunning = false;
                 e.printStackTrace();
             }
         }

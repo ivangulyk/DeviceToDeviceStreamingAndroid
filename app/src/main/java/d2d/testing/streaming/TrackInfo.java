@@ -8,19 +8,24 @@ import java.util.Random;
 import d2d.testing.net.threads.selectors.UDPServerSelector;
 
 public class TrackInfo {
-    private int mRemoteRtpPort;
-    private int mRemoteRtcpPort;
     private int mLocalRtpPort;
     private int mLocalRtcpPort;
 
-    private UDPServerSelector mRtcpUdpServer;
-    private Thread mRtcpUdpServerThread;
+    private int mRemoteRtpPort;
+    private int mRemoteRtcpPort;
+
     private UDPServerSelector mRtpUdpServer;
+    private UDPServerSelector mRtcpUdpServer;
+
+    private Thread mRtcpUdpServerThread;
     private Thread mRtpUdpServerThread;
 
+    private String mSSRCHex;
+    private String mSessionDescription;
+
     public TrackInfo() {
-        setLocalPorts(15000 * new Random().nextInt(1000));
-        setRemotePorts(14000 * new Random().nextInt(1000));
+        setLocalPorts(16000 + new Random().nextInt(2000));
+        setRemotePorts(14000 + new Random().nextInt(2000));
     }
 
     public void startServer() throws IOException {
@@ -44,13 +49,34 @@ public class TrackInfo {
         mRtpUdpServerThread = null;
     }
 
-    public void addEchoSession(InetAddress address, int port) {
-        mRtcpUdpServer.addConnectionUDP(address, port);
-        mRtpUdpServer.addConnectionUDP(address, port);
+    public SelectableChannel addRtcpEchoSession(String address, int rtcpPort) {
+        SelectableChannel channel = null;
+        try {
+            channel = mRtcpUdpServer.addConnectionUDP(InetAddress.getByName(address), rtcpPort);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return channel;
     }
 
-    public void removeSession(SelectableChannel channel) {
-        
+    public SelectableChannel addRtpEchoSession(String address, int rtpPort) {
+        SelectableChannel channel = null;
+        try {
+            channel = mRtpUdpServer.addConnectionUDP(InetAddress.getByName(address), rtpPort);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return channel;
+    }
+
+    public void removeSession(SelectableChannel rtcpChannel, SelectableChannel rtpChannel) {
+        if(mRtcpUdpServer != null) {
+            mRtcpUdpServer.disconnectClient(rtcpChannel);
+        }
+
+        if(mRtpUdpServer != null) {
+            mRtpUdpServer.disconnectClient(rtpChannel);
+        }
     }
 
     public int[] getRemotePorts() {
@@ -87,5 +113,21 @@ public class TrackInfo {
     public void setLocalPorts(int rtpPort, int rtcpPort) {
         mLocalRtpPort = rtpPort;
         mLocalRtcpPort = rtcpPort;
+    }
+
+    public String getSSRCHex() {
+        return mSSRCHex;
+    }
+
+    public void setSSRCHex(String ssrcHex) {
+        this.mSSRCHex = ssrcHex;
+    }
+
+    public String getSessionDescription() {
+        return mSessionDescription;
+    }
+
+    public void setSessionDescription(String sessionDescription) {
+        this.mSessionDescription = sessionDescription;
     }
 }
