@@ -56,7 +56,7 @@ public class UDPServerSelector extends AbstractSelector {
 
     @Override
     public void send(byte[] data) {
-        Logger.d("UDPServerSelector: sending " + data.length + "bytes to " + mConnections.size());
+        //Logger.d("UDPServerSelector: sending " + data.length + "bytes to " + mConnections.size());
         for (SelectableChannel socket : mConnections) {
             this.send(socket,data);
         }

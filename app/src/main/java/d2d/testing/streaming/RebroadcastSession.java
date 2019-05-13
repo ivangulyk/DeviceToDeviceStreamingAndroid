@@ -7,8 +7,6 @@ import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import d2d.testing.streaming.video.VideoStream;
-
 import static java.util.UUID.randomUUID;
 
 public class RebroadcastSession {
@@ -68,6 +66,9 @@ public class RebroadcastSession {
      * @throws IllegalStateException Thrown when {@link #setDestination(String)} has never been called.
      */
     public String getSessionDescription() {
+        final Pattern regexAudioDescription = Pattern.compile("m=audio (\\d+) (.*)", Pattern.CASE_INSENSITIVE);
+        final Pattern regexVideoDescription = Pattern.compile("m=video (\\d+) (.*)", Pattern.CASE_INSENSITIVE);
+
         StringBuilder sessionDescription = new StringBuilder();
         sessionDescription.append("v=0\r\n");
         // TODO: Add IPV6 support
@@ -80,16 +81,14 @@ public class RebroadcastSession {
         sessionDescription.append("a=recvonly\r\n");
 
         if(serverTrackExists(0)) {
-            final Pattern regexAudioDescription = Pattern.compile("m=audio (\\d+) (.*)",Pattern.CASE_INSENSITIVE);
             Matcher m = regexAudioDescription.matcher(getServerTrack(0).getSessionDescription());
-            sessionDescription.append(m.replaceFirst(Integer.toString(getRebroadcastTrack(0).getRemoteRtpPort())));
+            sessionDescription.append(m.replaceFirst("m=audio "+getRebroadcastTrack(0).getRemoteRtpPortString()+" $2"));
             sessionDescription.append("a=control:trackID="+0+"\r\n");
         }
 
         if(serverTrackExists(1)) {
-            final Pattern regexVideoDescription = Pattern.compile("m=video (\\d) (.*)",Pattern.CASE_INSENSITIVE);
             Matcher m = regexVideoDescription.matcher(getServerTrack(1).getSessionDescription());
-            sessionDescription.append(m.replaceFirst(Integer.toString(getRebroadcastTrack(1).getRemoteRtpPort())));
+            sessionDescription.append(m.replaceFirst("m=video "+getRebroadcastTrack(1).getRemoteRtpPortString()+" $2"));
             sessionDescription.append("a=control:trackID="+1+"\r\n");
         }
         return sessionDescription.toString();
@@ -186,6 +185,11 @@ public class RebroadcastSession {
         public int getRemoteRtpPort() {
             return mRemoteRtpPort;
         }
+
+        public String getRemoteRtpPortString() {
+            return Integer.toString(mRemoteRtpPort);
+        }
+
 
         public int getRemoteRctpPort() {
             return mRemoteRtcpPort;

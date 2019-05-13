@@ -80,15 +80,16 @@ public class RTSPServerWorker extends AbstractWorker {
                     } else if(rebroadcastSession != null) {
                         return SETUP_REBROADCAST(request, rebroadcastSession);
                     }
+                    break;
                 case "TEARDOWN":
                     if(requestSession != null) {
-                        return TEARDOWN(requestSession);
+                        return TEARDOWN(requestSession, channel);
                     } else if(serverSession != null) {
-                        return TEARDOWN(serverSession);
+                        return TEARDOWN(serverSession, channel);
                     } else if(rebroadcastSession != null) {
-                        return TEARDOWN(rebroadcastSession);
+                        return TEARDOWN(rebroadcastSession, channel);
                     }
-
+                    break;
                 case "ANNOUNCE":
                     return ANNOUNCE(request, channel);
                 case "REDIRECT":
@@ -484,22 +485,24 @@ Session: 902878796;timeout=60
         return response;
     }
 
-    private RtspResponse TEARDOWN(Session session) {
+    private RtspResponse TEARDOWN(Session session, SelectableChannel channel) {
         RtspResponse response = new RtspResponse();
         response.status = RtspResponse.STATUS_OK;
         return response;
     }
 
-    private RtspResponse TEARDOWN(ServerSession session) {
+    private RtspResponse TEARDOWN(ServerSession session, SelectableChannel channel) {
         RtspResponse response = new RtspResponse();
         session.stop();
+        mServerSessions.remove(channel);
         response.status = RtspResponse.STATUS_OK;
         return response;
     }
 
-    private RtspResponse TEARDOWN(RebroadcastSession session) {
+    private RtspResponse TEARDOWN(RebroadcastSession session, SelectableChannel channel) {
         RtspResponse response = new RtspResponse();
         session.stop();
+        mRebroadcastSessions.remove(channel);
         response.status = RtspResponse.STATUS_OK;
         return response;
     }
