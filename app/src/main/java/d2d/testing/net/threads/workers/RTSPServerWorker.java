@@ -81,7 +81,14 @@ public class RTSPServerWorker extends AbstractWorker {
                         return SETUP_REBROADCAST(request, rebroadcastSession);
                     }
                 case "TEARDOWN":
-                    return TEARDOWN();
+                    if(requestSession != null) {
+                        return TEARDOWN(requestSession);
+                    } else if(serverSession != null) {
+                        return TEARDOWN(serverSession);
+                    } else if(rebroadcastSession != null) {
+                        return TEARDOWN(rebroadcastSession);
+                    }
+
                 case "ANNOUNCE":
                     return ANNOUNCE(request, channel);
                 case "REDIRECT":
@@ -138,15 +145,20 @@ Session: 902878796;timeout=60
         // si no hay un path y no es el de nuestro stream es rebroadcast
         if(!request.path.equals("") && !request.path.equals("live")) {
             //if es una session para hacer play a un stream de rebroadcast entonces
-            RebroadcastSession session = handleRebroadcastRequest(request.path, socket);
-            mRebroadcastSessions.put(channel, session);
+            try {
+                RebroadcastSession session = handleRebroadcastRequest(request.path, socket);
+                mRebroadcastSessions.put(channel, session);
 
-            // If no exception has been thrown, we reply with OK
-            response.content = session.getSessionDescription();
-            response.attributes = "Content-Base: " + socket.getLocalAddress().getHostAddress() + ":" + socket.getLocalPort() + "/\r\n" +
-                                  "Content-Type: application/sdp\r\n";
+                // If no exception has been thrown, we reply with OK
+                response.content = session.getSessionDescription();
+                response.attributes = "Content-Base: " + socket.getLocalAddress().getHostAddress() + ":" + socket.getLocalPort() + "/\r\n" +
+                        "Content-Type: application/sdp\r\n";
 
-            response.status = RtspResponse.STATUS_OK;
+                response.status = RtspResponse.STATUS_OK;
+            } catch (IllegalArgumentException e) {
+                response.status = RtspResponse.STATUS_BAD_REQUEST;
+                return response;
+            }
         } else {
             Session session = handleRequest(request.uri, ((SocketChannel) channel).socket());
             mSessions.put(channel, session);
@@ -195,10 +207,14 @@ Session: 902878796;timeout=60
         RtspResponse response = new RtspResponse();
         Socket socket = ((SocketChannel) channel).socket();
 
+        if(request.path.equals("")) {
+            response.status = RtspResponse.STATUS_BAD_REQUEST;
+        }
+
         // Parse the requested URI and configure the session
         ServerSession session = handleServerRequest(request, socket);
-        mServerSessions.put(channel, session);
 
+        mServerSessions.put(channel, session);
         response.attributes = "Content-Base: " + socket.getLocalAddress().getHostAddress() + ":" + socket.getLocalPort() + "/\r\n" +
                               "Content-Type: application/sdp\r\n" +
                               "Session: " + session.getSessionID() + ";timeout=" + session.getTimeout() +"\r\n";
@@ -372,7 +388,7 @@ Session: 902878796;timeout=60
             response.status = RtspResponse.STATUS_BAD_REQUEST;
             return response;
         }
-        RebroadcastSession.RebroadcastTrackInfo rebroadcastTrackInfo = new RebroadcastSession.RebroadcastTrackInfo();
+        RebroadcastSession.RebroadcastTrackInfo rebroadcastTrackInfo = session.getRebroadcastTrack(trackId);
 
         p = Pattern.compile("client_port=(\\d+)(?:-(\\d+))?", Pattern.CASE_INSENSITIVE);
         m = p.matcher(request.headers.get("transport"));
@@ -392,9 +408,6 @@ Session: 902878796;timeout=60
         }
 
         srcPorts = session.getServerTrack(trackId).getLocalPorts();
-
-        //TODO ADD TO THE UDP SERVERS
-        session.addRebroadcastTrack(rebroadcastTrackInfo, trackId);
         session.startTrack(trackId);
 
         response.attributes = "Transport: RTP/AVP/UDP;" + (InetAddress.getByName(session.getDestination()).isMulticastAddress() ? "multicast" : "unicast") +
@@ -471,8 +484,22 @@ Session: 902878796;timeout=60
         return response;
     }
 
-    private RtspResponse TEARDOWN() {
+    private RtspResponse TEARDOWN(Session session) {
         RtspResponse response = new RtspResponse();
+        response.status = RtspResponse.STATUS_OK;
+        return response;
+    }
+
+    private RtspResponse TEARDOWN(ServerSession session) {
+        RtspResponse response = new RtspResponse();
+        session.stop();
+        response.status = RtspResponse.STATUS_OK;
+        return response;
+    }
+
+    private RtspResponse TEARDOWN(RebroadcastSession session) {
+        RtspResponse response = new RtspResponse();
+        session.stop();
         response.status = RtspResponse.STATUS_OK;
         return response;
     }
@@ -657,6 +684,7 @@ Session: 902878796;timeout=60
         Log.d(TAG,"handleRequest: Destination" + client.getLocalAddress().getHostAddress());
         session.setDestination(client.getLocalAddress().getHostAddress());
 
+        session.setPath(request.path);
         return session;
     }
 
@@ -665,7 +693,7 @@ Session: 902878796;timeout=60
         RebroadcastSession session = new RebroadcastSession();
 
         for(ServerSession serverSession : mServerSessions.values()) {
-            if(serverSession.mSessionID.equalsIgnoreCase(path)) {
+            if(serverSession.getPath().equalsIgnoreCase(path)) {
                 session.setServerSession(serverSession);
             }
         }

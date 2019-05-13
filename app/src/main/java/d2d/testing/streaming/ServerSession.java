@@ -20,6 +20,7 @@ public class ServerSession {
     private TrackInfo mVideoTrackInfo;
     private TrackInfo mAudioTrackInfo;
     private String mSessionIDessionDescription;
+    private String path;
 
 
     /**
@@ -33,6 +34,7 @@ public class ServerSession {
 
         mOrigin = "127.0.0.1";
         mSessionID = randomUUID().toString();
+        path = "";
     }
 
     /**
@@ -112,5 +114,13 @@ public class ServerSession {
 
     public String getTimeout() {
         return "60";
+    }
+
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    public String getPath() {
+        return path;
     }
 }

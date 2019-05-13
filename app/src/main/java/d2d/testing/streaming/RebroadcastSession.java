@@ -2,7 +2,10 @@ package d2d.testing.streaming;
 
 import android.os.HandlerThread;
 
+import java.nio.channels.SelectableChannel;
 import java.util.Random;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import d2d.testing.streaming.video.VideoStream;
 
@@ -20,6 +23,10 @@ public class RebroadcastSession {
     private RebroadcastTrackInfo mVideoRebroadcastTrackInfo;
     private RebroadcastTrackInfo mAudioRebroadcastTrackInfo;
     private ServerSession mServerSession;
+    private SelectableChannel rtcpVideoTrackChannel;
+    private SelectableChannel rtpVideoTrackChannel;
+    private SelectableChannel rtcpAudioTrackChannel;
+    private SelectableChannel rtpAudioTrackChannel;
 
     /**
      * Creates a streaming session that can be customized by adding tracks.
@@ -33,6 +40,8 @@ public class RebroadcastSession {
         mTimestamp = (uptime/1000)<<32 & (((uptime-((uptime/1000)*1000))>>32)/1000); // NTP timestamp
         mOrigin = "127.0.0.1";
         mSessionID = randomUUID().toString();
+        mVideoRebroadcastTrackInfo = new RebroadcastTrackInfo();
+        mAudioRebroadcastTrackInfo = new RebroadcastTrackInfo();
     }
 
     /**
@@ -71,12 +80,16 @@ public class RebroadcastSession {
         sessionDescription.append("a=recvonly\r\n");
 
         if(serverTrackExists(0)) {
-            sessionDescription.append(getServerTrack(0).getSessionDescription());
+            final Pattern regexAudioDescription = Pattern.compile("m=audio (\\d+) (.*)",Pattern.CASE_INSENSITIVE);
+            Matcher m = regexAudioDescription.matcher(getServerTrack(0).getSessionDescription());
+            sessionDescription.append(m.replaceFirst(Integer.toString(getRebroadcastTrack(0).getRemoteRtpPort())));
             sessionDescription.append("a=control:trackID="+0+"\r\n");
         }
 
         if(serverTrackExists(1)) {
-            sessionDescription.append(getServerTrack(1).getSessionDescription());
+            final Pattern regexVideoDescription = Pattern.compile("m=video (\\d) (.*)",Pattern.CASE_INSENSITIVE);
+            Matcher m = regexVideoDescription.matcher(getServerTrack(1).getSessionDescription());
+            sessionDescription.append(m.replaceFirst(Integer.toString(getRebroadcastTrack(1).getRemoteRtpPort())));
             sessionDescription.append("a=control:trackID="+1+"\r\n");
         }
         return sessionDescription.toString();
@@ -101,9 +114,13 @@ public class RebroadcastSession {
     }
     /** Stops all existing streams. */
     public void stop() {
+        if(serverTrackExists(0)) {
+            getServerTrack(0).removeSession(rtcpVideoTrackChannel,rtpVideoTrackChannel);
+        }
 
-
-        //........
+        if(serverTrackExists(1)) {
+            getServerTrack(1).removeSession(rtcpAudioTrackChannel,rtpAudioTrackChannel);
+        }
     }
 
     public boolean serverTrackExists(int id) {
@@ -130,25 +147,28 @@ public class RebroadcastSession {
     }
 
     public void startTrack(int trackId) {
-        if (serverTrackExists(trackId)){
-            getServerTrack(trackId).addRtcpEchoSession(
+        if (trackId == 0 && serverTrackExists(0)){
+            rtcpAudioTrackChannel = getServerTrack(0).addRtcpEchoSession(
                     getDestination(),
-                    getRebroadcastTrack(trackId).getRemoteRctpPort()
+                    getRebroadcastTrack(0).getRemoteRctpPort()
             );
 
-            getServerTrack(trackId).addRtpEchoSession(
+            rtpAudioTrackChannel = getServerTrack(0).addRtpEchoSession(
                     getDestination(),
-                    getRebroadcastTrack(trackId).getRemoteRtpPort()
+                    getRebroadcastTrack(0).getRemoteRtpPort()
             );
         }
-    }
+        if (trackId == 1 && serverTrackExists(1)){
+            rtcpVideoTrackChannel = getServerTrack(1).addRtcpEchoSession(
+                    getDestination(),
+                    getRebroadcastTrack(1).getRemoteRctpPort()
+            );
 
-    public void addRebroadcastTrack(RebroadcastTrackInfo rebroadcastTrackInfo, int trackId) {
-        if (trackId==0)
-
-            mAudioRebroadcastTrackInfo = rebroadcastTrackInfo;
-        else
-            mVideoRebroadcastTrackInfo = rebroadcastTrackInfo;
+            rtpVideoTrackChannel = getServerTrack(1).addRtpEchoSession(
+                    getDestination(),
+                    getRebroadcastTrack(1).getRemoteRtpPort()
+            );
+        }
     }
 
     public static class RebroadcastTrackInfo {

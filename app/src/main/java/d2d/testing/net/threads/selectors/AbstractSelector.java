@@ -208,9 +208,9 @@ public abstract class AbstractSelector implements Runnable{
                 SocketAddress address = ((DatagramChannel) socketChannel).receive(mReadBuffer); // Attempt to read off the channel
 
                 mReadBuffer.flip();
-                Logger.d("Readen from DatagramChannel: " + mReadBuffer.limit() +
-                        " bytes from " + ((InetSocketAddress) address).getAddress().getHostAddress() + ":" + ((InetSocketAddress) address).getPort()
-                + " on address " + ((InetSocketAddress) ((DatagramChannel) socketChannel).getLocalAddress()).getPort());
+                //Logger.d("Readen from DatagramChannel: " + mReadBuffer.limit() +
+                //        " bytes from " + ((InetSocketAddress) address).getAddress().getHostAddress() + ":" + ((InetSocketAddress) address).getPort()
+                // + " on address " + ((InetSocketAddress) ((DatagramChannel) socketChannel).getLocalAddress()).getPort());
 
                 if (mReadBuffer.limit() == -1) {
                     disconnectClient(socketChannel);
@@ -233,8 +233,8 @@ public abstract class AbstractSelector implements Runnable{
         try {
             socketChannel.keyFor(mSelector).cancel();       // Remote entity shut the socket down cleanly. Do the same
             socketChannel.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            //e.printStackTrace();
         }
         onClientDisconnected(socketChannel);
         mConnections.remove(socketChannel);
@@ -263,7 +263,7 @@ public abstract class AbstractSelector implements Runnable{
             while (!queue.isEmpty()) {                  // Write until there's not more data ...
                 ByteBuffer buf = (ByteBuffer) queue.get(0);
                 int written = ((ByteChannel) socketChannel).write(buf);
-                Logger.e("AbstractSelector: Wrote " + written + " bytes in " + this.getClass());
+                //Logger.e("AbstractSelector: Wrote " + written + " bytes in " + this.getClass());
                 if (buf.remaining() > 0) {              // ... or the socket's buffer fills up
                     break;
                 }
