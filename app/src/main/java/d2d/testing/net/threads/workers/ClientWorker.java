@@ -2,9 +2,8 @@ package d2d.testing.net.threads.workers;
 
 import java.nio.channels.SelectableChannel;
 
-import d2d.testing.helpers.Logger;
+import d2d.testing.utils.Logger;
 import d2d.testing.net.handlers.FileHandler;
-import d2d.testing.net.handlers.StreamHandler;
 import d2d.testing.net.packets.DataPacket;
 import d2d.testing.net.threads.selectors.AbstractSelector;
 
@@ -12,7 +11,6 @@ import d2d.testing.net.threads.selectors.AbstractSelector;
 //TODO COMPARTIR MISMOS WORKERS? Ya veremos
 public class ClientWorker extends AbstractWorker {
 
-    private StreamHandler mStream = null;
 
     @Override
     protected void processData(DataPacket dataPacket, AbstractSelector selector, SelectableChannel channel) {
@@ -43,12 +41,7 @@ public class ClientWorker extends AbstractWorker {
 
             case DataPacket.TYPE_VIDEO_STREAM:
                 Logger.d("ClientWorker received TYPE_VIDEO_STREAM");
-                if(mStream == null)
-                {
-                    mStream = new StreamHandler();
-                }
 
-                mStream.handle(dataPacket);
                 break;
 
             default:

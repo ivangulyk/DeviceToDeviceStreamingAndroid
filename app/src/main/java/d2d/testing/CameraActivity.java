@@ -28,9 +28,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
 
-import d2d.testing.helpers.Logger;
+import d2d.testing.utils.Logger;
 import d2d.testing.net.WifiP2pController;
-import d2d.testing.net.threads.workers.SendStreamWorker;
 
 import static d2d.testing.net.helpers.IOUtils.getOutputMediaFile;
 
@@ -51,7 +50,6 @@ public class CameraActivity extends AppCompatActivity {
     private Camera mCamera;
     private CameraPreview mPreview;
     private MediaRecorder mMediaRecorder;
-    private SendStreamWorker mStreamWorker;
     private CameraOrientationEventListener mOrientationListener;
 
     private boolean mVideoMode = false;
@@ -287,7 +285,6 @@ public class CameraActivity extends AppCompatActivity {
                 } catch (Exception e) {
                     Logger.d("Exception stopping MediaRecorder: " + e.toString());
                 }
-                mStreamWorker.stop();
                 mRecording = false;
 
                 updateButtonsStatus();
@@ -298,7 +295,6 @@ public class CameraActivity extends AppCompatActivity {
                 } catch (Exception e) {
                     Logger.d("Exception starting MediaRecorder: " + e.toString());
                 }
-                mStreamWorker.start();
                 mRecording = true;
 
                 updateButtonsStatus();
@@ -366,7 +362,6 @@ public class CameraActivity extends AppCompatActivity {
             FileOutputStream fileOutput = new FileOutputStream(file);
             FileInputStream fileInput = new FileInputStream(file);
             mMediaRecorder.setOutputFile(fileOutput.getFD());
-            mStreamWorker = new SendStreamWorker(fileInput);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {

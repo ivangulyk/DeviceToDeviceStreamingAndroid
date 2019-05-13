@@ -1,4 +1,4 @@
-package d2d.testing;
+package d2d.testing.gui;
 
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
@@ -19,6 +19,8 @@ import org.videolan.libvlc.util.AndroidUtil;
 import java.util.ArrayList;
 import java.util.List;
 
+import d2d.testing.MainActivity;
+import d2d.testing.R;
 import d2d.testing.net.packets.DataPacketBuilder;
 
 public class FragmentStreams extends Fragment {

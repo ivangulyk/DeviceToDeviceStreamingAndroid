@@ -16,8 +16,7 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import d2d.testing.helpers.Logger;
-import d2d.testing.net.handlers.StreamHandler;
+import d2d.testing.utils.Logger;
 import d2d.testing.net.packets.DataReceived;
 import d2d.testing.streaming.RebroadcastSession;
 import d2d.testing.streaming.ServerSession;
@@ -44,7 +43,6 @@ public class RTSPServerWorker extends AbstractWorker {
     protected HashMap<SelectableChannel, ServerSession> mServerSessions = new HashMap<>();
     protected HashMap<SelectableChannel, RebroadcastSession> mRebroadcastSessions = new HashMap<>();
 
-    private StreamHandler mStream = null;
 
     /** Credentials for Basic Auth */
     private String mUsername;

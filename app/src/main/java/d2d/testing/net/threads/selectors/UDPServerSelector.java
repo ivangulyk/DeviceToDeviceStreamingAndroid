@@ -6,12 +6,10 @@ import java.net.InetSocketAddress;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
-import java.nio.channels.SocketChannel;
 
 import d2d.testing.MainActivity;
-import d2d.testing.helpers.Logger;
-import d2d.testing.net.threads.workers.ServerWorker;
-import d2d.testing.net.threads.workers.UdpEchoWorker;
+import d2d.testing.utils.Logger;
+import d2d.testing.net.threads.workers.EchoWorker;
 
 public class UDPServerSelector extends AbstractSelector {
     private DatagramChannel mDatagramChannel;
@@ -20,7 +18,7 @@ public class UDPServerSelector extends AbstractSelector {
     public UDPServerSelector(MainActivity mainActivity, int port) throws IOException {
         super(mainActivity);
         mPortUDP = port;
-        mWorker = new UdpEchoWorker();
+        mWorker = new EchoWorker();
         mWorker.start();
     }
 

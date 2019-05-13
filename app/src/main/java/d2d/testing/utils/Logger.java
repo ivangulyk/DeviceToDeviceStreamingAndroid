@@ -1,4 +1,4 @@
-package d2d.testing.helpers;
+package d2d.testing.utils;
 
 import android.util.Log;
 

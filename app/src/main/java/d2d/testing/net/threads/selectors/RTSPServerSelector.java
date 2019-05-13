@@ -5,12 +5,9 @@ import java.net.InetSocketAddress;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
 
-import d2d.testing.MainActivity;
-import d2d.testing.helpers.Logger;
+import d2d.testing.utils.Logger;
 import d2d.testing.net.threads.workers.RTSPServerWorker;
-import d2d.testing.net.threads.workers.ServerWorker;
 
 public class RTSPServerSelector extends ServerSelector {
     private ServerSocketChannel mServerSocketChannel;

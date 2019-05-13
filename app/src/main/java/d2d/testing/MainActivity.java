@@ -11,39 +11,25 @@ import android.net.wifi.WifiManager;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
-import android.os.Parcelable;
-import android.os.SystemClock;
 import android.support.annotation.NonNull;
-import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.text.format.Formatter;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.nio.channels.SelectableChannel;
-import java.nio.channels.SocketChannel;
-import java.util.Enumeration;
-
 import d2d.testing.gui.DeviceListAdapter;
-import d2d.testing.helpers.Logger;
+import d2d.testing.gui.FragmentDevices;
+import d2d.testing.gui.FragmentStreams;
+import d2d.testing.gui.ViewPagerAdapter;
+import d2d.testing.utils.Logger;
 import d2d.testing.net.WifiP2pController;
-import d2d.testing.net.packets.DataPacket;
 import d2d.testing.net.packets.DataPacketBuilder;
+import d2d.testing.utils.Permissions;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -66,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
     private FragmentStreams streams_fragment;
 
     WifiP2pController mWifiP2pController;
-    WiFiP2pPermissions wiFiP2pPermissions;
+    Permissions wiFiP2pPermissions;
 
 
     IntentFilter mIntentFilter;
@@ -92,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
         this.storage_has_perm = storage;
     }
 
-    public WiFiP2pPermissions getWiFiP2pPermissions() {
+    public Permissions getWiFiP2pPermissions() {
         return wiFiP2pPermissions;
     }
     public boolean get_storage_has_perm(){
@@ -123,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
         devices_fragment.setmWifiP2pController(mWifiP2pController);
 
         mIntentFilter = new IntentFilter();
-        wiFiP2pPermissions = new WiFiP2pPermissions(this,this);
+        wiFiP2pPermissions = new Permissions(this,this);
         // Indicates a change in the Wi-Fi P2P status.
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
         // Indicates a change in the list of available peers.
@@ -415,11 +401,6 @@ public class MainActivity extends AppCompatActivity {
         this.startActivity(streamActivityIntent);
     }
 
-    public void openMediaActivity(Uri uri) {
-        Intent mediaActivityIntent = new Intent(this, MediaActivity.class);
-        mediaActivityIntent.putExtra("key-uri", uri);
-        this.startActivity(mediaActivityIntent);
-    }
 
     public void openViewStreamActivity(String ip) {
         Intent streamActivityIntent = new Intent(this, ViewStreamActivity.class);

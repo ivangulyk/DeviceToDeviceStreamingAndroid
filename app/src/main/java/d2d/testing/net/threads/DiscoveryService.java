@@ -1,7 +1,7 @@
 package d2d.testing.net.threads;
 
 import android.net.wifi.p2p.WifiP2pManager;
-import d2d.testing.helpers.Logger;
+import d2d.testing.utils.Logger;
 import d2d.testing.net.WifiP2pHandler;
 
 public class DiscoveryService implements Runnable {

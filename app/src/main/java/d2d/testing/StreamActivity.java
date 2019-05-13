@@ -10,9 +10,6 @@ import android.os.Bundle;
 import android.view.SurfaceHolder;
 import android.view.WindowManager;
 
-import java.io.IOException;
-
-import d2d.testing.helpers.Logger;
 import d2d.testing.net.WifiP2pController;
 import d2d.testing.net.packets.DataPacketBuilder;
 import d2d.testing.net.threads.selectors.RTSPServerSelector;
@@ -20,7 +17,6 @@ import d2d.testing.streaming.Session;
 import d2d.testing.streaming.SessionBuilder;
 import d2d.testing.streaming.gl.SurfaceView;
 import d2d.testing.streaming.rtsp.RtspServer;
-import d2d.testing.streaming.video.VideoQuality;
 
 
 public class StreamActivity extends AppCompatActivity implements SurfaceHolder.Callback {

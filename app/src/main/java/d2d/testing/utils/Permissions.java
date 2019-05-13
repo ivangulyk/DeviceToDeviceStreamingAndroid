@@ -1,4 +1,4 @@
-package d2d.testing;
+package d2d.testing.utils;
 
 import android.Manifest;
 import android.content.Context;
@@ -6,7 +6,9 @@ import android.content.pm.PackageManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 
-public class WiFiP2pPermissions {
+import d2d.testing.MainActivity;
+
+public class Permissions {
     public static final int REQUEST_COARSE_LOCATION_CODE = 101;
     private static final int MY_CAMERA_REQUEST_CODE = 100;
     private static final int MY_WRITE_EXTERNAL_STORAGE_CODE = 103;
@@ -15,7 +17,7 @@ public class WiFiP2pPermissions {
     private MainActivity activity;
     private Context context;
 
-    public WiFiP2pPermissions(MainActivity activity,Context context){
+    public Permissions(MainActivity activity, Context context){
         this.activity = activity;
         this.context = context;
     }

@@ -8,7 +8,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 
 import d2d.testing.MainActivity;
-import d2d.testing.helpers.Logger;
+import d2d.testing.utils.Logger;
 import d2d.testing.net.threads.workers.ClientWorker;
 
 public class ClientSelector extends AbstractSelector {

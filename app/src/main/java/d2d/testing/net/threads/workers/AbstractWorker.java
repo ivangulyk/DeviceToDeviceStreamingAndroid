@@ -1,13 +1,12 @@
 package d2d.testing.net.threads.workers;
 
 import java.nio.channels.SelectableChannel;
-import java.nio.channels.SocketChannel;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import d2d.testing.helpers.Logger;
+import d2d.testing.utils.Logger;
 import d2d.testing.net.helpers.IOUtils;
 import d2d.testing.net.packets.DataPacket;
 import d2d.testing.net.packets.DataReceived;

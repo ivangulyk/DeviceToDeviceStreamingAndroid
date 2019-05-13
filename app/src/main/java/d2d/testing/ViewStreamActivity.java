@@ -35,7 +35,7 @@ import java.util.ArrayList;
 import static java.security.AccessController.getContext;
 
 
-public class ViewStreamActivity extends AppCompatActivity implements IVLCVout.Callback {
+public class ViewStreamActivity extends AppCompatActivity implements IVLCVout.Callback,MediaPlayer.EventListener {
     public final static String TAG = "VideoActivity";
 
     public static final String RTSP_URL = "rtspurl";
@@ -51,8 +51,6 @@ public class ViewStreamActivity extends AppCompatActivity implements IVLCVout.Ca
     private int mVideoHeight;
     private final static int VideoSizeChanged = -1;
 
-
-    private MediaPlayer.EventListener mPlayerListener = new MyPlayerListener(this);
 
     private String rtspUrl;
 
@@ -98,7 +96,7 @@ public class ViewStreamActivity extends AppCompatActivity implements IVLCVout.Ca
         holder.setKeepScreenOn(true);
         // Create media player
         mMediaPlayer = new MediaPlayer(libvlc);
-        mMediaPlayer.setEventListener(mPlayerListener);
+        mMediaPlayer.setEventListener(this);
         // Set up video output
         final IVLCVout vout = mMediaPlayer.getVLCVout();
         vout.setVideoView(mSurface);
@@ -175,4 +173,18 @@ public class ViewStreamActivity extends AppCompatActivity implements IVLCVout.Ca
         mVideoHeight = 0;
     }
 
+    @Override
+    public void onEvent(MediaPlayer.Event event) {
+        switch(event.type) {
+            case MediaPlayer.Event.EndReached:
+                Log.d(TAG, "MediaPlayerEndReached");
+                releasePlayer();
+                break;
+            case MediaPlayer.Event.Playing:
+            case MediaPlayer.Event.Paused:
+            case MediaPlayer.Event.Stopped:
+            default:
+                break;
+        }
+    }
 }

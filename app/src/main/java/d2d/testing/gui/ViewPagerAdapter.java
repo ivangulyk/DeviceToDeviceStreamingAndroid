@@ -1,4 +1,4 @@
-package d2d.testing;
+package d2d.testing.gui;
 
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
