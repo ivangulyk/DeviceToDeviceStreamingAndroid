@@ -31,7 +31,7 @@ import java.util.List;
 import d2d.testing.utils.Logger;
 import d2d.testing.net.WifiP2pController;
 
-import static d2d.testing.net.helpers.IOUtils.getOutputMediaFile;
+import static d2d.testing.utils.IOUtils.getOutputMediaFile;
 
 public class CameraActivity extends AppCompatActivity {
 

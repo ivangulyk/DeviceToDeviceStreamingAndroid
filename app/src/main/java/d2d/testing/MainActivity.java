@@ -395,7 +395,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void openStreamActivity() {
-        mWifiP2pController.send(DataPacketBuilder.buildStreamNotifier(true,defaultP2PIp));
+        mWifiP2pController.send(DataPacketBuilder.buildStreamNotifier(true,defaultP2PIp,"",""));
         Intent streamActivityIntent = new Intent(this, StreamActivity.class);
         streamActivityIntent.putExtra("IP", defaultP2PIp);
         this.startActivity(streamActivityIntent);

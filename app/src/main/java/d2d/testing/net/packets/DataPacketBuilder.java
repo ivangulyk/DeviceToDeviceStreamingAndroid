@@ -3,7 +3,7 @@ package d2d.testing.net.packets;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-import d2d.testing.net.helpers.IOUtils;
+import d2d.testing.utils.IOUtils;
 
 public class DataPacketBuilder {
     public static DataPacket buildMsgPacket(String msg){
@@ -21,7 +21,7 @@ public class DataPacketBuilder {
         return packet;
     }
 
-    public static DataPacket buildStreamNotifier(boolean on_off, String notifier){
+    public static DataPacket buildStreamNotifier(boolean on_off, String ip, String path, String name){
         DataPacket packet = new DataPacket();
         if (on_off)
             packet.setType(DataPacket.STREAM_ON);
@@ -29,7 +29,18 @@ public class DataPacketBuilder {
 
         try {
             //CREATE THE MSG WITH JUST THE MSG
-            packet.createPacket(notifier.getBytes());
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
+
+            output.write(IOUtils.intToByteArray(ip.length()));
+            output.write(ip.getBytes());
+
+            output.write(IOUtils.intToByteArray(path.length()));
+            output.write(path.getBytes());
+
+            output.write(IOUtils.intToByteArray(name.length()));
+            output.write(name.getBytes());
+
+            packet.createPacket(ip.getBytes());
         } catch (IOException e) {
             e.printStackTrace();
             packet = null;
@@ -52,21 +63,6 @@ public class DataPacketBuilder {
             packet.createPacket(output.toByteArray());
         } catch (IOException e) {
             e.printStackTrace();
-        }
-
-        return packet;
-    }
-
-    public static DataPacket buildStreamPacket(byte[] data){
-        DataPacket packet = new DataPacket();
-        packet.setType(DataPacket.TYPE_VIDEO_STREAM);
-
-        try {
-            //CREATE THE packet WITH JUST THE MSG
-            packet.createPacket(data);
-        } catch (IOException e) {
-            e.printStackTrace();
-            packet = null;
         }
 
         return packet;

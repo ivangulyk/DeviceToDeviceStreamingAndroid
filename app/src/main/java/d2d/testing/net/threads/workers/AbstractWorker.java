@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import d2d.testing.utils.Logger;
-import d2d.testing.net.helpers.IOUtils;
+import d2d.testing.utils.IOUtils;
 import d2d.testing.net.packets.DataPacket;
 import d2d.testing.net.packets.DataReceived;
 import d2d.testing.net.threads.selectors.AbstractSelector;

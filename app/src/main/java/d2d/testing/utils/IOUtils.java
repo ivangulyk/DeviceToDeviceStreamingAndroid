@@ -1,4 +1,4 @@
-package d2d.testing.net.helpers;
+package d2d.testing.utils;
 
 import android.os.Environment;
 import android.util.Log;
