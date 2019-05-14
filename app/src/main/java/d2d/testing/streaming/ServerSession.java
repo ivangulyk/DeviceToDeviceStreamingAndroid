@@ -47,6 +47,15 @@ public class ServerSession {
     }
 
     /**
+     * The origin address of the session.
+     * It appears in the session description.
+     * @param origin The origin address
+     */
+    public void getOrigin(String origin) {
+        mOrigin = origin;
+    }
+
+    /**
      * The destination address for all the streams of the session. <br />
      * Changes will be taken into account the next time you start the session.
      * @param destination The destination address

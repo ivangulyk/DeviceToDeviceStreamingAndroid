@@ -16,6 +16,8 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import d2d.testing.net.WifiP2pController;
+import d2d.testing.net.packets.DataPacketBuilder;
 import d2d.testing.utils.Logger;
 import d2d.testing.net.packets.DataReceived;
 import d2d.testing.streaming.RebroadcastSession;
@@ -66,37 +68,27 @@ public class RTSPServerWorker extends AbstractWorker {
             switch (request.method) {
                 case "OPTIONS":
                     response.status = RtspResponse.STATUS_OK;
-                    response.attributes = "Public: DESCRIBE,SETUP,TEARDOWN,PLAY,PAUSE\r\n";
+                    response.attributes = "Public: DESCRIBE,ANNOUNCE,SETUP,PLAY,RECORD,PAUSE,TEARDOWN\r\n";
                     break;
                 case "DESCRIBE":
                     return DESCRIBE(request, channel);
+                case "ANNOUNCE":
+                    return ANNOUNCE(request, channel);
                 case "SETUP":
                     if(requestSession != null) {
                         return SETUP(request, requestSession);
                     } else if(serverSession != null) {
-                        return SETUP_RECEIVE(request, serverSession);
+                        return SETUP(request, serverSession);
                     } else if(rebroadcastSession != null) {
-                        return SETUP_REBROADCAST(request, rebroadcastSession);
-                    }
+                        return SETUP(request, rebroadcastSession);
+                    } else
+                        response.status = RtspResponse.STATUS_BAD_REQUEST;
                     break;
-                case "TEARDOWN":
-                    if(requestSession != null) {
-                        return TEARDOWN(requestSession, channel);
-                    } else if(serverSession != null) {
-                        return TEARDOWN(serverSession, channel);
-                    } else if(rebroadcastSession != null) {
-                        return TEARDOWN(rebroadcastSession, channel);
-                    }
-                    break;
-                case "ANNOUNCE":
-                    return ANNOUNCE(request, channel);
-                case "REDIRECT":
-                    return REDIRECT();
                 case "PLAY":
                     if(requestSession != null)
                         return PLAY(requestSession, channel);
                     else if(rebroadcastSession != null)
-                        return PLAY_REBROADCAST(rebroadcastSession, channel);
+                        return PLAY(rebroadcastSession, channel);
                     else
                         response.status = RtspResponse.STATUS_BAD_REQUEST;
                     break;
@@ -104,6 +96,16 @@ public class RTSPServerWorker extends AbstractWorker {
                     return RECORD(serverSession, channel);
                 case "PAUSE":
                     return PAUSE();
+                case "TEARDOWN":
+                    if(requestSession != null) {
+                        return TEARDOWN(requestSession, channel);
+                    } else if(serverSession != null) {
+                        return TEARDOWN(serverSession, channel);
+                    } else if(rebroadcastSession != null) {
+                        return TEARDOWN(rebroadcastSession, channel);
+                    } else
+                        response.status = RtspResponse.STATUS_BAD_REQUEST;
+                    break;
                 default:
                     Logger.e("Command unknown: " + request);
                     response.status = RtspResponse.STATUS_BAD_REQUEST;
@@ -112,30 +114,7 @@ public class RTSPServerWorker extends AbstractWorker {
         return response;
 
     }
-
-    /*
-    todo record para sesiones que recibimos, es similar al PLAY
-RECORD rtsp://192.169.6.151:1935/live/android_test RTSP/1.0
-Range: npt=0.000-
-CSeq: 4
-Content-Length: 0
-Session: 902878796
-Authorization: Digest username="User1",realm="Streaming Server",nonce="9d9e1266ebfe1e5d8f48432af4b97669",uri="rtsp://192.169.6.151:1935/live/android_test",response="93271d1b62097f92d85b34f65cdd89af"
-
-RTSP/1.0 200 OK
-CSeq: 4
-Server: Wowza Streaming Engine 4.4.0 build17748
-Cache-Control: no-cache
-Range: npt=now-
-Session: 902878796;timeout=60
-     */
-    private RtspResponse RECORD(ServerSession serverSession, SelectableChannel channel) {
-        RtspResponse response = new RtspResponse();
-        response.attributes = "Session: " + serverSession.getSessionID() + ";timeout=" + serverSession.getTimeout() +"\r\n";
-        response.status = RtspResponse.STATUS_OK;
-        return response;
-    }
-
+    // DESCRIBE Implementation for live Sessions and RebroadcastSessions...
     private RtspResponse DESCRIBE(RtspRequest request, SelectableChannel channel) throws IOException {
         RtspResponse response = new RtspResponse();
         Socket socket = ((SocketChannel) channel).socket();
@@ -174,34 +153,7 @@ Session: 902878796;timeout=60
         return response;
     }
 
-    /*
-    ANNOUNCE
-
-    The ANNOUNCE method serves two purposes:
-    When sent from client to server, ANNOUNCE posts the description of a presentation or media object identified by the request URL to a server. When sent from server to client, ANNOUNCE updates the session description in real-time. If a new media stream is added to a presentation (e.g., during a live presentation), the whole presentation description should be sent again, rather than just the additional components, so that components can be deleted.
-
-    C->S: ANNOUNCE rtsp://example.com/media.mp4 RTSP/1.0
-        CSeq: 7
-        Date: 23 Jan 1997 15:35:06 GMT
-        Session: 12345678
-        Content-Type: application/sdp
-        Content-Length: 332
-
-        v=0
-        o=mhandley 2890844526 2890845468 IN IP4 126.16.64.4
-        s=SDP Seminar
-                i=A Seminar on the session description protocol
-        u=http://www.cs.ucl.ac.uk/staff/M.Handley/sdp.03.ps
-        e=mjh@isi.edu (Mark Handley)
-                c=IN IP4 224.2.17.12/127
-        t=2873397496 2873404696
-        a=recvonly
-        m=audio 3456 RTP/AVP 0
-        m=video 2232 RTP/AVP 31
-
-    S->C: RTSP/1.0 200 OK
-        CSeq: 7
-*/
+    // ANNOUNCE Implementation for ServerSessions...
     private RtspResponse ANNOUNCE(RtspRequest request, SelectableChannel channel) throws IOException {
         RtspResponse response = new RtspResponse();
         Socket socket = ((SocketChannel) channel).socket();
@@ -223,6 +175,7 @@ Session: 902878796;timeout=60
         return response;
     }
 
+    // SETUP Implementation for live Sessions...
     private RtspResponse SETUP(RtspRequest request, Session session) throws IOException {
         RtspResponse response = new RtspResponse();
         Pattern p;
@@ -287,24 +240,8 @@ Session: 902878796;timeout=60
         return response;
     }
 
-    /* todo setup para las sessiones de recibir
-SETUP rtsp://192.169.6.151:1935/live/android_test/trackID=1 RTSP/1.0
-Transport: RTP/AVP/UDP;unicast;client_port=5002-5003;mode=receive
-CSeq: 3
-Content-Length: 0
-Session: 902878796
-Authorization: Digest username="User1",realm="Streaming Server",nonce="9d9e1266ebfe1e5d8f48432af4b97669",uri="rtsp://192.169.6.151:1935/live/android_test",response="93271d1b62097f92d85b34f65cdd89af"
-
-RTSP/1.0 200 OK
-CSeq: 3
-Server: Wowza Streaming Engine 4.4.0 build17748
-Cache-Control: no-cache
-Expires: Fri, 4 Mar 2016 11:31:22 IST
-Transport: RTP/AVP/UDP;unicast;client_port=5002-5003;mode=receive;source=192.169.6.151;server_port=6974-6975
-Date: Fri, 4 Mar 2016 11:31:22 IST
-Session: 902878796;timeout=60
-* */
-    private RtspResponse SETUP_RECEIVE(RtspRequest request, ServerSession session) throws IOException {
+    // SETUP Implementation for ServerSessions...
+    private RtspResponse SETUP(RtspRequest request, ServerSession session) throws IOException {
         RtspResponse response = new RtspResponse();
         Pattern p;
         Matcher m;
@@ -363,7 +300,8 @@ Session: 902878796;timeout=60
         return response;
     }
 
-    private RtspResponse SETUP_REBROADCAST(RtspRequest request, RebroadcastSession session) throws IOException {
+    // SETUP Implementation for RebroadcastSessions...
+    private RtspResponse SETUP(RtspRequest request, RebroadcastSession session) throws IOException {
         RtspResponse response = new RtspResponse();
         Pattern p;
         Matcher m;
@@ -426,25 +364,7 @@ Session: 902878796;timeout=60
         return response;
     }
 
-    private RtspResponse PLAY_REBROADCAST(RebroadcastSession rebroadcastSession, SelectableChannel channel) {
-        RtspResponse response = new RtspResponse();
-        Socket requestSocket = ((SocketChannel) channel).socket();
-        String url = requestSocket.getLocalAddress().getHostAddress() + ":" + requestSocket.getLocalPort();
-
-        String requestAttributes = "RTP-Info: ";
-        if (rebroadcastSession.serverTrackExists(0))
-            requestAttributes += "url=rtsp://" + url + "/trackID=" + 0 + ";seq=0,";
-        if (rebroadcastSession.serverTrackExists(1))
-            requestAttributes += "url=rtsp://" + url + "/trackID=" + 1 + ";seq=0,";
-        response.attributes = requestAttributes.substring(0, requestAttributes.length() - 1)
-                + "\r\nSession: " + rebroadcastSession.getSessionID() +"\r\n";
-
-        // If no exception has been thrown, we reply with OK
-        response.status = RtspResponse.STATUS_OK;
-
-        return response;
-    }
-
+    // PLAY Implementation for live Sessions...
     private RtspResponse PLAY(Session requestSession, SelectableChannel channel) {
         RtspResponse response = new RtspResponse();
         Socket requestSocket = ((SocketChannel) channel).socket();
@@ -464,44 +384,62 @@ Session: 902878796;timeout=60
         return response;
     }
 
-    /*
-        REDIRECT
-
-        A REDIRECT request informs the client that it must connect to another server location. It contains the mandatory header Location,
-        which indicates that the client should issue requests for that URL. It may contain the parameter Range, which indicates when the redirection takes effect.
-        If the client wants to continue to send or receive media for this URI, the client MUST issue a TEARDOWN request for the current session and a SETUP for the
-        new session at the designated host.
-
-        S->C: REDIRECT rtsp://example.com/media.mp4 RTSP/1.0
-            CSeq: 11
-            Location: rtsp://bigserver.com:8001
-            Range: clock=19960213T143205Z-
-    */
-    private RtspResponse REDIRECT() {
+    // PLAY Implementation for RebroadcastSessions...
+    private RtspResponse PLAY(RebroadcastSession rebroadcastSession, SelectableChannel channel) {
         RtspResponse response = new RtspResponse();
+        Socket requestSocket = ((SocketChannel) channel).socket();
+        String url = requestSocket.getLocalAddress().getHostAddress() + ":" + requestSocket.getLocalPort();
+
+        String requestAttributes = "RTP-Info: ";
+        if (rebroadcastSession.serverTrackExists(0))
+            requestAttributes += "url=rtsp://" + url + "/trackID=" + 0 + ";seq=0,";
+        if (rebroadcastSession.serverTrackExists(1))
+            requestAttributes += "url=rtsp://" + url + "/trackID=" + 1 + ";seq=0,";
+        response.attributes = requestAttributes.substring(0, requestAttributes.length() - 1)
+                + "\r\nSession: " + rebroadcastSession.getSessionID() +"\r\n";
+
+        // If no exception has been thrown, we reply with OK
         response.status = RtspResponse.STATUS_OK;
+
         return response;
     }
 
+    // RECORD Implementation for ServerSessions...
+    private RtspResponse RECORD(ServerSession serverSession, SelectableChannel channel) {
+        RtspResponse response = new RtspResponse();
+        response.attributes = "Session: " + serverSession.getSessionID() + ";timeout=" + serverSession.getTimeout() +"\r\n";
+        response.status = RtspResponse.STATUS_OK;
+
+        WifiP2pController.getInstance().send(DataPacketBuilder.buildStreamNotifier(true, serverSession.getDestination(), serverSession.getPath(), serverSession.getPath()));
+        return response;
+    }
+
+    // TEARDOWN Implementation for live Sessions...
     private RtspResponse TEARDOWN(Session session, SelectableChannel channel) {
         RtspResponse response = new RtspResponse();
-        response.status = RtspResponse.STATUS_OK;
-        return response;
-    }
-
-    private RtspResponse TEARDOWN(ServerSession session, SelectableChannel channel) {
-        RtspResponse response = new RtspResponse();
         session.stop();
-        mServerSessions.remove(channel);
+        mSessions.remove(channel);
         response.status = RtspResponse.STATUS_OK;
         return response;
     }
 
+    // TEARDOWN Implementation for RebroadcastSessions...
     private RtspResponse TEARDOWN(RebroadcastSession session, SelectableChannel channel) {
         RtspResponse response = new RtspResponse();
         session.stop();
         mRebroadcastSessions.remove(channel);
         response.status = RtspResponse.STATUS_OK;
+        return response;
+    }
+
+    // TEARDOWN Implementation for ServerSessions...
+    private RtspResponse TEARDOWN(ServerSession session, SelectableChannel channel) {
+        RtspResponse response = new RtspResponse();
+        session.stop();
+        mServerSessions.remove(channel);
+        response.status = RtspResponse.STATUS_OK;
+
+        WifiP2pController.getInstance().send(DataPacketBuilder.buildStreamNotifier(false, session.getDestination(), session.getPath(), session.getPath()));
         return response;
     }
 
@@ -552,12 +490,6 @@ Session: 902878796;timeout=60
                     request.body += "\r\n" + line;
                 }
             }
-
-
-            /*if (line==null) {
-                //todo para nosotros no es desconectado... simplemente no hay una linea completa?
-                throw new SocketException("Client disconnected");
-            }*/
 
             // It's not an error, it's just easier to follow what's happening in logcat with the request in red
             Logger.e(request.method+" "+request.uri);
@@ -620,40 +552,6 @@ Session: 902878796;timeout=60
         }
         return session;
     }
-
-    /**
-     * By default the RTSP uses {@link UriParser} to parse the URI requested by the client
-     * but you can change that behavior by override this method.
-     * @return A proper session
-     */
-      /*
-    ANNOUNCE
-
-    The ANNOUNCE method serves two purposes:
-    When sent from client to server, ANNOUNCE posts the description of a presentation or media object identified by the request URL to a server. When sent from server to client, ANNOUNCE updates the session description in real-time. If a new media stream is added to a presentation (e.g., during a live presentation), the whole presentation description should be sent again, rather than just the additional components, so that components can be deleted.
-
-    C->S: ANNOUNCE rtsp://example.com/media.mp4 RTSP/1.0
-        CSeq: 7
-        Date: 23 Jan 1997 15:35:06 GMT
-        Session: 12345678
-        Content-Type: application/sdp
-        Content-Length: 332
-
-        v=0
-        o=mhandley 2890844526 2890845468 IN IP4 126.16.64.4
-        s=SDP Seminar
-                i=A Seminar on the session description protocol
-        u=http://www.cs.ucl.ac.uk/staff/M.Handley/sdp.03.ps
-        e=mjh@isi.edu (Mark Handley)
-                c=IN IP4 224.2.17.12/127
-        t=2873397496 2873404696
-        a=recvonly
-        m=audio 3456 RTP/AVP 0
-        m=video 2232 RTP/AVP 31
-
-    S->C: RTSP/1.0 200 OK
-        CSeq: 7
-*/
 
     protected ServerSession handleServerRequest(RtspRequest request, Socket client) throws IllegalStateException, IOException {
         ServerSession session = new ServerSession();
