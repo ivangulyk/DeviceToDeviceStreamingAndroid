@@ -9,7 +9,6 @@ import android.os.Build;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
-import android.util.Log;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
@@ -17,10 +16,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import d2d.testing.helpers.Logger;
+import d2d.testing.utils.Logger;
 import d2d.testing.net.WifiP2pHandler;
-import d2d.testing.net.helpers.IOUtils;
-import d2d.testing.net.packets.DataPacket;
+import d2d.testing.net.packets.DataPacketBuilder;
 
 public class SendFileWorker implements Runnable{
 
@@ -52,7 +50,7 @@ public class SendFileWorker implements Runnable{
             InputStream is = cr.openInputStream(Uri.parse(mFileUri.toString()));
 
             copyFile(is, output); //todo ioUtils copy from stream to stream
-            mHandler.mController.send(DataPacket.createFilePacket(output.toByteArray(), filename));
+            mHandler.mController.send(DataPacketBuilder.buildFilePacket(output.toByteArray(), filename));
 
             Logger.d("File worker: Data passed to controller to send...");
         } catch (FileNotFoundException e) {

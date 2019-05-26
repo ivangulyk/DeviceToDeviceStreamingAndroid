@@ -1,11 +1,15 @@
 package d2d.testing.net.threads.selectors;
 
+import android.annotation.SuppressLint;
+import android.util.Log;
+
 import java.io.IOException;
-import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.nio.ByteBuffer;
+import java.nio.channels.ByteChannel;
 import java.nio.channels.DatagramChannel;
+import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
@@ -19,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import d2d.testing.MainActivity;
-import d2d.testing.helpers.Logger;
+import d2d.testing.utils.Logger;
 import d2d.testing.net.threads.workers.AbstractWorker;
 
 import static java.lang.Thread.sleep;
@@ -39,17 +43,18 @@ public abstract class AbstractSelector implements Runnable{
     private final Selector mSelector;
 
     // A list of ChangeRequest instances and Data/socket map
-    protected final List<SocketChannel> mConnections = new ArrayList<>();
+    protected final List<SelectableChannel> mConnections = new ArrayList<>();
     private final List<ChangeRequest> mPendingChangeRequests = new LinkedList<>();
-    private final Map<SocketChannel, List> mPendingData = new HashMap<>();
+    private final Map<SelectableChannel, List> mPendingData = new HashMap<>();
     private final ByteBuffer mReadBuffer = ByteBuffer.allocate(BUFFER_SIZE);
 
-    private DatagramChannel mDatagramChannel;
     protected InetAddress mInetAddress;
+
+    protected int mPortTCP = PORT_TCP;
 
     private boolean mEnabled = true;
     protected int mStatusTCP = STATUS_DISCONNECTED;
-    private int mStatusUDP = STATUS_DISCONNECTED;
+    protected int mStatusUDP = STATUS_DISCONNECTED;
 
 
     protected AbstractWorker mWorker; //TODO convert to array??
@@ -81,7 +86,7 @@ public abstract class AbstractSelector implements Runnable{
             while(mEnabled) {
                 this.initiateConnection();
 
-                while (mStatusTCP != STATUS_DISCONNECTED) {
+                while (mStatusTCP != STATUS_DISCONNECTED || mStatusUDP != STATUS_DISCONNECTED) {
                     this.processChangeRequests();
 
                     mSelector.select();
@@ -130,33 +135,7 @@ public abstract class AbstractSelector implements Runnable{
         }
     }
 
-    private void initiateConnectionUDP(){
-        try {
-            mDatagramChannel = (DatagramChannel) DatagramChannel.open().configureBlocking(false);
-            mDatagramChannel.socket().bind(new InetSocketAddress(PORT_UDP));
-
-            mStatusUDP = STATUS_LISTENING;
-            this.addChangeRequest(new ChangeRequest(mDatagramChannel, ChangeRequest.REGISTER, SelectionKey.OP_READ));
-            Logger.d("ClientSelector: initiateConnection as server listening UDP on port " + InetAddress.getLocalHost().getHostAddress() + ":" + PORT_UDP);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static DatagramSocket initiateConnectionUDP(InetAddress address, int port){
-        try {
-            DatagramSocket datagramSocket = new DatagramSocket();
-            datagramSocket.connect(new InetSocketAddress(address.getHostAddress(), port));
-
-            Logger.d("ClientSelector: initiateConnection UDP client 'connected' to " + address.getHostAddress() + ":" + port);
-            return datagramSocket;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    protected void send(SocketChannel socket, byte[] data) {
+    public void send(SelectableChannel socket, byte[] data) {
         synchronized(mPendingChangeRequests) {
             this.mPendingChangeRequests.add(new ChangeRequest(socket, ChangeRequest.CHANGE_OPS, SelectionKey.OP_WRITE));
 
@@ -192,6 +171,7 @@ public abstract class AbstractSelector implements Runnable{
                 this.mStatusTCP = STATUS_CONNECTED;
                 key.interestOps(SelectionKey.OP_READ);  // Register an interest in reading till send
                 Logger.d("AbstractSelector: client (" + socketChannel.socket().getLocalAddress() + ") finished connecting...");
+                mMainActivity.setDefaultP2PIp(socketChannel.socket().getLocalAddress().toString().substring(1));
             }
         } catch (IOException e) {
             this.mStatusTCP = STATUS_DISCONNECTED;
@@ -200,34 +180,74 @@ public abstract class AbstractSelector implements Runnable{
         }
     }
 
+    @SuppressLint("NewApi")
     private void read(SelectionKey key) throws IOException {
         int numRead;
-        SocketChannel socketChannel = (SocketChannel) key.channel();
+        SelectableChannel socketChannel = key.channel();
         mReadBuffer.clear();   //Clear out our read buffer
 
-        try {
-            numRead = socketChannel.read(mReadBuffer); // Attempt to read off the channel
-        } catch (IOException e) {
-            key.cancel();       // Forced to close the connection, cancel key and close the channel.
-            socketChannel.close();
-            mConnections.remove(socketChannel);
-            return;
-        }
+        if (socketChannel instanceof SocketChannel ||
+           (socketChannel instanceof DatagramChannel && ((DatagramChannel) socketChannel).isConnected())) {
+            try {
+                numRead = ((ByteChannel) socketChannel).read(mReadBuffer); // Attempt to read off the channel
+            } catch (IOException e) {
+                disconnectClient(socketChannel);
+                return;
+            }
 
-        if (numRead == -1) {
-            key.cancel();       // Remote entity shut the socket down cleanly. Do the same
-            socketChannel.close();
-            mConnections.remove(socketChannel);
-            Logger.d("AbstractSelector: client closed connection... IP: " + socketChannel.socket().getLocalAddress());
-            return;
-        }
+            if (numRead == -1) {
+                disconnectClient(socketChannel);
+                return;
+            }
 
-        // Hand the data off to our worker thread
-        this.mWorker.addData(this, socketChannel, mReadBuffer.array(), numRead);
+            // Hand the data off to our worker thread
+            this.mWorker.addData(this, socketChannel, mReadBuffer.array(), numRead);
+        } else if(socketChannel instanceof DatagramChannel) {
+            try {
+                SocketAddress address = ((DatagramChannel) socketChannel).receive(mReadBuffer); // Attempt to read off the channel
+
+                mReadBuffer.flip();
+                //Logger.d("Readen from DatagramChannel: " + mReadBuffer.limit() +
+                //        " bytes from " + ((InetSocketAddress) address).getAddress().getHostAddress() + ":" + ((InetSocketAddress) address).getPort()
+                // + " on address " + ((InetSocketAddress) ((DatagramChannel) socketChannel).getLocalAddress()).getPort());
+
+                if (mReadBuffer.limit() == -1) {
+                    disconnectClient(socketChannel);
+                    return;
+                } else if (mReadBuffer.limit() == 0) {
+                    disconnectClient(socketChannel);
+                    return;
+                }
+
+                this.mWorker.addData(this, socketChannel, mReadBuffer.array(), mReadBuffer.limit());
+            } catch (IOException e) {
+                disconnectClient(socketChannel);
+                return;
+            }
+            // Hand the data off to our worker thread
+        }
     }
 
+    public void disconnectClient(SelectableChannel socketChannel) {
+        try {
+            socketChannel.keyFor(mSelector).cancel();       // Remote entity shut the socket down cleanly. Do the same
+            socketChannel.close();
+        } catch (Exception e) {
+            //e.printStackTrace();
+        }
+        onClientDisconnected(socketChannel);
+        mConnections.remove(socketChannel);
+        if(socketChannel instanceof SocketChannel) {
+            Logger.d("AbstractSelector: client closed connection... IP: " + ((SocketChannel) socketChannel).socket().getLocalAddress());
+        } else  if (socketChannel instanceof  DatagramChannel) {
+            Logger.d("AbstractSelector: client closed connection... IP: " + ((DatagramChannel) socketChannel).socket().getLocalAddress());
+        }
+    }
+
+    protected abstract void onClientDisconnected(SelectableChannel socketChannel);
+
     private void write(SelectionKey key) throws IOException {
-        SocketChannel socketChannel = (SocketChannel) key.channel();
+        SelectableChannel socketChannel = key.channel();
 
         synchronized (mPendingData) {
             List queue = mPendingData.get(socketChannel);
@@ -241,8 +261,8 @@ public abstract class AbstractSelector implements Runnable{
 
             while (!queue.isEmpty()) {                  // Write until there's not more data ...
                 ByteBuffer buf = (ByteBuffer) queue.get(0);
-                int written = socketChannel.write(buf);
-                Logger.e("AbstractSelector: Wrote " + written + " bytes in " + this.getClass());
+                int written = ((ByteChannel) socketChannel).write(buf);
+                //Logger.e("AbstractSelector: Wrote " + written + " bytes in " + this.getClass());
                 if (buf.remaining() > 0) {              // ... or the socket's buffer fills up
                     break;
                 }
@@ -272,13 +292,17 @@ public abstract class AbstractSelector implements Runnable{
     private void processChangeRequests() throws Exception {
         synchronized (mPendingChangeRequests) {
             for (ChangeRequest changeRequest : mPendingChangeRequests) {
-                switch (changeRequest.getType()) {
-                    case ChangeRequest.CHANGE_OPS:
-                        changeRequest.getChannel().keyFor(mSelector).interestOps(changeRequest.getOps());
-                        break;
-                    case ChangeRequest.REGISTER:
-                        changeRequest.getChannel().register(mSelector, changeRequest.getOps());
-                        break;
+                try {
+                    switch (changeRequest.getType()) {
+                        case ChangeRequest.CHANGE_OPS:
+                            changeRequest.getChannel().keyFor(mSelector).interestOps(changeRequest.getOps());
+                            break;
+                        case ChangeRequest.REGISTER:
+                            changeRequest.getChannel().register(mSelector, changeRequest.getOps());
+                            break;
+                    }
+                } catch (Exception e) {
+                    Log.e("AbstractSelector", "Error in process change Request probably client disconnected...");
                 }
             }
             this.mPendingChangeRequests.clear();

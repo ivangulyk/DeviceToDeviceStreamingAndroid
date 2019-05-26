@@ -4,8 +4,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 
-import d2d.testing.helpers.Logger;
-import d2d.testing.net.helpers.IOUtils;
+import d2d.testing.utils.Logger;
+import d2d.testing.utils.IOUtils;
 
 public class DataPacket {
     private static final byte[] START_PACKET = {0x11,0x17,0x16,0x15};
@@ -24,8 +24,9 @@ public class DataPacket {
     public static final byte    TYPE_OPEN = -1;
     public static final byte    TYPE_MSG  = 0x15;
     public static final byte    TYPE_FILE = 0x17;
-    public static final byte    TYPE_VIDEO_STREAM = 0x19;
-    public static final byte[]  TYPE_LIST = {TYPE_MSG, TYPE_FILE, TYPE_VIDEO_STREAM};
+    public static final byte    STREAM_ON = 0x13;
+    public static final byte    STREAM_OFF = 0x14;
+    public static final byte[]  TYPE_LIST = {TYPE_MSG, TYPE_FILE, STREAM_ON,STREAM_OFF};
 
     public static final int STATUS_INVALID   = -1;
     public static final int STATUS_OPEN      = 0;
@@ -83,7 +84,7 @@ public class DataPacket {
     }
 
 
-    public void addData(byte[] data){
+    public void addData(byte[] data) {
         try {
             mDataStream.write(data);
         } catch (IOException e) {
@@ -91,8 +92,7 @@ public class DataPacket {
         }
     }
 
-    public void parsePacket()
-    {
+    public void parsePacket() {
         mData = mDataStream.toByteArray();
 
         if (getRemainingLength() > 0)
@@ -118,7 +118,7 @@ public class DataPacket {
         }
 
 
-        if(!IOUtils.contains(TYPE_LIST,mData[TYPE_POSITION])){
+        if(!IOUtils.contains(TYPE_LIST, mData[TYPE_POSITION])){
             mStatus = STATUS_INVALID;
             Logger.d("DataFormatter: No packet type found!");
             return;
@@ -134,55 +134,6 @@ public class DataPacket {
         //todo VAMOS A TENER QUE HACER ALGO MAS AQUI SEPARADO? CABECERAS PROPIAS... ETC
 
         mStatus = STATUS_HEADER;
-    }
-
-    public static DataPacket createMsgPacket(String msg){
-        DataPacket packet = new DataPacket();
-        packet.setType(TYPE_MSG);
-
-        try {
-            //CREATE THE MSG WITH JUST THE MSG
-            packet.createPacket(msg.getBytes());
-        } catch (IOException e) {
-            e.printStackTrace();
-            packet = null;
-        }
-
-        return packet;
-    }
-
-    public static DataPacket createFilePacket(byte[] file, String fileName){
-        DataPacket packet = new DataPacket();
-        packet.setType(TYPE_FILE);
-
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
-        try {
-            //LENGTH + FILENAME
-            output.write(IOUtils.intToByteArray(fileName.length()));
-            output.write(fileName.getBytes());
-            //FILE
-            output.write(file);
-            packet.createPacket(output.toByteArray());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return packet;
-    }
-
-    public static DataPacket createStreamPacket(byte[] data){
-        DataPacket packet = new DataPacket();
-        packet.setType(TYPE_VIDEO_STREAM);
-
-        try {
-            //CREATE THE packet WITH JUST THE MSG
-            packet.createPacket(data);
-        } catch (IOException e) {
-            e.printStackTrace();
-            packet = null;
-        }
-
-        return packet;
     }
 
     protected void createPacket(byte[] data) throws IOException {

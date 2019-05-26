@@ -6,8 +6,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 
-import d2d.testing.helpers.Logger;
-import d2d.testing.net.helpers.IOUtils;
+import d2d.testing.utils.Logger;
+import d2d.testing.utils.IOUtils;
 import d2d.testing.net.packets.DataPacket;
 
 public class FileHandler {

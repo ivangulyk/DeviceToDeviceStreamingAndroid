@@ -1,14 +1,13 @@
 package d2d.testing;
 
 import android.content.Context;
-import android.content.res.Configuration;
 import android.hardware.Camera;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
 import java.io.IOException;
 
-import  d2d.testing.helpers.Logger;
+import  d2d.testing.utils.Logger;
 
 /** A basic Camera preview class */
 public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback {

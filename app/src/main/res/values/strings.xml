@@ -1,5 +1,6 @@
 <resources>
-    <string name="app_name">testing</string>
+    <string name="app_name">D2D Stream</string>
+    <string name="no_streams">No Streams Available</string>
     <string name="string_on_off">\On/Off WIFI</string>
     <string name="string_discover_peers">\Discover peers</string>
     <string name="string_transfer_file">\Transfer File</string>

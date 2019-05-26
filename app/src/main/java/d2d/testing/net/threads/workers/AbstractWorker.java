@@ -1,26 +1,27 @@
 package d2d.testing.net.threads.workers;
 
 import java.nio.channels.SelectableChannel;
-import java.nio.channels.SocketChannel;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import d2d.testing.helpers.Logger;
-import d2d.testing.net.helpers.IOUtils;
+import d2d.testing.utils.Logger;
+import d2d.testing.utils.IOUtils;
 import d2d.testing.net.packets.DataPacket;
 import d2d.testing.net.packets.DataReceived;
 import d2d.testing.net.threads.selectors.AbstractSelector;
 
 public abstract class AbstractWorker implements Runnable {
     private final List<DataReceived> mDataReceivedQueue;
-    private final Map<SelectableChannel, DataPacket> mOpenPacketsMap;
+    protected final Map<SelectableChannel, DataPacket> mOpenPacketsMap;
 
     private Thread mThread;
     private boolean mEnabled;
 
-    protected abstract void processData(DataPacket dataPacket, AbstractSelector selector, SelectableChannel channel);
+    protected void processData(DataPacket dataPacket, AbstractSelector selector, SelectableChannel channel) {
+
+    }
 
     protected AbstractWorker() {
         mDataReceivedQueue = new LinkedList<>();
@@ -54,7 +55,7 @@ public abstract class AbstractWorker implements Runnable {
         }
     }
 
-    public void addData(AbstractSelector selectorThread, SocketChannel socket, byte[] data, int count) {
+    public void addData(AbstractSelector selectorThread, SelectableChannel socket, byte[] data, int count) {
         byte[] dataCopy = new byte[count];
         System.arraycopy(data, 0, dataCopy, 0, count);
         synchronized(mDataReceivedQueue) {
@@ -63,7 +64,8 @@ public abstract class AbstractWorker implements Runnable {
         }
     }
 
-    private void parsePackets(DataReceived dataReceived) {
+
+    protected void parsePackets(DataReceived dataReceived) {
         DataPacket openPacket = mOpenPacketsMap.get(dataReceived.getSocket());
         int cont = 0;
 

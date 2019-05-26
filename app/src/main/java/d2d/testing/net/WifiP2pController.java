@@ -13,10 +13,13 @@ import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Build;
 import android.os.Looper;
 import android.support.annotation.RequiresApi;
+import android.util.Log;
 import android.widget.Toast;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.nio.channels.SelectableChannel;
+import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -117,6 +120,8 @@ public class WifiP2pController {
         send(dataPacket.getData());
     }
 
+
+
     public void send(byte[] data) {
         if(mClientSelectorThread != null) {
             mClientSelectorThread.send(data);
@@ -177,6 +182,7 @@ public class WifiP2pController {
                 {
                     try {
                         mServerSelectorThread = new ServerSelector(mContext);
+                        mContext.setDefaultP2PIp(groupOwnerAddress.toString().substring(1));
                         new Thread(mServerSelectorThread).start();
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -186,11 +192,13 @@ public class WifiP2pController {
                 {
                     //TODO somos el owner y ya tenemos el thread comprobar el estado de bind, conexion y seguir si no hay error
                 }
+                Toast.makeText(mContext,"You are Group Owner", Toast.LENGTH_SHORT).show();
+                Log.i("**** IP de owner:", "mi ip es: "+ groupOwnerAddress.toString());
             } else if (info.groupFormed) {
                 // The other device acts as the peer (client). In this case,
                 // you'll want to create a peer thread that connects
                 // to the group owner.
-                if(mServerSelectorThread == null) {
+                if(mClientSelectorThread == null) {
                     try {
                         mClientSelectorThread = new ClientSelector(groupOwnerAddress, mContext);
                         new Thread(mClientSelectorThread).start();
