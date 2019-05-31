@@ -16,13 +16,13 @@
  * limitations under the License.
  */
 
-package d2d.testing.streaming;
+package d2d.testing.streaming.video;
 
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.UUID;
-import java.util.concurrent.CountDownLatch;
+
+import d2d.testing.streaming.Stream;
 import d2d.testing.streaming.audio.AudioQuality;
 import d2d.testing.streaming.audio.AudioStream;
 import d2d.testing.streaming.exceptions.CameraInUseException;
@@ -31,8 +31,7 @@ import d2d.testing.streaming.exceptions.InvalidSurfaceException;
 import d2d.testing.streaming.exceptions.StorageUnavailableException;
 import d2d.testing.streaming.gl.SurfaceView;
 import d2d.testing.streaming.rtsp.RtspClient;
-import d2d.testing.streaming.video.VideoQuality;
-import d2d.testing.streaming.video.VideoStream;
+
 import android.hardware.Camera.CameraInfo;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -121,7 +120,7 @@ public class Session {
 	public Session() {
 		long uptime = System.currentTimeMillis();
 
-		HandlerThread thread = new HandlerThread("d2d.testing.streaming.Session");
+		HandlerThread thread = new HandlerThread("d2d.testing.streaming.video.Session");
 		thread.start();
 
 		mHandler = new Handler(thread.getLooper());

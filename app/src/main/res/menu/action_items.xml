@@ -21,7 +21,7 @@
 
     <item
         android:id="@+id/atn_direct_camera"
-        android:icon="@drawable/outline_camera_alt_black_18dp"
+        android:icon="@drawable/live5"
         android:title="@string/string_camera"
         app:showAsAction="always" />
 

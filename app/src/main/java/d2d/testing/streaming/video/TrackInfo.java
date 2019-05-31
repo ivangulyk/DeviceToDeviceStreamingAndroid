@@ -1,4 +1,4 @@
-package d2d.testing.streaming;
+package d2d.testing.streaming.video;
 
 import java.io.IOException;
 import java.net.InetAddress;

@@ -22,12 +22,13 @@ import java.util.List;
 import d2d.testing.MainActivity;
 import d2d.testing.R;
 import d2d.testing.net.packets.DataPacketBuilder;
+import d2d.testing.streaming.Stream;
 
 public class FragmentStreams extends Fragment {
     View view;
-    private List<String> streamList = new ArrayList();
+    private ArrayList<StreamDetail> streamList = new ArrayList();
     private TextView there_is_stream;
-    private ArrayAdapter<String> arrayAdapter;
+    private StreamListAdapter arrayAdapter;
     private ListView streamsListView;
     private MainActivity mainActivity;
     public FragmentStreams(){
@@ -47,7 +48,7 @@ public class FragmentStreams extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         streamsListView = view.findViewById(R.id.streamListView);
         there_is_stream = view.findViewById(R.id.text_stream);
-        arrayAdapter = new ArrayAdapter<String>(mainActivity.getApplicationContext(),android.R.layout.simple_list_item_1,streamList);
+        arrayAdapter = new StreamListAdapter(mainActivity.getApplicationContext(), streamList);
         streamsListView.setAdapter(arrayAdapter);
         execListener();
     }
@@ -62,14 +63,15 @@ public class FragmentStreams extends Fragment {
         else there_is_stream.setVisibility(View.VISIBLE);
     }
 
-    public void updateList(boolean on_off, String ip){
+    public void updateList(boolean on_off, String ip, String name){
         if(!ip.equals("0.0.0.0")) {
+            StreamDetail detail = new StreamDetail(name,ip);
             if (on_off) {
-                if (!streamList.contains(ip))
-                    streamList.add(ip);
+                if (!streamList.contains(detail))
+                    streamList.add(detail);
             } else {
-                if (streamList.contains(ip))
-                    streamList.remove(ip);
+                if (streamList.contains(detail))
+                    streamList.remove(detail);
             }
             streamAvailable();
         }
@@ -80,7 +82,7 @@ public class FragmentStreams extends Fragment {
 
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-               mainActivity.openViewStreamActivity(streamList.get(position));
+               mainActivity.openViewStreamActivity(streamList.get(position).getIp());
             }
         });
 

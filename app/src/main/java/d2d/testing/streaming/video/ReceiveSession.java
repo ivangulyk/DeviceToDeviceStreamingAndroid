@@ -1,16 +1,14 @@
-package d2d.testing.streaming;
+package d2d.testing.streaming.video;
 
 import android.os.HandlerThread;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.StringReader;
 
 import static java.util.UUID.randomUUID;
 
-public class ServerSession {
+public class ReceiveSession {
 
-    public final static String TAG = "ServerSession";
+    public final static String TAG = "ReceiveSession";
 
     private String mOrigin;
     private String mDestination;
@@ -26,10 +24,10 @@ public class ServerSession {
     /**
      * Creates a streaming session that can be customized by adding tracks.
      */
-    public ServerSession() {
+    public ReceiveSession() {
         long uptime = System.currentTimeMillis();
 
-        HandlerThread thread = new HandlerThread("d2d.testing.streaming.Session");
+        HandlerThread thread = new HandlerThread("d2d.testing.streaming.video.Session");
         thread.start();
 
         mOrigin = "127.0.0.1";

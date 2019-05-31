@@ -1,4 +1,4 @@
-package d2d.testing.net;
+package d2d.testing.wifip2p;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -18,8 +18,6 @@ import android.widget.Toast;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.nio.channels.SelectableChannel;
-import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,7 +25,7 @@ import d2d.testing.MainActivity;
 import d2d.testing.net.packets.DataPacket;
 import d2d.testing.net.threads.selectors.ClientSelector;
 import d2d.testing.net.threads.selectors.ServerSelector;
-import d2d.testing.net.threads.workers.SendFileWorker;
+import d2d.testing.net.utils.FileSender;
 
 /*
 TODO IMPORTANTE LEGACY USERS... HE LEIDO EN ALGUN SITIO QUE ERA MAS RAPIDO PARA SALTAR ENTRE REDES SI LO TENEMOS QUE USAR
@@ -54,8 +52,8 @@ public class WifiP2pController {
     private WifiP2pManager.Channel mChannel;
 
     private WiFiP2pBroadcastReceiver mReciever;
-    private ServerSelector mServerSelectorThread;
-    private ClientSelector mClientSelectorThread;
+    private ServerSelector mServerSelector;
+    private ClientSelector mClientSelector;
 
     protected List<WifiP2pDevice> peers = new ArrayList<>();
     protected WifiP2pDevice[] deviceArray;
@@ -123,16 +121,16 @@ public class WifiP2pController {
 
 
     public void send(byte[] data) {
-        if(mClientSelectorThread != null) {
-            mClientSelectorThread.send(data);
+        if(mClientSelector != null) {
+            mClientSelector.send(data);
         }
-        if(mServerSelectorThread != null) {
-            mServerSelectorThread.send(data);
+        if(mServerSelector != null) {
+            mServerSelector.send(data);
         }
     }
 
     public void sendFile(Uri uri) {
-        SendFileWorker worker = new SendFileWorker(uri,mWifiP2pHandler);
+        FileSender worker = new FileSender(uri,mWifiP2pHandler);
         new Thread(worker).start();
     }
 
@@ -178,12 +176,12 @@ public class WifiP2pController {
                 // Do whatever tasks are specific to the group owner.
                 // One common case is creating a group owner thread and accepting
                 // incoming connections.
-                if(mServerSelectorThread == null)
+                if(mServerSelector == null)
                 {
                     try {
-                        mServerSelectorThread = new ServerSelector(mContext);
+                        mServerSelector = new ServerSelector(mContext);
                         mContext.setDefaultP2PIp(groupOwnerAddress.toString().substring(1));
-                        new Thread(mServerSelectorThread).start();
+                        mServerSelector.start();
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -198,10 +196,10 @@ public class WifiP2pController {
                 // The other device acts as the peer (client). In this case,
                 // you'll want to create a peer thread that connects
                 // to the group owner.
-                if(mClientSelectorThread == null) {
+                if(mClientSelector == null) {
                     try {
-                        mClientSelectorThread = new ClientSelector(groupOwnerAddress, mContext);
-                        new Thread(mClientSelectorThread).start();
+                        mClientSelector = new ClientSelector(groupOwnerAddress, mContext);
+                        mClientSelector.start();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }

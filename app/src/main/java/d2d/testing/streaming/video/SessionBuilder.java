@@ -16,19 +16,16 @@
  * limitations under the License.
  */
 
-package d2d.testing.streaming;
+package d2d.testing.streaming.video;
 
 import java.io.IOException;
-import java.net.InetAddress;
+
 import d2d.testing.streaming.audio.AACStream;
 import d2d.testing.streaming.audio.AMRNBStream;
 import d2d.testing.streaming.audio.AudioQuality;
 import d2d.testing.streaming.audio.AudioStream;
 import d2d.testing.streaming.gl.SurfaceView;
-import d2d.testing.streaming.video.H263Stream;
-import d2d.testing.streaming.video.H264Stream;
-import d2d.testing.streaming.video.VideoQuality;
-import d2d.testing.streaming.video.VideoStream;
+
 import android.content.Context;
 import android.hardware.Camera.CameraInfo;
 import android.preference.PreferenceManager;

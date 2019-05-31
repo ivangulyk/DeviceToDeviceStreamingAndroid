@@ -9,8 +9,10 @@ import java.nio.channels.ServerSocketChannel;
 import d2d.testing.utils.Logger;
 import d2d.testing.net.threads.workers.RTSPServerWorker;
 
-public class RTSPServerSelector extends ServerSelector {
+public class RTSPServerSelector extends AbstractSelector {
     private ServerSocketChannel mServerSocketChannel;
+
+    static private RTSPServerSelector INSTANCE = null;
 
     public RTSPServerSelector(int port) throws IOException {
         super(null);
@@ -18,6 +20,14 @@ public class RTSPServerSelector extends ServerSelector {
         mPortTCP = port;
         mWorker = new RTSPServerWorker();
         mWorker.start();
+    }
+
+    public static RTSPServerSelector getInstance() throws IOException {
+        if(INSTANCE == null) {
+            INSTANCE = new RTSPServerSelector(12345);
+        }
+
+        return INSTANCE;
     }
 
     @Override
@@ -45,6 +55,10 @@ public class RTSPServerSelector extends ServerSelector {
         for (SelectableChannel socket : mConnections) {
             this.send(socket,data);
         }
+    }
+
+    public void setAllowLiveStreaming(boolean allow) {
+        ((RTSPServerWorker) mWorker).setAllowLiveStreaming(allow);
     }
 
 }

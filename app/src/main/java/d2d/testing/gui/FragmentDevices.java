@@ -19,8 +19,7 @@ import android.widget.Toast;
 
 import d2d.testing.MainActivity;
 import d2d.testing.R;
-import d2d.testing.gui.DeviceListAdapter;
-import d2d.testing.net.WifiP2pController;
+import d2d.testing.wifip2p.WifiP2pController;
 import d2d.testing.net.packets.DataPacketBuilder;
 
 public class FragmentDevices extends Fragment {
