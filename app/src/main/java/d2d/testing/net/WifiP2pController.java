@@ -18,8 +18,6 @@ import android.widget.Toast;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.nio.channels.SelectableChannel;
-import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,7 +25,7 @@ import d2d.testing.MainActivity;
 import d2d.testing.net.packets.DataPacket;
 import d2d.testing.net.threads.selectors.ClientSelector;
 import d2d.testing.net.threads.selectors.ServerSelector;
-import d2d.testing.net.threads.workers.SendFileWorker;
+import d2d.testing.net.utils.FileSender;
 
 /*
 TODO IMPORTANTE LEGACY USERS... HE LEIDO EN ALGUN SITIO QUE ERA MAS RAPIDO PARA SALTAR ENTRE REDES SI LO TENEMOS QUE USAR
@@ -132,7 +130,7 @@ public class WifiP2pController {
     }
 
     public void sendFile(Uri uri) {
-        SendFileWorker worker = new SendFileWorker(uri,mWifiP2pHandler);
+        FileSender worker = new FileSender(uri,mWifiP2pHandler);
         new Thread(worker).start();
     }
 

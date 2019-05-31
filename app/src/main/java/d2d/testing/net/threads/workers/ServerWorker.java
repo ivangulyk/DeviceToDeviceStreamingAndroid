@@ -4,7 +4,7 @@ import java.nio.channels.SelectableChannel;
 
 import d2d.testing.utils.IOUtils;
 import d2d.testing.utils.Logger;
-import d2d.testing.net.handlers.FileHandler;
+import d2d.testing.net.utils.FileHandler;
 import d2d.testing.net.packets.DataPacket;
 import d2d.testing.net.threads.selectors.AbstractSelector;
 

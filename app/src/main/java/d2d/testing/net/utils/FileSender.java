@@ -1,4 +1,4 @@
-package d2d.testing.net.threads.workers;
+package d2d.testing.net.utils;
 
 import android.content.ContentResolver;
 import android.content.ContentUris;
@@ -20,14 +20,14 @@ import d2d.testing.utils.Logger;
 import d2d.testing.net.WifiP2pHandler;
 import d2d.testing.net.packets.DataPacketBuilder;
 
-public class SendFileWorker implements Runnable{
+public class FileSender implements Runnable{
 
     private final Uri mFileUri;
     private WifiP2pHandler mHandler;
 
     private Thread mThread;
 
-    public SendFileWorker(Uri uri, WifiP2pHandler handler) {
+    public FileSender(Uri uri, WifiP2pHandler handler) {
         this.mFileUri = uri;
         this.mHandler = handler;
     }
