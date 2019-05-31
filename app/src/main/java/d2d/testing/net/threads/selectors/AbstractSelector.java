@@ -52,7 +52,7 @@ public abstract class AbstractSelector implements Runnable{
 
     protected int mPortTCP = PORT_TCP;
 
-    private boolean mEnabled = true;
+    private boolean mEnabled = false;
     protected int mStatusTCP = STATUS_DISCONNECTED;
     protected int mStatusUDP = STATUS_DISCONNECTED;
 
@@ -79,6 +79,13 @@ public abstract class AbstractSelector implements Runnable{
 
     public void stop(){
         this.mEnabled = false;
+    }
+
+    public void start() {
+        if(!mEnabled) {
+            new Thread(this).start();
+            mEnabled = true;
+        }
     }
 
     public void run(){

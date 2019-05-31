@@ -22,13 +22,15 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import java.io.IOException;
+
 import d2d.testing.gui.DeviceListAdapter;
 import d2d.testing.gui.FragmentDevices;
 import d2d.testing.gui.FragmentStreams;
 import d2d.testing.gui.ViewPagerAdapter;
+import d2d.testing.net.threads.selectors.RTSPServerSelector;
 import d2d.testing.utils.Logger;
-import d2d.testing.net.WifiP2pController;
-import d2d.testing.net.packets.DataPacketBuilder;
+import d2d.testing.wifip2p.WifiP2pController;
 import d2d.testing.utils.Permissions;
 
 
@@ -56,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     IntentFilter mIntentFilter;
+    private RTSPServerSelector mRtspServerSelector;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -119,7 +122,11 @@ public class MainActivity extends AppCompatActivity {
         // Indicates this device's details have changed.
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
 
-
+        try {
+            RTSPServerSelector.getInstance().start();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void DiscoverPeers(){
@@ -271,6 +278,12 @@ public class MainActivity extends AppCompatActivity {
         unregisterReceiver(this.mWifiP2pController.getWiFiP2pBroadcastReceiver());
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        mRtspServerSelector.stop();
+    }
+
     public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
         switch (requestCode) {
             case REQUEST_COARSE_LOCATION_CODE: {
@@ -378,24 +391,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public static Camera getCameraInstance(){
-        Camera c = null;
-        try {
-            c = Camera.open(); // attempt to get a Camera instance
-        }
-        catch (Exception e){
-            // Camera is not available (in use or does not exist)
-        }
-        return c; // returns null if camera is unavailable
-    }
-
     private void openCameraActivity() {
         Intent cameraActivityIntent = new Intent(this, CameraActivity.class);
         this.startActivity(cameraActivityIntent);
     }
 
     private void openStreamActivity() {
-        mWifiP2pController.send(DataPacketBuilder.buildStreamNotifier(true,defaultP2PIp,"",""));
         Intent streamActivityIntent = new Intent(this, StreamActivity.class);
         streamActivityIntent.putExtra("IP", defaultP2PIp);
         this.startActivity(streamActivityIntent);

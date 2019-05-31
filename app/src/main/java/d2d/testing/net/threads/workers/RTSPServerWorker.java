@@ -13,6 +13,7 @@ import java.nio.channels.SelectableChannel;
 import java.nio.channels.SocketChannel;
 import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -45,6 +46,7 @@ public class RTSPServerWorker extends AbstractWorker {
     protected HashMap<SelectableChannel, ReceiveSession> mServerSessions = new HashMap<>();
     protected HashMap<SelectableChannel, RebroadcastSession> mRebroadcastSessions = new HashMap<>();
 
+    boolean allowLiveStreaming = false;
 
     /** Credentials for Basic Auth */
     private String mUsername;
@@ -137,7 +139,7 @@ public class RTSPServerWorker extends AbstractWorker {
                 response.status = RtspResponse.STATUS_BAD_REQUEST;
                 return response;
             }
-        } else {
+        } else if(allowLiveStreaming){
             Session session = handleRequest(request.uri, ((SocketChannel) channel).socket());
             mSessions.put(channel, session);
             session.syncConfigure();
@@ -447,6 +449,29 @@ public class RTSPServerWorker extends AbstractWorker {
         RtspResponse response = new RtspResponse();
         response.status = RtspResponse.STATUS_OK;
         return response;
+    }
+
+    public void setAllowLiveStreaming(boolean bool) {
+        allowLiveStreaming = bool;
+
+        if(!allowLiveStreaming && !mSessions.isEmpty()) {
+            for (Map.Entry<SelectableChannel, Session> sessionEntry : mSessions.entrySet()) {
+                Session session = sessionEntry.getValue();
+                SelectableChannel channel = sessionEntry.getKey();
+
+                if(sessionEntry != null) {
+                    TEARDOWN(session, channel);
+
+                    if (session.isStreaming()) {
+                        session.syncStop();
+                    }
+
+                    session.release();
+                }
+            }
+
+            mSessions.clear();
+        }
     }
 
     @Override
