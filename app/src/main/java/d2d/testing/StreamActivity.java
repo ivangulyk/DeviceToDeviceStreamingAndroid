@@ -103,7 +103,7 @@ public class StreamActivity extends AppCompatActivity implements SurfaceHolder.C
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            WifiP2pController.getInstance().send(DataPacketBuilder.buildStreamNotifier(true,"rtsp://192.168.49.1:12345","Group Owner stream"));
+            WifiP2pController.getInstance().send(DataPacketBuilder.buildStreamNotifier(true,"192.168.49.1:12345","Group Owner stream"));
             Toast.makeText(this,"Retransmitting streaming from server to multiple devices simultaneously", Toast.LENGTH_SHORT).show();
         } else {
             rtspClient = new RtspClient();
@@ -125,7 +125,7 @@ public class StreamActivity extends AppCompatActivity implements SurfaceHolder.C
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            WifiP2pController.getInstance().send(DataPacketBuilder.buildStreamNotifier(false, "rtsp://192.168.49.1:12345",  "Group Owner stream"));
+            WifiP2pController.getInstance().send(DataPacketBuilder.buildStreamNotifier(false, "192.168.49.1:12345",  "Group Owner stream"));
         } else if (rtspClient.isStreaming()) {
             rtspClient.stopStream();
         }

@@ -31,7 +31,7 @@ public class StreamDetail {
         if(o instanceof StreamDetail) {
             StreamDetail streamDetail = (StreamDetail) o;
 
-            return streamDetail.ip == this.ip && streamDetail.name == this.name;
+            return streamDetail.ip.equals(this.ip) && streamDetail.name.equals(this.name);
         }
         return false;
     }

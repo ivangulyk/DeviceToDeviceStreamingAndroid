@@ -37,7 +37,7 @@ public class DataPacketBuilder {
             output.write(IOUtils.intToByteArray(name.length()));
             output.write(name.getBytes());
 
-            packet.createPacket(ip.getBytes());
+            packet.createPacket(output.toByteArray());
         } catch (IOException e) {
             e.printStackTrace();
             packet = null;

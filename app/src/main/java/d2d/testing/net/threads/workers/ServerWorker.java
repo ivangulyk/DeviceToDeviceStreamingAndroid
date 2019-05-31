@@ -13,6 +13,8 @@ public class ServerWorker extends AbstractWorker {
     @Override
     protected void processData(DataPacket dataPacket, AbstractSelector selector, SelectableChannel channel) {
         String ip = "", name = "";
+        byte[] bodyData;
+        int ipLen, nameLen;
 
         switch (dataPacket.getType())
         {
@@ -24,7 +26,13 @@ public class ServerWorker extends AbstractWorker {
                 selector.send(dataPacket.getData());
                 break;
             case DataPacket.STREAM_ON:
-                parseStreamPacket(dataPacket, ip, name);
+                bodyData = dataPacket.getBodyData();
+
+                ipLen = IOUtils.fromByteArray(bodyData);
+                nameLen = IOUtils.fromByteArray(IOUtils.copyMax(bodyData, 4+ipLen, 4));
+
+                ip = ip.concat(new String(IOUtils.copyMax(bodyData, 4, ipLen)));
+                name = name.concat(new String(IOUtils.copyMax(bodyData, 8 + ipLen, nameLen)));
 
                 selector.getMainActivity().updateStreamList(true, ip, name);
                 Logger.d("ServerWorker received STREAM_ON command");
@@ -34,7 +42,13 @@ public class ServerWorker extends AbstractWorker {
                 break;
 
             case DataPacket.STREAM_OFF:
-                parseStreamPacket(dataPacket, ip, name);
+                bodyData = dataPacket.getBodyData();
+
+                ipLen = IOUtils.fromByteArray(bodyData);
+                nameLen = IOUtils.fromByteArray(IOUtils.copyMax(bodyData, 4+ipLen, 4));
+
+                ip = ip.concat(new String(IOUtils.copyMax(bodyData, 4, ipLen)));
+                name = name.concat(new String(IOUtils.copyMax(bodyData, 8 + ipLen, nameLen)));
 
                 selector.getMainActivity().updateStreamList(false, ip, name);
                 Logger.d("ServerWorker received STREAM_OFF command");
@@ -57,15 +71,5 @@ public class ServerWorker extends AbstractWorker {
                 Logger.e("ClientWorker received no TYPE_FILE");
                 //ERROR NO HAY TIPO DE MENSAJE!!
         }
-    }
-
-    private void parseStreamPacket(DataPacket dataPacket, String ip, String name) {
-        byte[] bodyData = dataPacket.getBodyData();
-
-        int ipLen = IOUtils.fromByteArray(bodyData);
-        int nameLen = IOUtils.fromByteArray(IOUtils.copyMax(bodyData, 4+ipLen, 4));
-
-        ip.concat(new String(IOUtils.copyMax(bodyData, 4, ipLen)));
-        name.concat(new String(IOUtils.copyMax(bodyData, 8 + ipLen, nameLen)));
     }
 }

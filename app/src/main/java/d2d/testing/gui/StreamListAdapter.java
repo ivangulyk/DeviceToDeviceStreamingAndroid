@@ -20,7 +20,7 @@ public class StreamListAdapter extends ArrayAdapter<StreamDetail> {
 
     public StreamListAdapter(Context context , ArrayList<StreamDetail> objects) {
         super(context, -1, objects);
-        this.mContext = mContext;
+        this.mContext = context;
     }
 
     @Override
