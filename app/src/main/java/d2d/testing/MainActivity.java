@@ -58,7 +58,6 @@ public class MainActivity extends AppCompatActivity {
 
 
     IntentFilter mIntentFilter;
-    private RTSPServerSelector mRtspServerSelector;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -281,7 +280,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        mRtspServerSelector.stop();
+        try {
+            RTSPServerSelector.getInstance().stop();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {

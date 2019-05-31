@@ -38,7 +38,7 @@ public class ClientSelector extends AbstractSelector {
 
     @Override
     protected void onClientDisconnected(SelectableChannel socketChannel) {
-
+        mStatusTCP = STATUS_DISCONNECTED;
     }
 
     @Override
