@@ -21,7 +21,7 @@ public class DataPacketBuilder {
         return packet;
     }
 
-    public static DataPacket buildStreamNotifier(boolean on_off, String ip, String path, String name){
+    public static DataPacket buildStreamNotifier(boolean on_off, String ip, String name){
         DataPacket packet = new DataPacket();
         if (on_off)
             packet.setType(DataPacket.STREAM_ON);
@@ -33,9 +33,6 @@ public class DataPacketBuilder {
 
             output.write(IOUtils.intToByteArray(ip.length()));
             output.write(ip.getBytes());
-
-            output.write(IOUtils.intToByteArray(path.length()));
-            output.write(path.getBytes());
 
             output.write(IOUtils.intToByteArray(name.length()));
             output.write(name.getBytes());

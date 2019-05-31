@@ -12,7 +12,7 @@ import d2d.testing.net.threads.workers.RTSPServerWorker;
 public class RTSPServerSelector extends AbstractSelector {
     private ServerSocketChannel mServerSocketChannel;
 
-    static public RTSPServerSelector INSTANCE;
+    static private RTSPServerSelector INSTANCE = null;
 
     public RTSPServerSelector(int port) throws IOException {
         super(null);

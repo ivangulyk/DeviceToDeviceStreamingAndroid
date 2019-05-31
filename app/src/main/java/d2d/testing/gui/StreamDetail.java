@@ -26,4 +26,13 @@ public class StreamDetail {
     public void setName(String name) {
         this.name = name;
     }
+
+    public boolean equals(Object o) {
+        if(o instanceof StreamDetail) {
+            StreamDetail streamDetail = (StreamDetail) o;
+
+            return streamDetail.ip == this.ip && streamDetail.name == this.name;
+        }
+        return false;
+    }
 }

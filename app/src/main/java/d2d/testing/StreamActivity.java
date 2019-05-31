@@ -1,7 +1,5 @@
 package d2d.testing;
 
-
-import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.ColorStateList;
 import android.support.design.widget.FloatingActionButton;
@@ -34,7 +32,7 @@ public class StreamActivity extends AppCompatActivity implements SurfaceHolder.C
 
     public Session mSesion;
 
-    final FloatingActionButton recordButton = findViewById(R.id.button_capture);
+    private FloatingActionButton recordButton;
     public boolean mRecording = false;
 
     private boolean groupOwner = true;
@@ -66,7 +64,7 @@ public class StreamActivity extends AppCompatActivity implements SurfaceHolder.C
         //mIntent = new Intent(this, RtspServer.class);
         //this.startService(mIntent);
 
-        final FloatingActionButton recordButton = findViewById(R.id.button_capture);
+        recordButton = findViewById(R.id.button_capture);
         recordButton.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(android.R.color.holo_red_dark)));
         recordButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -105,7 +103,7 @@ public class StreamActivity extends AppCompatActivity implements SurfaceHolder.C
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            WifiP2pController.getInstance().send(DataPacketBuilder.buildStreamNotifier(true,"192.168.49.1","","Group Owner stream"));
+            WifiP2pController.getInstance().send(DataPacketBuilder.buildStreamNotifier(true,"rtsp://192.168.49.1:12345","Group Owner stream"));
             Toast.makeText(this,"Retransmitting streaming from server to multiple devices simultaneously", Toast.LENGTH_SHORT).show();
         } else {
             rtspClient = new RtspClient();
@@ -117,6 +115,7 @@ public class StreamActivity extends AppCompatActivity implements SurfaceHolder.C
         }
 
         recordButton.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_stop));
+        mRecording = true;
     }
 
     private void stopStreaming() {
@@ -126,12 +125,13 @@ public class StreamActivity extends AppCompatActivity implements SurfaceHolder.C
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            WifiP2pController.getInstance().send(DataPacketBuilder.buildStreamNotifier(false, "192.168.49.1", "", "Group Owner stream"));
+            WifiP2pController.getInstance().send(DataPacketBuilder.buildStreamNotifier(false, "rtsp://192.168.49.1:12345",  "Group Owner stream"));
         } else if (rtspClient.isStreaming()) {
             rtspClient.stopStream();
         }
 
         recordButton.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_video_camera));
+        mRecording = false;
         Toast.makeText(this,"Stopped retransmitting the streaming", Toast.LENGTH_SHORT).show();
     }
 

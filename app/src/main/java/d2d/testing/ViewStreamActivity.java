@@ -65,8 +65,7 @@ public class ViewStreamActivity extends AppCompatActivity implements IVLCVout.Ca
 
 
         String ip = getIntent().getExtras().getString("IP");
-        String port = "12345";
-        String path= "rtsp://" + ip + ":" + port;
+        String path= "rtsp://" + ip;
 
         // Get URL
         rtspUrl = path;

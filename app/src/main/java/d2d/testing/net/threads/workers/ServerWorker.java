@@ -12,7 +12,7 @@ public class ServerWorker extends AbstractWorker {
 
     @Override
     protected void processData(DataPacket dataPacket, AbstractSelector selector, SelectableChannel channel) {
-        String ip = "", path = "", name = "";
+        String ip = "", name = "";
 
         switch (dataPacket.getType())
         {
@@ -24,7 +24,7 @@ public class ServerWorker extends AbstractWorker {
                 selector.send(dataPacket.getData());
                 break;
             case DataPacket.STREAM_ON:
-                parseStreamPacket(dataPacket, ip, path, name);
+                parseStreamPacket(dataPacket, ip, name);
 
                 selector.getMainActivity().updateStreamList(true, ip, name);
                 Logger.d("ServerWorker received STREAM_ON command");
@@ -34,7 +34,7 @@ public class ServerWorker extends AbstractWorker {
                 break;
 
             case DataPacket.STREAM_OFF:
-                parseStreamPacket(dataPacket, ip, path, name);
+                parseStreamPacket(dataPacket, ip, name);
 
                 selector.getMainActivity().updateStreamList(false, ip, name);
                 Logger.d("ServerWorker received STREAM_OFF command");
@@ -59,15 +59,13 @@ public class ServerWorker extends AbstractWorker {
         }
     }
 
-    private void parseStreamPacket(DataPacket dataPacket, String ip, String path, String name) {
+    private void parseStreamPacket(DataPacket dataPacket, String ip, String name) {
         byte[] bodyData = dataPacket.getBodyData();
 
         int ipLen = IOUtils.fromByteArray(bodyData);
-        int pathLen = IOUtils.fromByteArray(IOUtils.copyMax(bodyData, 4+ipLen, 4));
-        int nameLen = IOUtils.fromByteArray(IOUtils.copyMax(bodyData, 8+ipLen+pathLen, 4));
+        int nameLen = IOUtils.fromByteArray(IOUtils.copyMax(bodyData, 4+ipLen, 4));
 
         ip.concat(new String(IOUtils.copyMax(bodyData, 4, ipLen)));
-        path.concat(new String(IOUtils.copyMax(bodyData, 8 + ipLen, pathLen)));
-        name.concat(new String(IOUtils.copyMax(bodyData, 12 + ipLen + pathLen, nameLen)));
+        name.concat(new String(IOUtils.copyMax(bodyData, 8 + ipLen, nameLen)));
     }
 }

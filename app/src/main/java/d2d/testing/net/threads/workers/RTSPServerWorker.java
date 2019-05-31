@@ -412,7 +412,7 @@ public class RTSPServerWorker extends AbstractWorker {
         response.attributes = "Session: " + receiveSession.getSessionID() + ";timeout=" + receiveSession.getTimeout() +"\r\n";
         response.status = RtspResponse.STATUS_OK;
 
-        WifiP2pController.getInstance().send(DataPacketBuilder.buildStreamNotifier(true, receiveSession.getDestination(), receiveSession.getPath(), receiveSession.getPath()));
+        WifiP2pController.getInstance().send(DataPacketBuilder.buildStreamNotifier(true, receiveSession.getDestination() + ":12345/" + receiveSession.getPath(), receiveSession.getPath()));
         return response;
     }
 
@@ -441,7 +441,7 @@ public class RTSPServerWorker extends AbstractWorker {
         mServerSessions.remove(channel);
         response.status = RtspResponse.STATUS_OK;
 
-        WifiP2pController.getInstance().send(DataPacketBuilder.buildStreamNotifier(false, session.getDestination(), session.getPath(), session.getPath()));
+        WifiP2pController.getInstance().send(DataPacketBuilder.buildStreamNotifier(false, session.getDestination() + ":12345/" + session.getPath(), session.getPath()));
         return response;
     }
 
