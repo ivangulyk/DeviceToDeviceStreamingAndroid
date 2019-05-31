@@ -25,14 +25,14 @@ public class ClientWorker extends AbstractWorker {
             case DataPacket.STREAM_ON:
                 parseStreamPacket(dataPacket, ip, path, name);
 
-                selector.getMainActivity().updateStreamList(true, ip);
+                selector.getMainActivity().updateStreamList(true, ip,name);
                 Logger.d("ClientWorker received STREAM_ON command");
                 break;
 
             case DataPacket.STREAM_OFF:
                 parseStreamPacket(dataPacket, ip, path, name);
 
-                selector.getMainActivity().updateStreamList(false, ip);
+                selector.getMainActivity().updateStreamList(false, ip, name);
                 Logger.d("ClientWorker received STREAM_OFF command");
                 break;
             case DataPacket.TYPE_FILE:

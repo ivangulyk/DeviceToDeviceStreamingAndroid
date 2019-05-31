@@ -26,7 +26,7 @@ public class ServerWorker extends AbstractWorker {
             case DataPacket.STREAM_ON:
                 parseStreamPacket(dataPacket, ip, path, name);
 
-                selector.getMainActivity().updateStreamList(true, ip);
+                selector.getMainActivity().updateStreamList(true, ip, name);
                 Logger.d("ServerWorker received STREAM_ON command");
 
                 selector.send(dataPacket.getData());
@@ -36,7 +36,7 @@ public class ServerWorker extends AbstractWorker {
             case DataPacket.STREAM_OFF:
                 parseStreamPacket(dataPacket, ip, path, name);
 
-                selector.getMainActivity().updateStreamList(false, ip);
+                selector.getMainActivity().updateStreamList(false, ip, name);
                 Logger.d("ServerWorker received STREAM_OFF command");
 
                 selector.send(dataPacket.getData());

@@ -221,10 +221,10 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void updateStreamList(final boolean on_off,final String ip){
+    public void updateStreamList(final boolean on_off,final String ip, final String name){
         runOnUiThread(new Runnable() {
             public void run() {
-                streams_fragment.updateList(on_off,ip);
+                streams_fragment.updateList(on_off, ip, name);
             }
         });
     }
