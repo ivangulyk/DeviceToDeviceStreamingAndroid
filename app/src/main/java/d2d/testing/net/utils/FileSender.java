@@ -17,7 +17,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import d2d.testing.utils.Logger;
-import d2d.testing.net.WifiP2pHandler;
+import d2d.testing.wifip2p.WifiP2pHandler;
 import d2d.testing.net.packets.DataPacketBuilder;
 
 public class FileSender implements Runnable{

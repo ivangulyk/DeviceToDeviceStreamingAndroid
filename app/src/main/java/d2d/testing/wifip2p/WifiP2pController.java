@@ -1,4 +1,4 @@
-package d2d.testing.net;
+package d2d.testing.wifip2p;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;

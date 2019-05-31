@@ -28,8 +28,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
 
+import d2d.testing.gui.CameraPreview;
 import d2d.testing.utils.Logger;
-import d2d.testing.net.WifiP2pController;
+import d2d.testing.wifip2p.WifiP2pController;
 
 import static d2d.testing.utils.IOUtils.getOutputMediaFile;
 

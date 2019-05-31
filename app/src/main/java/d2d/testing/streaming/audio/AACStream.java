@@ -23,19 +23,14 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.lang.reflect.Field;
 import java.net.InetAddress;
-import java.nio.ByteBuffer;
-import d2d.testing.streaming.SessionBuilder;
+
+import d2d.testing.streaming.video.SessionBuilder;
 import d2d.testing.streaming.rtp.AACADTSPacketizer;
 import d2d.testing.streaming.rtp.AACLATMPacketizer;
-import d2d.testing.streaming.rtp.MediaCodecInputStream;
+
 import android.annotation.SuppressLint;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
-import android.media.AudioFormat;
-import android.media.AudioRecord;
-import android.media.MediaCodec;
-import android.media.MediaCodecInfo;
-import android.media.MediaFormat;
 import android.media.MediaRecorder;
 import android.os.Build;
 import android.os.Environment;
