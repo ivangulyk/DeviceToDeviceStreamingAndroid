@@ -122,7 +122,7 @@ public class MainActivity extends AppCompatActivity {
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
 
         try {
-            RTSPServerSelector.getInstance().start();
+            RTSPServerSelector.initiateInstance(this).start();
         } catch (IOException e) {
             e.printStackTrace();
         }

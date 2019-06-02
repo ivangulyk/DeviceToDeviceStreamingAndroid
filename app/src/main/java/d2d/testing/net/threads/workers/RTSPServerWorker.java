@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import d2d.testing.MainActivity;
 import d2d.testing.wifip2p.WifiP2pController;
 import d2d.testing.net.packets.DataPacketBuilder;
 import d2d.testing.streaming.video.ReceiveSession;
@@ -51,6 +52,15 @@ public class RTSPServerWorker extends AbstractWorker {
     /** Credentials for Basic Auth */
     private String mUsername;
     private String mPassword;
+
+    private MainActivity mMainActivity;
+
+    public RTSPServerWorker(String username, String password, MainActivity mainActivity) {
+        super();
+        this.mUsername = username;
+        this.mPassword = password;
+        this.mMainActivity = mainActivity;
+    }
 
     public RtspResponse processRequest(RtspRequest request, SelectableChannel channel) throws IllegalStateException, IOException {
         Session requestSession = mSessions.get(channel);
@@ -412,7 +422,12 @@ public class RTSPServerWorker extends AbstractWorker {
         response.attributes = "Session: " + receiveSession.getSessionID() + ";timeout=" + receiveSession.getTimeout() +"\r\n";
         response.status = RtspResponse.STATUS_OK;
 
-        WifiP2pController.getInstance().send(DataPacketBuilder.buildStreamNotifier(true, receiveSession.getDestination() + ":12345/" + receiveSession.getPath(), receiveSession.getPath()));
+        String ip = receiveSession.getDestination() + ":12345/" + receiveSession.getPath();
+        String name = receiveSession.getPath();
+
+        mMainActivity.updateStreamList(true, ip, name);
+        WifiP2pController.getInstance().send(DataPacketBuilder.buildStreamNotifier(true, ip, name));
+
         return response;
     }
 
@@ -441,7 +456,12 @@ public class RTSPServerWorker extends AbstractWorker {
         mServerSessions.remove(channel);
         response.status = RtspResponse.STATUS_OK;
 
-        WifiP2pController.getInstance().send(DataPacketBuilder.buildStreamNotifier(false, session.getDestination() + ":12345/" + session.getPath(), session.getPath()));
+        String ip = session.getDestination() + ":12345/" + session.getPath();
+        String name = session.getPath();
+
+        mMainActivity.updateStreamList(false, ip, name);
+        WifiP2pController.getInstance().send(DataPacketBuilder.buildStreamNotifier(false, ip, name));
+
         return response;
     }
 

@@ -6,6 +6,7 @@ import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.ServerSocketChannel;
 
+import d2d.testing.MainActivity;
 import d2d.testing.utils.Logger;
 import d2d.testing.net.threads.workers.RTSPServerWorker;
 
@@ -14,17 +15,33 @@ public class RTSPServerSelector extends AbstractSelector {
 
     static private RTSPServerSelector INSTANCE = null;
 
-    public RTSPServerSelector(int port) throws IOException {
+    private RTSPServerSelector(int port) throws IOException {
         super(null);
 
         mPortTCP = port;
-        mWorker = new RTSPServerWorker();
+        mWorker = new RTSPServerWorker(null, null, null);
+        mWorker.start();
+    }
+
+    private RTSPServerSelector(MainActivity mainActivity, int port) throws IOException {
+        super(mainActivity);
+
+        mPortTCP = port;
+        mWorker = new RTSPServerWorker(null, null, mainActivity);
         mWorker.start();
     }
 
     public static RTSPServerSelector getInstance() throws IOException {
         if(INSTANCE == null) {
             INSTANCE = new RTSPServerSelector(12345);
+        }
+
+        return INSTANCE;
+    }
+
+    public static RTSPServerSelector initiateInstance(MainActivity mainActivity) throws IOException {
+        if(INSTANCE == null) {
+            INSTANCE = new RTSPServerSelector(mainActivity,12345);
         }
 
         return INSTANCE;
