@@ -30,23 +30,18 @@ public class TrackInfo {
 
     public void startServer() throws IOException {
         mRtcpUdpServer = new UDPServerSelector(null, mLocalRtcpPort);
-        mRtcpUdpServerThread = new Thread(mRtcpUdpServer);
-        mRtcpUdpServerThread.start();
+        mRtcpUdpServer.start();
+
         mRtpUdpServer = new UDPServerSelector(null, mLocalRtpPort);
-        mRtpUdpServerThread = new Thread(mRtpUdpServer);
-        mRtpUdpServerThread.start();
+        mRtpUdpServer.start();
     }
 
     public void stopServer() {
         mRtcpUdpServer.stop();
         mRtcpUdpServer = null;
-        mRtcpUdpServerThread.interrupt();
-        mRtcpUdpServerThread = null;
 
         mRtpUdpServer.stop();
         mRtpUdpServer = null;
-        mRtpUdpServerThread.interrupt();
-        mRtpUdpServerThread = null;
     }
 
     public SelectableChannel addRtcpEchoSession(String address, int rtcpPort) {

@@ -672,6 +672,12 @@ public class RTSPServerWorker extends AbstractWorker {
 
         ReceiveSession receiveSession = mServerSessions.get(channel);
         if(receiveSession != null) {
+            String ip = receiveSession.getDestination() + ":12345/" + receiveSession.getPath();
+            String name = receiveSession.getPath();
+
+            mMainActivity.updateStreamList(false, ip, name);
+            WifiP2pController.getInstance().send(DataPacketBuilder.buildStreamNotifier(false, ip, name));
+
             receiveSession.stop();
             receiveSession.release();
             mServerSessions.remove(channel);

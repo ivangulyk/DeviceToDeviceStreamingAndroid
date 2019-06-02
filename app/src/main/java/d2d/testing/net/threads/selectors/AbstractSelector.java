@@ -83,8 +83,8 @@ public abstract class AbstractSelector implements Runnable{
 
     public void start() {
         if(!mEnabled) {
-            new Thread(this).start();
             mEnabled = true;
+            new Thread(this).start();
         }
     }
 

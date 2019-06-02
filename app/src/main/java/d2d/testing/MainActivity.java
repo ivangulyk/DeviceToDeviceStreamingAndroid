@@ -401,7 +401,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void openStreamActivity() {
         Intent streamActivityIntent = new Intent(this, StreamActivity.class);
-        streamActivityIntent.putExtra("IP", defaultP2PIp);
         this.startActivity(streamActivityIntent);
     }
 
