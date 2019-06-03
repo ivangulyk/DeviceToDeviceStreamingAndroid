@@ -52,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
     private ViewPager viewPager;
     private FragmentDevices devices_fragment;
     private FragmentStreams streams_fragment;
+    ViewPagerAdapter adapter;
 
     WifiP2pController mWifiP2pController;
     Permissions wiFiP2pPermissions;
@@ -99,7 +100,7 @@ public class MainActivity extends AppCompatActivity {
         streams_fragment.setMainActivity(this);
         devices_fragment.setMainActivity(this);
 
-        ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
+        adapter = new ViewPagerAdapter(getSupportFragmentManager());
         adapter.AddFragment(devices_fragment,"WiFi Devices");
         adapter.AddFragment(streams_fragment, "Streams Available");
 
@@ -140,6 +141,11 @@ public class MainActivity extends AppCompatActivity {
                 devices_fragment.setTextView("Discovery Starting Failed");
             }
         });
+    }
+
+    public void updateStreamsCounter(int count){
+        adapter.setStreamNumber(count);
+        adapter.notifyDataSetChanged();
     }
 
     private void handleCamera(){

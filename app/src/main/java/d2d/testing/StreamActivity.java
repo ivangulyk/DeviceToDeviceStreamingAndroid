@@ -108,7 +108,7 @@ public class StreamActivity extends AppCompatActivity implements SurfaceHolder.C
         } else {
             rtspClient = new RtspClient();
             rtspClient.setSession(mSesion);
-            rtspClient.setStreamPath("/customName");
+            rtspClient.setStreamPath("/Cliente_B");
             rtspClient.setServerAddress("192.168.49.1", 12345);
             rtspClient.startStream();
             Toast.makeText(this,"Retransmitting streaming to GO server for multihopping", Toast.LENGTH_SHORT).show();
