@@ -1,6 +1,7 @@
 package d2d.testing;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
@@ -46,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean storage_has_perm = false;
     private Camera mCamera;
     private String defaultP2PIp = "192.168.49.1";
+    MenuItem wifiItem;
 
 
     private TabLayout tabLayout;
@@ -157,6 +159,8 @@ public class MainActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.action_items, menu);
+        wifiItem = menu.getItem(0);
+        updateWifiIcon(WifiP2pController.getInstance().isWifiEnabled());
         return true;
     }
     @Override
@@ -211,6 +215,17 @@ public class MainActivity extends AppCompatActivity {
             default:
                 return "Unknown";
 
+        }
+    }
+
+    @SuppressLint("NewApi")
+    public void updateWifiIcon(boolean wifi) {
+        if(wifiItem!= null) {
+            if(wifi) {
+                wifiItem.setIconTintList(ColorStateList.valueOf(getResources().getColor(android.R.color.holo_green_light)));
+            } else {
+                wifiItem.setIconTintList(ColorStateList.valueOf(getResources().getColor(android.R.color.holo_red_dark)));
+            }
         }
     }
 
