@@ -4,6 +4,7 @@ package d2d.testing;
 
 import android.app.Activity;
 import android.app.Application;
+import android.app.ProgressDialog;
 import android.content.pm.ActivityInfo;
 import android.content.res.Resources;
 import android.graphics.Point;
@@ -51,6 +52,7 @@ public class ViewStreamActivity extends AppCompatActivity implements IVLCVout.Ca
     private int mVideoHeight;
     private final static int VideoSizeChanged = -1;
 
+    ProgressDialog progressDialog;
 
     private String rtspUrl;
 
@@ -120,6 +122,11 @@ public class ViewStreamActivity extends AppCompatActivity implements IVLCVout.Ca
         mMediaPlayer.setMedia(m);
         mMediaPlayer.play();
 
+        progressDialog = new ProgressDialog(this);
+        progressDialog.setTitle("Stream buffering");
+        progressDialog.setTitle("Please wait...");
+        progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+        progressDialog.show();
     }
 
     @Override
@@ -179,7 +186,10 @@ public class ViewStreamActivity extends AppCompatActivity implements IVLCVout.Ca
                 Log.d(TAG, "MediaPlayerEndReached");
                 releasePlayer();
                 break;
+            case MediaPlayer.Event.Buffering:
+                break;
             case MediaPlayer.Event.Playing:
+                progressDialog.hide();
             case MediaPlayer.Event.Paused:
             case MediaPlayer.Event.Stopped:
             default:
