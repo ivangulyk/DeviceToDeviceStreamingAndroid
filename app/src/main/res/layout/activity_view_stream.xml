@@ -22,8 +22,8 @@
         <ProgressBar
             android:id="@+id/bufferSpinner"
             style="?android:attr/progressBarStyleLarge"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="140dp"
+            android:layout_height="149dp"
             android:layout_centerHorizontal="true"
             android:layout_centerVertical="true"
             android:theme="@android:style/Widget.ProgressBar.Large.Inverse"

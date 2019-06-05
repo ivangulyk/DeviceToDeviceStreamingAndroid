@@ -37,11 +37,15 @@ public class TrackInfo {
     }
 
     public void stopServer() {
-        mRtcpUdpServer.stop();
-        mRtcpUdpServer = null;
+        if(mRtcpUdpServer != null) {
+            mRtcpUdpServer.stop();
+            mRtcpUdpServer = null;
+        }
 
-        mRtpUdpServer.stop();
-        mRtpUdpServer = null;
+        if(mRtpUdpServer != null){
+            mRtpUdpServer.stop();
+            mRtpUdpServer = null;
+        }
     }
 
     public SelectableChannel addRtcpEchoSession(String address, int rtcpPort) {
