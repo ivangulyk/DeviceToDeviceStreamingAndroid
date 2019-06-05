@@ -252,6 +252,7 @@ public abstract class AbstractSelector implements Runnable{
     }
 
     protected abstract void onClientDisconnected(SelectableChannel socketChannel);
+    protected void onClientConnected(SelectableChannel socketChannel) {}
 
     private void write(SelectionKey key) throws IOException {
         SelectableChannel socketChannel = key.channel();
