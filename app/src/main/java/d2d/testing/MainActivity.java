@@ -1,13 +1,14 @@
 package d2d.testing;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
 import android.net.Uri;
 import android.hardware.Camera;
-import android.net.wifi.WifiManager;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
@@ -16,17 +17,18 @@ import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
-import android.text.format.Formatter;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.Toast;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 import d2d.testing.gui.DeviceListAdapter;
 import d2d.testing.gui.FragmentDevices;
 import d2d.testing.gui.FragmentStreams;
+import d2d.testing.gui.StreamDetail;
 import d2d.testing.gui.ViewPagerAdapter;
 import d2d.testing.net.threads.selectors.RTSPServerSelector;
 import d2d.testing.utils.Logger;
@@ -46,12 +48,14 @@ public class MainActivity extends AppCompatActivity {
     private boolean storage_has_perm = false;
     private Camera mCamera;
     private String defaultP2PIp = "192.168.49.1";
+    MenuItem wifiItem;
 
 
     private TabLayout tabLayout;
     private ViewPager viewPager;
     private FragmentDevices devices_fragment;
     private FragmentStreams streams_fragment;
+    ViewPagerAdapter adapter;
 
     WifiP2pController mWifiP2pController;
     Permissions wiFiP2pPermissions;
@@ -99,7 +103,7 @@ public class MainActivity extends AppCompatActivity {
         streams_fragment.setMainActivity(this);
         devices_fragment.setMainActivity(this);
 
-        ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
+        adapter = new ViewPagerAdapter(getSupportFragmentManager());
         adapter.AddFragment(devices_fragment,"WiFi Devices");
         adapter.AddFragment(streams_fragment, "Streams Available");
 
@@ -122,7 +126,7 @@ public class MainActivity extends AppCompatActivity {
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
 
         try {
-            RTSPServerSelector.getInstance().start();
+            RTSPServerSelector.initiateInstance(this).start();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -132,14 +136,21 @@ public class MainActivity extends AppCompatActivity {
         mWifiP2pController.discoverPeers(new WifiP2pManager.ActionListener() {
             @Override
             public void onSuccess() {
+                Toast.makeText(getApplicationContext(), "Discovery Started", Toast.LENGTH_SHORT).show();
                 devices_fragment.setTextView("Discovery Started");
         }
 
             @Override
             public void onFailure(int reason) {
+                Toast.makeText(getApplicationContext(), "Discovery Starting Failed, make sure WiFI is ON", Toast.LENGTH_SHORT).show();
                 devices_fragment.setTextView("Discovery Starting Failed");
             }
         });
+    }
+
+    public void updateStreamsCounter(int count){
+        adapter.setStreamNumber(count);
+        adapter.notifyDataSetChanged();
     }
 
     private void handleCamera(){
@@ -151,6 +162,8 @@ public class MainActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.action_items, menu);
+        wifiItem = menu.getItem(0);
+        updateWifiIcon(WifiP2pController.getInstance().isWifiEnabled());
         return true;
     }
     @Override
@@ -205,6 +218,17 @@ public class MainActivity extends AppCompatActivity {
             default:
                 return "Unknown";
 
+        }
+    }
+
+    @SuppressLint("NewApi")
+    public void updateWifiIcon(boolean wifi) {
+        if(wifiItem!= null) {
+            if(wifi) {
+                wifiItem.setIconTintList(ColorStateList.valueOf(getResources().getColor(android.R.color.holo_green_light)));
+            } else {
+                wifiItem.setIconTintList(ColorStateList.valueOf(getResources().getColor(android.R.color.holo_red_dark)));
+            }
         }
     }
 
@@ -394,6 +418,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public ArrayList<StreamDetail> getStreamlist(){
+        return streams_fragment.getStreamList();
+    }
+
     private void openCameraActivity() {
         Intent cameraActivityIntent = new Intent(this, CameraActivity.class);
         this.startActivity(cameraActivityIntent);
@@ -401,7 +429,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void openStreamActivity() {
         Intent streamActivityIntent = new Intent(this, StreamActivity.class);
-        streamActivityIntent.putExtra("IP", defaultP2PIp);
         this.startActivity(streamActivityIntent);
     }
 
@@ -410,12 +437,6 @@ public class MainActivity extends AppCompatActivity {
         Intent streamActivityIntent = new Intent(this, ViewStreamActivity.class);
         streamActivityIntent.putExtra("IP",ip);
         this.startActivity(streamActivityIntent);
-    }
-
-    public String getMyIpAddress(){
-        WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
-        String ip = Formatter.formatIpAddress(wm.getConnectionInfo().getIpAddress());
-        return ip;
     }
 
     public void setDefaultP2PIp(final String ip){

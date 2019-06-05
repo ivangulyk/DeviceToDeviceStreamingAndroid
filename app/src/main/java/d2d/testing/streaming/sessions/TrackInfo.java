@@ -1,4 +1,4 @@
-package d2d.testing.streaming.video;
+package d2d.testing.streaming.sessions;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -17,8 +17,6 @@ public class TrackInfo {
     private UDPServerSelector mRtpUdpServer;
     private UDPServerSelector mRtcpUdpServer;
 
-    private Thread mRtcpUdpServerThread;
-    private Thread mRtpUdpServerThread;
 
     private String mSSRCHex;
     private String mSessionDescription;
@@ -30,23 +28,22 @@ public class TrackInfo {
 
     public void startServer() throws IOException {
         mRtcpUdpServer = new UDPServerSelector(null, mLocalRtcpPort);
-        mRtcpUdpServerThread = new Thread(mRtcpUdpServer);
-        mRtcpUdpServerThread.start();
+        mRtcpUdpServer.start();
+
         mRtpUdpServer = new UDPServerSelector(null, mLocalRtpPort);
-        mRtpUdpServerThread = new Thread(mRtpUdpServer);
-        mRtpUdpServerThread.start();
+        mRtpUdpServer.start();
     }
 
     public void stopServer() {
-        mRtcpUdpServer.stop();
-        mRtcpUdpServer = null;
-        mRtcpUdpServerThread.interrupt();
-        mRtcpUdpServerThread = null;
+        if(mRtcpUdpServer != null) {
+            mRtcpUdpServer.stop();
+            mRtcpUdpServer = null;
+        }
 
-        mRtpUdpServer.stop();
-        mRtpUdpServer = null;
-        mRtpUdpServerThread.interrupt();
-        mRtpUdpServerThread = null;
+        if(mRtpUdpServer != null){
+            mRtpUdpServer.stop();
+            mRtpUdpServer = null;
+        }
     }
 
     public SelectableChannel addRtcpEchoSession(String address, int rtcpPort) {

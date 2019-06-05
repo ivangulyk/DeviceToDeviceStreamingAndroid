@@ -18,12 +18,12 @@
 
 package d2d.testing.streaming.rtsp;
 
-import static d2d.testing.streaming.video.SessionBuilder.AUDIO_AAC;
-import static d2d.testing.streaming.video.SessionBuilder.AUDIO_AMRNB;
-import static d2d.testing.streaming.video.SessionBuilder.AUDIO_NONE;
-import static d2d.testing.streaming.video.SessionBuilder.VIDEO_H263;
-import static d2d.testing.streaming.video.SessionBuilder.VIDEO_H264;
-import static d2d.testing.streaming.video.SessionBuilder.VIDEO_NONE;
+import static d2d.testing.streaming.sessions.SessionBuilder.AUDIO_AAC;
+import static d2d.testing.streaming.sessions.SessionBuilder.AUDIO_AMRNB;
+import static d2d.testing.streaming.sessions.SessionBuilder.AUDIO_NONE;
+import static d2d.testing.streaming.sessions.SessionBuilder.VIDEO_H263;
+import static d2d.testing.streaming.sessions.SessionBuilder.VIDEO_H264;
+import static d2d.testing.streaming.sessions.SessionBuilder.VIDEO_NONE;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -32,8 +32,8 @@ import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.util.Set;
 import d2d.testing.streaming.MediaStream;
-import d2d.testing.streaming.video.Session;
-import d2d.testing.streaming.video.SessionBuilder;
+import d2d.testing.streaming.sessions.Session;
+import d2d.testing.streaming.sessions.SessionBuilder;
 import d2d.testing.streaming.audio.AudioQuality;
 import d2d.testing.streaming.video.VideoQuality;
 

@@ -24,7 +24,7 @@ import java.io.RandomAccessFile;
 import java.lang.reflect.Field;
 import java.net.InetAddress;
 
-import d2d.testing.streaming.video.SessionBuilder;
+import d2d.testing.streaming.sessions.SessionBuilder;
 import d2d.testing.streaming.rtp.AACADTSPacketizer;
 import d2d.testing.streaming.rtp.AACLATMPacketizer;
 

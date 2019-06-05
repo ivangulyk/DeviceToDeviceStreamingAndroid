@@ -55,6 +55,8 @@ public class WifiP2pController {
     private ServerSelector mServerSelector;
     private ClientSelector mClientSelector;
 
+    private boolean groupOwner = false;
+
     protected List<WifiP2pDevice> peers = new ArrayList<>();
     protected WifiP2pDevice[] deviceArray;
 
@@ -172,6 +174,7 @@ public class WifiP2pController {
             // After the group negotiation, we can determine the group owner
             // (server).
             if (info.groupFormed && info.isGroupOwner) {
+                groupOwner = true;
                 //TODO
                 // Do whatever tasks are specific to the group owner.
                 // One common case is creating a group owner thread and accepting
@@ -193,6 +196,7 @@ public class WifiP2pController {
                 Toast.makeText(mContext,"You are Group Owner", Toast.LENGTH_SHORT).show();
                 Log.i("**** IP de owner:", "mi ip es: "+ groupOwnerAddress.toString());
             } else if (info.groupFormed) {
+                groupOwner = false;
                 // The other device acts as the peer (client). In this case,
                 // you'll want to create a peer thread that connects
                 // to the group owner.
@@ -212,4 +216,8 @@ public class WifiP2pController {
             }
         }
     };
+
+    public boolean isGroupOwner() {
+        return groupOwner;
+    }
 }

@@ -65,6 +65,8 @@ public class FragmentDevices extends Fragment {
         myAdd = view.findViewById(R.id.my_address);
         myName = view.findViewById(R.id.my_name);
         myStatus = view.findViewById(R.id.my_status);
+
+        textView.setVisibility(TextView.INVISIBLE); // this text was used for debug, maybe u want to activate it again
     }
 
     public void setTextView(String status){

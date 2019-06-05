@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package d2d.testing.streaming.video;
+package d2d.testing.streaming.sessions;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -31,6 +31,8 @@ import d2d.testing.streaming.exceptions.InvalidSurfaceException;
 import d2d.testing.streaming.exceptions.StorageUnavailableException;
 import d2d.testing.streaming.gl.SurfaceView;
 import d2d.testing.streaming.rtsp.RtspClient;
+import d2d.testing.streaming.video.VideoQuality;
+import d2d.testing.streaming.video.VideoStream;
 
 import android.hardware.Camera.CameraInfo;
 import android.os.Handler;
@@ -43,7 +45,7 @@ import static java.util.UUID.*;
  * You should instantiate this class with the {@link SessionBuilder}.<br />
  * This is the class you will want to use to stream audio and or video to some peer using RTP.<br />
  * 
- * It holds a {@link VideoStream} and a {@link AudioStream} together and provides 
+ * It holds a {@link VideoStream} and a {@link AudioStream} together and provides
  * synchronous and asynchronous functions to start and stop those steams.
  * You should implement a callback interface {@link Callback} to receive notifications and error reports.<br />
  * 
@@ -120,7 +122,7 @@ public class Session {
 	public Session() {
 		long uptime = System.currentTimeMillis();
 
-		HandlerThread thread = new HandlerThread("d2d.testing.streaming.video.Session");
+		HandlerThread thread = new HandlerThread("d2d.testing.streaming.sessions.Session");
 		thread.start();
 
 		mHandler = new Handler(thread.getLooper());

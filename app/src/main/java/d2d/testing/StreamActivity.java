@@ -12,19 +12,21 @@ import android.view.WindowManager;
 import android.widget.Toast;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
+import d2d.testing.gui.StreamDetail;
 import d2d.testing.wifip2p.WifiP2pController;
 import d2d.testing.net.packets.DataPacketBuilder;
 import d2d.testing.net.threads.selectors.RTSPServerSelector;
-import d2d.testing.streaming.video.Session;
-import d2d.testing.streaming.video.SessionBuilder;
+import d2d.testing.streaming.sessions.Session;
+import d2d.testing.streaming.sessions.SessionBuilder;
 import d2d.testing.streaming.gl.SurfaceView;
 import d2d.testing.streaming.rtsp.RtspClient;
 
 
 public class StreamActivity extends AppCompatActivity implements SurfaceHolder.Callback {
 
-    private final static String TAG = "MainActivity";
+    private final static String TAG = "StreamActivity";
 
     private SurfaceView mSurfaceView;
 
@@ -34,8 +36,6 @@ public class StreamActivity extends AppCompatActivity implements SurfaceHolder.C
 
     private FloatingActionButton recordButton;
     public boolean mRecording = false;
-
-    private boolean groupOwner = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,13 +56,6 @@ public class StreamActivity extends AppCompatActivity implements SurfaceHolder.C
                 .build();
 
         mSurfaceView.getHolder().addCallback(this);
-
-        //SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(this).edit();
-        //editor.putString(RtspServer.KEY_PORT, String.valueOf(12345));
-        //editor.commit();
-        // Starts the RTSP server
-        //mIntent = new Intent(this, RtspServer.class);
-        //this.startService(mIntent);
 
         recordButton = findViewById(R.id.button_capture);
         recordButton.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(android.R.color.holo_red_dark)));
@@ -97,18 +90,18 @@ public class StreamActivity extends AppCompatActivity implements SurfaceHolder.C
     }
 
     public void startStreaming() {
-        if(groupOwner) {
+        if(WifiP2pController.getInstance().isGroupOwner()) {
             try {
                 RTSPServerSelector.getInstance().setAllowLiveStreaming(true);
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            WifiP2pController.getInstance().send(DataPacketBuilder.buildStreamNotifier(true,"192.168.49.1:12345","Group Owner stream"));
+            WifiP2pController.getInstance().send(DataPacketBuilder.buildStreamNotifier(true,"192.168.49.1:12345/","Group Owner stream"));
             Toast.makeText(this,"Retransmitting streaming from server to multiple devices simultaneously", Toast.LENGTH_SHORT).show();
         } else {
             rtspClient = new RtspClient();
             rtspClient.setSession(mSesion);
-            rtspClient.setStreamPath("/customName");
+            rtspClient.setStreamPath(setPath());
             rtspClient.setServerAddress("192.168.49.1", 12345);
             rtspClient.startStream();
             Toast.makeText(this,"Retransmitting streaming to GO server for multihopping", Toast.LENGTH_SHORT).show();
@@ -119,13 +112,13 @@ public class StreamActivity extends AppCompatActivity implements SurfaceHolder.C
     }
 
     private void stopStreaming() {
-        if (groupOwner) {
+        if (WifiP2pController.getInstance().isGroupOwner()) {
             try {
                 RTSPServerSelector.getInstance().setAllowLiveStreaming(false);
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            WifiP2pController.getInstance().send(DataPacketBuilder.buildStreamNotifier(false, "192.168.49.1:12345",  "Group Owner stream"));
+            WifiP2pController.getInstance().send(DataPacketBuilder.buildStreamNotifier(false, "192.168.49.1:12345/",  "Group Owner stream"));
         } else if (rtspClient.isStreaming()) {
             rtspClient.stopStream();
         }
@@ -144,5 +137,30 @@ public class StreamActivity extends AppCompatActivity implements SurfaceHolder.C
         //mSesion.stop();
         //this.stopService(mIntent);
         mSesion.stopPreview();
+    }
+    /*
+     setPath() esto quiza se deberia comprobar en GO en futuro antes de hacer streaming
+    */
+    private String setPath(){
+       ArrayList<StreamDetail> list = WifiP2pController.getInstance().getMainActivity().getStreamlist();
+
+       String ip = "192.168.49.1:12345";
+       String name = "Cliente_";
+       String path = "/Cliente_";
+       StreamDetail streamDetail = new StreamDetail(name + "1", ip + path + "1");
+       int clietnNumber = 1;
+
+       if(list.contains(streamDetail)) {
+           for (int i = 2; i < 100; i++) {
+               streamDetail.setIp(ip + path + i);
+               streamDetail.setName(name + i);
+               if (!list.contains(streamDetail)) {
+                   clietnNumber = i;
+                   break;
+               }
+           }
+       }
+
+       return path + clietnNumber;
     }
 }

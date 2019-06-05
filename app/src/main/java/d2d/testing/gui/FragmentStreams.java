@@ -73,6 +73,9 @@ public class FragmentStreams extends Fragment {
                 if (streamList.contains(detail))
                     streamList.remove(detail);
             }
+
+            arrayAdapter.notifyDataSetChanged();
+            mainActivity.updateStreamsCounter(streamList.size()); //update TAB title
             streamAvailable();
         }
     }
@@ -86,5 +89,9 @@ public class FragmentStreams extends Fragment {
             }
         });
 
+    }
+
+    public ArrayList<StreamDetail> getStreamList(){
+        return this.streamList;
     }
 }

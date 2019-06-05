@@ -5,8 +5,11 @@ import java.net.InetSocketAddress;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.ServerSocketChannel;
+import java.util.ArrayList;
 
 import d2d.testing.MainActivity;
+import d2d.testing.gui.StreamDetail;
+import d2d.testing.net.packets.DataPacketBuilder;
 import d2d.testing.utils.Logger;
 import d2d.testing.net.threads.workers.ServerWorker;
 
@@ -23,6 +26,16 @@ public class ServerSelector extends AbstractSelector {
     @Override
     protected void onClientDisconnected(SelectableChannel socketChannel) {
 
+    }
+
+    protected void onClientConnected(SelectableChannel socketChannel) {
+        ArrayList<StreamDetail> list = getMainActivity().getStreamlist();
+
+        for (StreamDetail item : list) {
+            send(socketChannel,
+                DataPacketBuilder.buildStreamNotifier(true, item.getIp(), item.getName()).getData()
+            );
+        }
     }
 
     @Override
