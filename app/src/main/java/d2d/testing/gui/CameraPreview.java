@@ -1,4 +1,4 @@
-package d2d.testing;
+package d2d.testing.gui;
 
 import android.content.Context;
 import android.hardware.Camera;

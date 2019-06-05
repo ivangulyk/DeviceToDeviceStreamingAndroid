@@ -19,8 +19,7 @@ import android.widget.Toast;
 
 import d2d.testing.MainActivity;
 import d2d.testing.R;
-import d2d.testing.gui.DeviceListAdapter;
-import d2d.testing.net.WifiP2pController;
+import d2d.testing.wifip2p.WifiP2pController;
 import d2d.testing.net.packets.DataPacketBuilder;
 
 public class FragmentDevices extends Fragment {
@@ -66,6 +65,8 @@ public class FragmentDevices extends Fragment {
         myAdd = view.findViewById(R.id.my_address);
         myName = view.findViewById(R.id.my_name);
         myStatus = view.findViewById(R.id.my_status);
+
+        textView.setVisibility(TextView.INVISIBLE); // this text was used for debug, maybe u want to activate it again
     }
 
     public void setTextView(String status){

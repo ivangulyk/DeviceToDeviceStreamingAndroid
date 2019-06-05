@@ -13,17 +13,19 @@ import java.nio.channels.SelectableChannel;
 import java.nio.channels.SocketChannel;
 import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import d2d.testing.net.WifiP2pController;
+import d2d.testing.MainActivity;
+import d2d.testing.wifip2p.WifiP2pController;
 import d2d.testing.net.packets.DataPacketBuilder;
+import d2d.testing.streaming.sessions.ReceiveSession;
 import d2d.testing.utils.Logger;
 import d2d.testing.net.packets.DataReceived;
-import d2d.testing.streaming.RebroadcastSession;
-import d2d.testing.streaming.ServerSession;
-import d2d.testing.streaming.Session;
-import d2d.testing.streaming.TrackInfo;
+import d2d.testing.streaming.sessions.RebroadcastSession;
+import d2d.testing.streaming.sessions.Session;
+import d2d.testing.streaming.sessions.TrackInfo;
 import d2d.testing.streaming.rtsp.RtspRequest;
 import d2d.testing.streaming.rtsp.RtspResponse;
 import d2d.testing.streaming.rtsp.UriParser;
@@ -42,17 +44,27 @@ public class RTSPServerWorker extends AbstractWorker {
     public static final Pattern rexegHeader = Pattern.compile("(\\S+):(.+)",Pattern.CASE_INSENSITIVE);
 
     protected HashMap<SelectableChannel, Session> mSessions = new HashMap<>();
-    protected HashMap<SelectableChannel, ServerSession> mServerSessions = new HashMap<>();
+    protected HashMap<SelectableChannel, ReceiveSession> mServerSessions = new HashMap<>();
     protected HashMap<SelectableChannel, RebroadcastSession> mRebroadcastSessions = new HashMap<>();
 
+    boolean allowLiveStreaming = false;
 
     /** Credentials for Basic Auth */
     private String mUsername;
     private String mPassword;
 
+    private MainActivity mMainActivity;
+
+    public RTSPServerWorker(String username, String password, MainActivity mainActivity) {
+        super();
+        this.mUsername = username;
+        this.mPassword = password;
+        this.mMainActivity = mainActivity;
+    }
+
     public RtspResponse processRequest(RtspRequest request, SelectableChannel channel) throws IllegalStateException, IOException {
         Session requestSession = mSessions.get(channel);
-        ServerSession serverSession = mServerSessions.get(channel);
+        ReceiveSession receiveSession = mServerSessions.get(channel);
         RebroadcastSession rebroadcastSession = mRebroadcastSessions.get(channel);
         RtspResponse response = new RtspResponse(request);
 
@@ -77,8 +89,8 @@ public class RTSPServerWorker extends AbstractWorker {
                 case "SETUP":
                     if(requestSession != null) {
                         return SETUP(request, requestSession);
-                    } else if(serverSession != null) {
-                        return SETUP(request, serverSession);
+                    } else if(receiveSession != null) {
+                        return SETUP(request, receiveSession);
                     } else if(rebroadcastSession != null) {
                         return SETUP(request, rebroadcastSession);
                     } else
@@ -93,14 +105,14 @@ public class RTSPServerWorker extends AbstractWorker {
                         response.status = RtspResponse.STATUS_BAD_REQUEST;
                     break;
                 case "RECORD":
-                    return RECORD(serverSession, channel);
+                    return RECORD(receiveSession, channel);
                 case "PAUSE":
                     return PAUSE();
                 case "TEARDOWN":
                     if(requestSession != null) {
                         return TEARDOWN(requestSession, channel);
-                    } else if(serverSession != null) {
-                        return TEARDOWN(serverSession, channel);
+                    } else if(receiveSession != null) {
+                        return TEARDOWN(receiveSession, channel);
                     } else if(rebroadcastSession != null) {
                         return TEARDOWN(rebroadcastSession, channel);
                     } else
@@ -137,7 +149,7 @@ public class RTSPServerWorker extends AbstractWorker {
                 response.status = RtspResponse.STATUS_BAD_REQUEST;
                 return response;
             }
-        } else {
+        } else if(allowLiveStreaming){
             Session session = handleRequest(request.uri, ((SocketChannel) channel).socket());
             mSessions.put(channel, session);
             session.syncConfigure();
@@ -163,7 +175,7 @@ public class RTSPServerWorker extends AbstractWorker {
         }
 
         // Parse the requested URI and configure the session
-        ServerSession session = handleServerRequest(request, socket);
+        ReceiveSession session = handleServerRequest(request, socket);
 
         mServerSessions.put(channel, session);
         response.attributes = "Content-Base: " + socket.getLocalAddress().getHostAddress() + ":" + socket.getLocalPort() + "/\r\n" +
@@ -241,7 +253,7 @@ public class RTSPServerWorker extends AbstractWorker {
     }
 
     // SETUP Implementation for ServerSessions...
-    private RtspResponse SETUP(RtspRequest request, ServerSession session) throws IOException {
+    private RtspResponse SETUP(RtspRequest request, ReceiveSession session) throws IOException {
         RtspResponse response = new RtspResponse();
         Pattern p;
         Matcher m;
@@ -405,12 +417,17 @@ public class RTSPServerWorker extends AbstractWorker {
     }
 
     // RECORD Implementation for ServerSessions...
-    private RtspResponse RECORD(ServerSession serverSession, SelectableChannel channel) {
+    private RtspResponse RECORD(ReceiveSession receiveSession, SelectableChannel channel) {
         RtspResponse response = new RtspResponse();
-        response.attributes = "Session: " + serverSession.getSessionID() + ";timeout=" + serverSession.getTimeout() +"\r\n";
+        response.attributes = "Session: " + receiveSession.getSessionID() + ";timeout=" + receiveSession.getTimeout() +"\r\n";
         response.status = RtspResponse.STATUS_OK;
 
-        WifiP2pController.getInstance().send(DataPacketBuilder.buildStreamNotifier(true, serverSession.getDestination(), serverSession.getPath(), serverSession.getPath()));
+        String ip = receiveSession.getDestination() + ":12345/" + receiveSession.getPath();
+        String name = receiveSession.getPath();
+
+        mMainActivity.updateStreamList(true, ip, name);
+        WifiP2pController.getInstance().send(DataPacketBuilder.buildStreamNotifier(true, ip, name));
+
         return response;
     }
 
@@ -433,13 +450,18 @@ public class RTSPServerWorker extends AbstractWorker {
     }
 
     // TEARDOWN Implementation for ServerSessions...
-    private RtspResponse TEARDOWN(ServerSession session, SelectableChannel channel) {
+    private RtspResponse TEARDOWN(ReceiveSession session, SelectableChannel channel) {
         RtspResponse response = new RtspResponse();
         session.stop();
         mServerSessions.remove(channel);
         response.status = RtspResponse.STATUS_OK;
 
-        WifiP2pController.getInstance().send(DataPacketBuilder.buildStreamNotifier(false, session.getDestination(), session.getPath(), session.getPath()));
+        String ip = session.getDestination() + ":12345/" + session.getPath();
+        String name = session.getPath();
+
+        mMainActivity.updateStreamList(false, ip, name);
+        WifiP2pController.getInstance().send(DataPacketBuilder.buildStreamNotifier(false, ip, name));
+
         return response;
     }
 
@@ -447,6 +469,29 @@ public class RTSPServerWorker extends AbstractWorker {
         RtspResponse response = new RtspResponse();
         response.status = RtspResponse.STATUS_OK;
         return response;
+    }
+
+    public void setAllowLiveStreaming(boolean bool) {
+        allowLiveStreaming = bool;
+
+        if(!allowLiveStreaming && !mSessions.isEmpty()) {
+            for (Map.Entry<SelectableChannel, Session> sessionEntry : mSessions.entrySet()) {
+                Session session = sessionEntry.getValue();
+                SelectableChannel channel = sessionEntry.getKey();
+
+                if(sessionEntry != null) {
+                    TEARDOWN(session, channel);
+
+                    if (session.isStreaming()) {
+                        session.syncStop();
+                    }
+
+                    session.release();
+                }
+            }
+
+            mSessions.clear();
+        }
     }
 
     @Override
@@ -553,8 +598,8 @@ public class RTSPServerWorker extends AbstractWorker {
         return session;
     }
 
-    protected ServerSession handleServerRequest(RtspRequest request, Socket client) throws IllegalStateException, IOException {
-        ServerSession session = new ServerSession();
+    protected ReceiveSession handleServerRequest(RtspRequest request, Socket client) throws IllegalStateException, IOException {
+        ReceiveSession session = new ReceiveSession();
         BufferedReader reader = new BufferedReader(new StringReader(request.body));
         String line = null;
 
@@ -591,9 +636,9 @@ public class RTSPServerWorker extends AbstractWorker {
         //Buscar la serverSession que corresponde al path
         RebroadcastSession session = new RebroadcastSession();
 
-        for(ServerSession serverSession : mServerSessions.values()) {
-            if(serverSession.getPath().equalsIgnoreCase(path)) {
-                session.setServerSession(serverSession);
+        for(ReceiveSession receiveSession : mServerSessions.values()) {
+            if(receiveSession.getPath().equalsIgnoreCase(path)) {
+                session.setServerSession(receiveSession);
             }
         }
 
@@ -625,10 +670,16 @@ public class RTSPServerWorker extends AbstractWorker {
             mSessions.remove(channel);
         }
 
-        ServerSession serverSession = mServerSessions.get(channel);
-        if(serverSession != null) {
-            serverSession.stop();
-            serverSession.release();
+        ReceiveSession receiveSession = mServerSessions.get(channel);
+        if(receiveSession != null) {
+            String ip = receiveSession.getDestination() + ":12345/" + receiveSession.getPath();
+            String name = receiveSession.getPath();
+
+            mMainActivity.updateStreamList(false, ip, name);
+            WifiP2pController.getInstance().send(DataPacketBuilder.buildStreamNotifier(false, ip, name));
+
+            receiveSession.stop();
+            receiveSession.release();
             mServerSessions.remove(channel);
         }
 

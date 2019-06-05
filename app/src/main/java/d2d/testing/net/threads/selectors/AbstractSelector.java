@@ -52,7 +52,7 @@ public abstract class AbstractSelector implements Runnable{
 
     protected int mPortTCP = PORT_TCP;
 
-    private boolean mEnabled = true;
+    private boolean mEnabled = false;
     protected int mStatusTCP = STATUS_DISCONNECTED;
     protected int mStatusUDP = STATUS_DISCONNECTED;
 
@@ -79,6 +79,13 @@ public abstract class AbstractSelector implements Runnable{
 
     public void stop(){
         this.mEnabled = false;
+    }
+
+    public void start() {
+        if(!mEnabled) {
+            mEnabled = true;
+            new Thread(this).start();
+        }
     }
 
     public void run(){
@@ -160,6 +167,7 @@ public abstract class AbstractSelector implements Runnable{
         // Register the SocketChannel with our Selector, indicating to be notified for READING
         socketChannel.register(mSelector, SelectionKey.OP_READ);
         mConnections.add(socketChannel);
+        onClientConnected(socketChannel);
         Logger.d("AbstractSelector: Connection Accepted from IP " + socketChannel.socket().getRemoteSocketAddress());
     }
 
@@ -171,6 +179,7 @@ public abstract class AbstractSelector implements Runnable{
                 this.mStatusTCP = STATUS_CONNECTED;
                 key.interestOps(SelectionKey.OP_READ);  // Register an interest in reading till send
                 Logger.d("AbstractSelector: client (" + socketChannel.socket().getLocalAddress() + ") finished connecting...");
+                onClientConnected(socketChannel);
                 mMainActivity.setDefaultP2PIp(socketChannel.socket().getLocalAddress().toString().substring(1));
             }
         } catch (IOException e) {
@@ -245,6 +254,7 @@ public abstract class AbstractSelector implements Runnable{
     }
 
     protected abstract void onClientDisconnected(SelectableChannel socketChannel);
+    protected void onClientConnected(SelectableChannel socketChannel) {}
 
     private void write(SelectionKey key) throws IOException {
         SelectableChannel socketChannel = key.channel();

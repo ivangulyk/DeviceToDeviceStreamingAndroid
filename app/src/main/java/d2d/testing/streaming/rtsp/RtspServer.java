@@ -34,9 +34,8 @@ import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import d2d.testing.streaming.Session;
-import d2d.testing.streaming.SessionBuilder;
-import d2d.testing.streaming.audio.AudioPacketizerDispatcher;
+import d2d.testing.streaming.sessions.Session;
+import d2d.testing.streaming.sessions.SessionBuilder;
 
 import android.app.Service;
 import android.content.Intent;

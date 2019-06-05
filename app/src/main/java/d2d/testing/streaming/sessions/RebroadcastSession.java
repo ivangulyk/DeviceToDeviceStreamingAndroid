@@ -1,4 +1,4 @@
-package d2d.testing.streaming;
+package d2d.testing.streaming.sessions;
 
 import android.os.HandlerThread;
 
@@ -11,7 +11,7 @@ import static java.util.UUID.randomUUID;
 
 public class RebroadcastSession {
 
-    public final static String TAG = "ServerSession";
+    public final static String TAG = "ReceiveSession";
 
     private String mOrigin;
     private String mDestination;
@@ -20,7 +20,7 @@ public class RebroadcastSession {
     public final String mSessionID;
     private RebroadcastTrackInfo mVideoRebroadcastTrackInfo;
     private RebroadcastTrackInfo mAudioRebroadcastTrackInfo;
-    private ServerSession mServerSession;
+    private ReceiveSession mReceiveSession;
     private SelectableChannel rtcpVideoTrackChannel;
     private SelectableChannel rtpVideoTrackChannel;
     private SelectableChannel rtcpAudioTrackChannel;
@@ -32,7 +32,7 @@ public class RebroadcastSession {
     public RebroadcastSession() {
         long uptime = System.currentTimeMillis();
 
-        HandlerThread thread = new HandlerThread("d2d.testing.streaming.Session");
+        HandlerThread thread = new HandlerThread("d2d.testing.streaming.sessions.Session");
         thread.start();
 
         mTimestamp = (uptime/1000)<<32 & (((uptime-((uptime/1000)*1000))>>32)/1000); // NTP timestamp
@@ -123,19 +123,19 @@ public class RebroadcastSession {
     }
 
     public boolean serverTrackExists(int id) {
-        return mServerSession.trackExists(id);
+        return mReceiveSession.trackExists(id);
     }
 
     public TrackInfo getServerTrack(int id) {
-        return mServerSession.getTrack(id);
+        return mReceiveSession.getTrack(id);
     }
 
-    public ServerSession getServerSession() {
-        return mServerSession;
+    public ReceiveSession getServerSession() {
+        return mReceiveSession;
     }
 
-    public void setServerSession(ServerSession serverSession) {
-        this.mServerSession = serverSession;
+    public void setServerSession(ReceiveSession receiveSession) {
+        this.mReceiveSession = receiveSession;
     }
 
     public RebroadcastTrackInfo getRebroadcastTrack(int trackId) {

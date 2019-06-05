@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 public class RtspResponse {
-    public final static String LOG_TAG = "RtspRequest";
+    public final static String LOG_TAG = "RtspResponse";
 
     public static String SERVER_NAME = "D2D Video Streaming Server";
 

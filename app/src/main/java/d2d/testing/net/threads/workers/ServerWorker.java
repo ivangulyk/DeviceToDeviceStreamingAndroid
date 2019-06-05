@@ -4,7 +4,7 @@ import java.nio.channels.SelectableChannel;
 
 import d2d.testing.utils.IOUtils;
 import d2d.testing.utils.Logger;
-import d2d.testing.net.handlers.FileHandler;
+import d2d.testing.net.utils.FileHandler;
 import d2d.testing.net.packets.DataPacket;
 import d2d.testing.net.threads.selectors.AbstractSelector;
 
@@ -12,7 +12,9 @@ public class ServerWorker extends AbstractWorker {
 
     @Override
     protected void processData(DataPacket dataPacket, AbstractSelector selector, SelectableChannel channel) {
-        String ip = "", path = "", name = "";
+        String ip = "", name = "";
+        byte[] bodyData;
+        int ipLen, nameLen;
 
         switch (dataPacket.getType())
         {
@@ -24,9 +26,15 @@ public class ServerWorker extends AbstractWorker {
                 selector.send(dataPacket.getData());
                 break;
             case DataPacket.STREAM_ON:
-                parseStreamPacket(dataPacket, ip, path, name);
+                bodyData = dataPacket.getBodyData();
 
-                selector.getMainActivity().updateStreamList(true, ip);
+                ipLen = IOUtils.fromByteArray(bodyData);
+                nameLen = IOUtils.fromByteArray(IOUtils.copyMax(bodyData, 4+ipLen, 4));
+
+                ip = ip.concat(new String(IOUtils.copyMax(bodyData, 4, ipLen)));
+                name = name.concat(new String(IOUtils.copyMax(bodyData, 8 + ipLen, nameLen)));
+
+                selector.getMainActivity().updateStreamList(true, ip, name);
                 Logger.d("ServerWorker received STREAM_ON command");
 
                 selector.send(dataPacket.getData());
@@ -34,9 +42,15 @@ public class ServerWorker extends AbstractWorker {
                 break;
 
             case DataPacket.STREAM_OFF:
-                parseStreamPacket(dataPacket, ip, path, name);
+                bodyData = dataPacket.getBodyData();
 
-                selector.getMainActivity().updateStreamList(false, ip);
+                ipLen = IOUtils.fromByteArray(bodyData);
+                nameLen = IOUtils.fromByteArray(IOUtils.copyMax(bodyData, 4+ipLen, 4));
+
+                ip = ip.concat(new String(IOUtils.copyMax(bodyData, 4, ipLen)));
+                name = name.concat(new String(IOUtils.copyMax(bodyData, 8 + ipLen, nameLen)));
+
+                selector.getMainActivity().updateStreamList(false, ip, name);
                 Logger.d("ServerWorker received STREAM_OFF command");
 
                 selector.send(dataPacket.getData());
@@ -57,17 +71,5 @@ public class ServerWorker extends AbstractWorker {
                 Logger.e("ClientWorker received no TYPE_FILE");
                 //ERROR NO HAY TIPO DE MENSAJE!!
         }
-    }
-
-    private void parseStreamPacket(DataPacket dataPacket, String ip, String path, String name) {
-        byte[] bodyData = dataPacket.getBodyData();
-
-        int ipLen = IOUtils.fromByteArray(bodyData);
-        int pathLen = IOUtils.fromByteArray(IOUtils.copyMax(bodyData, 4+ipLen, 4));
-        int nameLen = IOUtils.fromByteArray(IOUtils.copyMax(bodyData, 8+ipLen+pathLen, 4));
-
-        ip.concat(new String(IOUtils.copyMax(bodyData, 4, ipLen)));
-        path.concat(new String(IOUtils.copyMax(bodyData, 8 + ipLen, pathLen)));
-        name.concat(new String(IOUtils.copyMax(bodyData, 12 + ipLen + pathLen, nameLen)));
     }
 }

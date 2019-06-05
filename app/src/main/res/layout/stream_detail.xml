@@ -8,42 +8,36 @@
 
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="fill_parent"
-        android:layout_height="79dp"
+        android:layout_height="?android:attr/listPreferredItemHeight"
         android:background="?android:attr/activatedBackgroundIndicator"
         android:padding="6dip"
         tools:layout_editor_absoluteX="0dp"
         tools:layout_editor_absoluteY="1dp">
 
         <ImageView
-            android:id="@+id/icon"
-            android:layout_width="wrap_content"
+            android:id="@+id/stream_icon"
+            android:layout_width="44dp"
             android:layout_height="fill_parent"
             android:layout_marginRight="2dip"
-            android:src="@drawable/machine" />
+            android:src="@drawable/live" />
 
         <LinearLayout
             android:layout_width="0dip"
+            android:layout_marginLeft="20px"
             android:layout_height="fill_parent"
             android:layout_weight="1"
             android:orientation="vertical">
 
             <TextView
-                android:id="@+id/device_name"
+                android:id="@+id/stream_name"
                 android:layout_width="match_parent"
                 android:layout_height="0dip"
                 android:layout_weight="1"
                 android:gravity="center_vertical" />
 
-            <TextView
-                android:id="@+id/device_adress"
-                android:layout_width="match_parent"
-                android:layout_height="0dip"
-                android:layout_weight="1"
-                android:ellipsize="marquee"
-                android:singleLine="true" />
 
             <TextView
-                android:id="@+id/device_status"
+                android:id="@+id/stream_ip"
                 android:layout_width="match_parent"
                 android:layout_height="0dip"
                 android:layout_weight="1"

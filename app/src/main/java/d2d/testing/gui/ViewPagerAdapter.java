@@ -37,5 +37,11 @@ public class ViewPagerAdapter extends FragmentPagerAdapter {
         fragmentListTitles.add(Title);
     }
 
-
+    //TODO : this is really hardcoded, maybe make it more dimanic in the future
+    public void setStreamNumber(int number) {
+        if(number != 0)
+            this.fragmentListTitles.set(1,"Streams Available" + " (" + number + ")");
+        else
+            this.fragmentListTitles.set(1,"Streams Available" );
+    }
 }

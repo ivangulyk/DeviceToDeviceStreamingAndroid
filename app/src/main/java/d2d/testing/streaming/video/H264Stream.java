@@ -22,12 +22,14 @@ import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-import d2d.testing.streaming.SessionBuilder;
+
 import d2d.testing.streaming.exceptions.ConfNotSupportedException;
 import d2d.testing.streaming.exceptions.StorageUnavailableException;
 import d2d.testing.streaming.hw.EncoderDebugger;
 import d2d.testing.streaming.mp4.MP4Config;
 import d2d.testing.streaming.rtp.H264Packetizer;
+import d2d.testing.streaming.sessions.SessionBuilder;
+
 import android.annotation.SuppressLint;
 import android.content.SharedPreferences.Editor;
 import android.graphics.ImageFormat;

@@ -34,7 +34,7 @@ import java.util.Map;
 import java.util.concurrent.Semaphore;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import d2d.testing.streaming.Session;
+import d2d.testing.streaming.sessions.Session;
 import d2d.testing.streaming.Stream;
 import d2d.testing.streaming.rtp.RtpSocket;
 import android.os.Handler;

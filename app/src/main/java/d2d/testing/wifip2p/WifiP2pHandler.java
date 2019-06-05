@@ -1,4 +1,4 @@
-package d2d.testing.net;
+package d2d.testing.wifip2p;
 
 import android.net.wifi.p2p.WifiP2pManager;
 

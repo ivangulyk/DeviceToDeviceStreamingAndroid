@@ -3,7 +3,7 @@
 
     <item
         android:id="@+id/atn_direct_enable"
-        android:icon="@drawable/outline_power_settings_new_black_18dp"
+        android:icon="@drawable/round_wifi_black_18dp"
         android:title="@string/string_on_off"
         app:showAsAction="always" />
 
@@ -21,7 +21,7 @@
 
     <item
         android:id="@+id/atn_direct_camera"
-        android:icon="@drawable/outline_camera_alt_black_18dp"
+        android:icon="@drawable/live5"
         android:title="@string/string_camera"
         app:showAsAction="always" />
 

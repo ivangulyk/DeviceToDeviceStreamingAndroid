@@ -82,7 +82,10 @@ public class VideoPacketizerDispatcher {
                     } else {
                         Log.e(TAG,"No buffer available !");
                     }
-                } finally {
+
+                }
+                catch(IllegalStateException error){}
+                finally {
                     mCamera.addCallbackBuffer(data);
                 }
             }

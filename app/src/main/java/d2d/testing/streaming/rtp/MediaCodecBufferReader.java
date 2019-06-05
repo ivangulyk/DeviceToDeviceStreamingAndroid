@@ -44,7 +44,6 @@ public class MediaCodecBufferReader implements Runnable {
                 }
             } catch (IOException e) {
                 mRunning = false;
-                e.printStackTrace();
             }
         }
 

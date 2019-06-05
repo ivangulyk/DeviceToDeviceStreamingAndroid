@@ -1,4 +1,4 @@
-package d2d.testing.net;
+package d2d.testing.wifip2p;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -25,8 +25,10 @@ public class WiFiP2pBroadcastReceiver extends BroadcastReceiver {
                 // the Activity.
                 int state = intent.getIntExtra(WifiP2pManager.EXTRA_WIFI_STATE, -1);
                 if (state == WifiP2pManager.WIFI_P2P_STATE_ENABLED) {
+                    mWifiP2pHandler.mActivity.updateWifiIcon(true);
                     Toast.makeText(context,"Wifi is ON", Toast.LENGTH_SHORT).show();
                 } else {
+                    mWifiP2pHandler.mActivity.updateWifiIcon(false);
                     Toast.makeText(context,"Wifi is OFF", Toast.LENGTH_SHORT).show();
                 }
                 break;
