@@ -90,4 +90,8 @@ public class FragmentStreams extends Fragment {
         });
 
     }
+
+    public ArrayList<StreamDetail> getStreamList(){
+        return this.streamList;
+    }
 }

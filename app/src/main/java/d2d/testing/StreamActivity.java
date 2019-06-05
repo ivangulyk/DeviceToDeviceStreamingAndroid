@@ -12,7 +12,9 @@ import android.view.WindowManager;
 import android.widget.Toast;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
+import d2d.testing.gui.StreamDetail;
 import d2d.testing.wifip2p.WifiP2pController;
 import d2d.testing.net.packets.DataPacketBuilder;
 import d2d.testing.net.threads.selectors.RTSPServerSelector;
@@ -108,7 +110,7 @@ public class StreamActivity extends AppCompatActivity implements SurfaceHolder.C
         } else {
             rtspClient = new RtspClient();
             rtspClient.setSession(mSesion);
-            rtspClient.setStreamPath("/Cliente_B");
+            rtspClient.setStreamPath(setPath());
             rtspClient.setServerAddress("192.168.49.1", 12345);
             rtspClient.startStream();
             Toast.makeText(this,"Retransmitting streaming to GO server for multihopping", Toast.LENGTH_SHORT).show();
@@ -144,5 +146,28 @@ public class StreamActivity extends AppCompatActivity implements SurfaceHolder.C
         //mSesion.stop();
         //this.stopService(mIntent);
         mSesion.stopPreview();
+    }
+
+    private String setPath(){
+       ArrayList<StreamDetail> list = WifiP2pController.getInstance().getMainActivity().getStreamlist();
+
+       String ip = "192.168.49.1:12345";
+       String name = "Cliente_";
+       String path = "/Cliente_";
+       StreamDetail streamDetail = new StreamDetail(name + "1", ip + path + "1");
+       int clietnNumber = 1;
+
+       if(list.contains(streamDetail)) {
+           for (int i = 2; i < 10; i++) {
+               streamDetail.setIp(ip + path + i);
+               streamDetail.setName(name + i);
+               if (!list.contains(streamDetail)) {
+                   clietnNumber = i;
+                   break;
+               }
+           }
+       }
+
+       return path + clietnNumber;
     }
 }

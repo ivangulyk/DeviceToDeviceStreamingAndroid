@@ -24,6 +24,7 @@ import android.view.SurfaceView;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Toast;
 
 
 import org.videolan.libvlc.IVLCVout;
@@ -121,12 +122,13 @@ public class ViewStreamActivity extends AppCompatActivity implements IVLCVout.Ca
         Media m = new Media(libvlc, Uri.parse(rtspUrl));
         mMediaPlayer.setMedia(m);
         mMediaPlayer.play();
-
+        /*
         progressDialog = new ProgressDialog(this);
         progressDialog.setTitle("Stream buffering");
         progressDialog.setTitle("Please wait...");
-        progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+        progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         progressDialog.show();
+        */
     }
 
     @Override
@@ -183,15 +185,19 @@ public class ViewStreamActivity extends AppCompatActivity implements IVLCVout.Ca
     public void onEvent(MediaPlayer.Event event) {
         switch(event.type) {
             case MediaPlayer.Event.EndReached:
-                Log.d(TAG, "MediaPlayerEndReached");
+                Log.e(TAG, "MediaPlayerEndReached");
                 releasePlayer();
+                Toast.makeText(getApplicationContext(), "Streaming finished", Toast.LENGTH_SHORT).show();
+                finish();
                 break;
             case MediaPlayer.Event.Buffering:
                 break;
             case MediaPlayer.Event.Playing:
-                progressDialog.hide();
+                //progressDialog.dismiss();
+                break;
             case MediaPlayer.Event.Paused:
             case MediaPlayer.Event.Stopped:
+                Log.e(TAG, "EL STREAMING HA PARADO");
             default:
                 break;
         }

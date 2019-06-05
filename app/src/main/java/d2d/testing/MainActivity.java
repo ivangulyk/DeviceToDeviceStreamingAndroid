@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
 import android.net.Uri;
 import android.hardware.Camera;
 import android.net.wifi.WifiManager;
@@ -24,10 +25,12 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 import d2d.testing.gui.DeviceListAdapter;
 import d2d.testing.gui.FragmentDevices;
 import d2d.testing.gui.FragmentStreams;
+import d2d.testing.gui.StreamDetail;
 import d2d.testing.gui.ViewPagerAdapter;
 import d2d.testing.net.threads.selectors.RTSPServerSelector;
 import d2d.testing.utils.Logger;
@@ -135,11 +138,13 @@ public class MainActivity extends AppCompatActivity {
         mWifiP2pController.discoverPeers(new WifiP2pManager.ActionListener() {
             @Override
             public void onSuccess() {
+                Toast.makeText(getApplicationContext(), "Discovery Started", Toast.LENGTH_SHORT).show();
                 devices_fragment.setTextView("Discovery Started");
         }
 
             @Override
             public void onFailure(int reason) {
+                Toast.makeText(getApplicationContext(), "Discovery Starting Failed, make sure WiFI is ON", Toast.LENGTH_SHORT).show();
                 devices_fragment.setTextView("Discovery Starting Failed");
             }
         });
@@ -413,6 +418,10 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(getApplicationContext(), "YOUR DEVICE HAS NO CAMERA", Toast.LENGTH_SHORT).show();
             return false;
         }
+    }
+
+    public ArrayList<StreamDetail> getStreamlist(){
+        return streams_fragment.getStreamList();
     }
 
     private void openCameraActivity() {
