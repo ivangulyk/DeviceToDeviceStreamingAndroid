@@ -18,15 +18,15 @@ import d2d.testing.gui.StreamDetail;
 import d2d.testing.wifip2p.WifiP2pController;
 import d2d.testing.net.packets.DataPacketBuilder;
 import d2d.testing.net.threads.selectors.RTSPServerSelector;
-import d2d.testing.streaming.video.Session;
-import d2d.testing.streaming.video.SessionBuilder;
+import d2d.testing.streaming.sessions.Session;
+import d2d.testing.streaming.sessions.SessionBuilder;
 import d2d.testing.streaming.gl.SurfaceView;
 import d2d.testing.streaming.rtsp.RtspClient;
 
 
 public class StreamActivity extends AppCompatActivity implements SurfaceHolder.Callback {
 
-    private final static String TAG = "MainActivity";
+    private final static String TAG = "StreamActivity";
 
     private SurfaceView mSurfaceView;
 
@@ -36,8 +36,6 @@ public class StreamActivity extends AppCompatActivity implements SurfaceHolder.C
 
     private FloatingActionButton recordButton;
     public boolean mRecording = false;
-
-    private boolean groupOwner = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,13 +56,6 @@ public class StreamActivity extends AppCompatActivity implements SurfaceHolder.C
                 .build();
 
         mSurfaceView.getHolder().addCallback(this);
-
-        //SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(this).edit();
-        //editor.putString(RtspServer.KEY_PORT, String.valueOf(12345));
-        //editor.commit();
-        // Starts the RTSP server
-        //mIntent = new Intent(this, RtspServer.class);
-        //this.startService(mIntent);
 
         recordButton = findViewById(R.id.button_capture);
         recordButton.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(android.R.color.holo_red_dark)));
@@ -147,7 +138,9 @@ public class StreamActivity extends AppCompatActivity implements SurfaceHolder.C
         //this.stopService(mIntent);
         mSesion.stopPreview();
     }
-
+    /*
+     setPath() esto quiza se deberia comprobar en GO en futuro antes de hacer streaming
+    */
     private String setPath(){
        ArrayList<StreamDetail> list = WifiP2pController.getInstance().getMainActivity().getStreamlist();
 
@@ -158,7 +151,7 @@ public class StreamActivity extends AppCompatActivity implements SurfaceHolder.C
        int clietnNumber = 1;
 
        if(list.contains(streamDetail)) {
-           for (int i = 2; i < 10; i++) {
+           for (int i = 2; i < 100; i++) {
                streamDetail.setIp(ip + path + i);
                streamDetail.setName(name + i);
                if (!list.contains(streamDetail)) {

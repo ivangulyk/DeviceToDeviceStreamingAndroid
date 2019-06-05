@@ -1,4 +1,4 @@
-package d2d.testing.streaming.video;
+package d2d.testing.streaming.sessions;
 
 import android.os.HandlerThread;
 
@@ -27,7 +27,7 @@ public class ReceiveSession {
     public ReceiveSession() {
         long uptime = System.currentTimeMillis();
 
-        HandlerThread thread = new HandlerThread("d2d.testing.streaming.video.Session");
+        HandlerThread thread = new HandlerThread("d2d.testing.streaming.sessions.Session");
         thread.start();
 
         mOrigin = "127.0.0.1";

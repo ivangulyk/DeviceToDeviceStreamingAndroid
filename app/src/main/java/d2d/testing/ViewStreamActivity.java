@@ -69,13 +69,6 @@ public class ViewStreamActivity extends AppCompatActivity implements IVLCVout.Ca
 
         mSurface = (SurfaceView) findViewById(R.id.surface);
         holder = mSurface.getHolder();
-        //holder.addCallback(this);
-
-        Display display = getWindowManager().getDefaultDisplay();
-        Point size = new Point();
-        display.getSize(size);
-        int width = size.x;
-        int height = size.y;
 
         ArrayList<String> options = new ArrayList<String>();
         options.add("--aout=opensles");
@@ -87,21 +80,18 @@ public class ViewStreamActivity extends AppCompatActivity implements IVLCVout.Ca
         options.add("--logfile=vlc-log.txt");
         //options.add("--video-filter=rotate {angle=270}");
 
-        //AnimationSet anim = new AnimationSet(true);
-        //RotateAnimation rotate = new RotateAnimation(0f, 360f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
-        //public class VideoPlayerActivity extends AppCompatActivity implements IVLCVout.C
         bufferSpinner = findViewById(R.id.bufferSpinner);
-
 
         libvlc = new LibVLC(getApplicationContext(), options);
         holder.setKeepScreenOn(true);
+
         // Create media player
         mMediaPlayer = new MediaPlayer(libvlc);
         mMediaPlayer.setEventListener(this);
+
         // Set up video output
         final IVLCVout vout = mMediaPlayer.getVLCVout();
         vout.setVideoView(mSurface);
-
 
         DisplayMetrics displayMetrics = new DisplayMetrics();
         if (Build.VERSION.SDK_INT >= 19) {

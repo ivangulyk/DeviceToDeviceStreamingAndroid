@@ -28,6 +28,8 @@ import d2d.testing.streaming.exceptions.StorageUnavailableException;
 import d2d.testing.streaming.hw.EncoderDebugger;
 import d2d.testing.streaming.mp4.MP4Config;
 import d2d.testing.streaming.rtp.H264Packetizer;
+import d2d.testing.streaming.sessions.SessionBuilder;
+
 import android.annotation.SuppressLint;
 import android.content.SharedPreferences.Editor;
 import android.graphics.ImageFormat;

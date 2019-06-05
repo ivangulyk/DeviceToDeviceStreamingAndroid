@@ -1,4 +1,4 @@
-package d2d.testing.streaming.video;
+package d2d.testing.streaming.sessions;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -17,8 +17,6 @@ public class TrackInfo {
     private UDPServerSelector mRtpUdpServer;
     private UDPServerSelector mRtcpUdpServer;
 
-    private Thread mRtcpUdpServerThread;
-    private Thread mRtpUdpServerThread;
 
     private String mSSRCHex;
     private String mSessionDescription;

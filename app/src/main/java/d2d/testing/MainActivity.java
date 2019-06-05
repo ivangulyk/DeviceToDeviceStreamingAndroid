@@ -9,7 +9,6 @@ import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.net.Uri;
 import android.hardware.Camera;
-import android.net.wifi.WifiManager;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
@@ -18,7 +17,6 @@ import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
-import android.text.format.Formatter;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -439,12 +437,6 @@ public class MainActivity extends AppCompatActivity {
         Intent streamActivityIntent = new Intent(this, ViewStreamActivity.class);
         streamActivityIntent.putExtra("IP",ip);
         this.startActivity(streamActivityIntent);
-    }
-
-    public String getMyIpAddress(){
-        WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
-        String ip = Formatter.formatIpAddress(wm.getConnectionInfo().getIpAddress());
-        return ip;
     }
 
     public void setDefaultP2PIp(final String ip){

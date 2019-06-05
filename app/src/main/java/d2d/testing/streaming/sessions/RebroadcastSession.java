@@ -1,4 +1,4 @@
-package d2d.testing.streaming.video;
+package d2d.testing.streaming.sessions;
 
 import android.os.HandlerThread;
 
@@ -32,7 +32,7 @@ public class RebroadcastSession {
     public RebroadcastSession() {
         long uptime = System.currentTimeMillis();
 
-        HandlerThread thread = new HandlerThread("d2d.testing.streaming.video.Session");
+        HandlerThread thread = new HandlerThread("d2d.testing.streaming.sessions.Session");
         thread.start();
 
         mTimestamp = (uptime/1000)<<32 & (((uptime-((uptime/1000)*1000))>>32)/1000); // NTP timestamp
