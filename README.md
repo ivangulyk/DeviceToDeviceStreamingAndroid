@@ -1,5 +1,5 @@
 # Device To Device Streaming on mobile phones
-This project is a Final Degree Project in Computer Engineering, Faculty of Computer Engineering of the Complutense University of Madrid
+This project is a Final Degree Project in Computer Engineering, Faculty of Computer Engineering of the Complutense University of Madrid. The project  is explained in detail in the memory that can be found [here](https://github.com/ivangulyk/DeviceToDeviceStreamingAndroid/blob/master/D2D%20Project%20Memory.pdf) (Spanish).
 
 ## Authors
 
@@ -17,7 +17,7 @@ The main objective of this project has been to develop an application for mobile
 In the course of the project we showed that, due to limitations in the implementation of the available technology, it is currently not possible to achieve this objective in its entirety. For this reason, we developed an application with reduced functionality, but capable of transmitting and playing streaming through a small distributed network of connected devices using WiFi Direct technology. The application allows to distribute the streaming by means of *multihopping*, in such a way that it goes from one device to another in chain until reaching its destination. However, the current state of technology implemented in mobile devices only allows us to perform two jumps, that is, connect three devices in chain.
 
 # Device To Device Streaming en dispositivos móviles
-Este proyecto es un Trabajo de Fin de Grado del Grado en Ingeniería Informática, Facualtad de Ingeniería Informática de la Universidad Complutense de Madrid
+Este proyecto es un Trabajo de Fin de Grado del Grado en Ingeniería Informática, Facualtad de Ingeniería Informática de la Universidad Complutense de Madrid. El proyecto esta explicado en detalle en la memoria que se puede encontrar [aquí](https://github.com/ivangulyk/DeviceToDeviceStreamingAndroid/blob/master/D2D%20Project%20Memory.pdf).
 
 ## Resumen
 
